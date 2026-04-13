@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veyano Blog | Loading Story...</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container flex justify-between items-center">
+      <a href="index.html" class="brand-logo">Veyano</a>
+      <div class="nav-actions">
+        <nav style="display: flex; align-items: center; gap: 1.5rem;">
+          <a href="index.html" style="font-size: 0.9rem; font-weight: 500;">Home</a>
+          <a href="blog.html" style="font-size: 0.9rem; font-weight: 600; color: #FF9900;">Blog</a>
+          <a href="index.html#products" class="btn btn-outline" style="padding: 0.5rem 1.5rem; text-transform: none;">Shop Now</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main id="blog-content">
+    <div style="text-align: center; padding: 10rem 0;">
+      <p>Loading your story...</p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" style="padding: 4rem 0; background: #1a1a1a; color: #fff; margin-top: 4rem;">
+    <div class="container">
+      <div class="footer-grid" style="display: flex; justify-content: space-between; gap: 4rem;">
+        <div>
+          <h2 class="brand-logo" style="margin-bottom: 1rem;">Veyano</h2>
+          <p style="color: #888; max-width: 300px;">Thoughtfully made makhana for the modern snacker. Pure, natural, and never fried.</p>
+        </div>
+        <div style="display: flex; gap: 4rem;">
+          <div>
+            <h4 style="margin-bottom: 1rem; color: #FF9900;">Shop</h4>
+            <ul style="list-style: none; color: #888; display: flex; flex-direction: column; gap: 0.5rem;">
+              <li><a href="index.html#products">All Products</a></li>
+              <li><a href="product.html?variant=combo">Combo Pack</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 style="margin-bottom: 1rem; color: #FF9900;">Support</h4>
+            <ul style="list-style: none; color: #888; display: flex; flex-direction: column; gap: 0.5rem;">
+              <li><a href="blog.html">Blog</a></li>
+              <li><a href="mailto:hello@veyano.in">Contact Us</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div style="border-top: 1px solid #333; margin-top: 4rem; padding-top: 2rem; text-align: center; color: #666; font-size: 0.85rem;">
+        &copy; 2024 Veyano Foods. FSSAI No. 20826010000397. 
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    async function fetchPost() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const slug = urlParams.get('slug');
+      const container = document.getElementById('blog-content');
+
+      if (!slug) {
+        window.location.href = 'blog.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/blog/${slug}`);
+        if (!res.ok) throw new Error('Not found');
+        const post = await res.json();
+        
+        document.title = `${post.title} | Veyano Blog`;
+
+        container.innerHTML = `
+          <img src="${post.image_url || './assets/plain.png'}" class="blog-post-hero" alt="${post.title}">
+          <div class="blog-post-body">
+            <a href="blog.html" class="back-btn">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+              Back to Blogs
+            </a>
+            <h1 style="margin-top: 1.5rem; font-size: 2.8rem; line-height: 1.2;">${post.title}</h1>
+            <div style="margin: 1.5rem 0; color: #888; font-size: 0.9rem;">
+              By <strong>${post.author}</strong> &bull; ${new Date(post.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </div>
+            <div class="blog-post-content">
+              ${post.content}
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        console.error('Post load error:', err);
+        container.innerHTML = `
+          <div class="container" style="text-align: center; padding: 10rem 0;">
+            <h2>Story not found</h2>
+            <p style="margin: 1rem 0;">It seems this page has moved or doesn't exist.</p>
+            <a href="blog.html" class="btn">Return to Blog</a>
+          </div>
+        `;
+      }
+    }
+    window.addEventListener('load', fetchPost);
+  </script>
+</body>
+</html>

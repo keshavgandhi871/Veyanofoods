@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veyano Blog | Stories & Insights</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container flex justify-between items-center">
+      <a href="index.html" class="brand-logo">Veyano</a>
+      <div class="nav-actions">
+        <nav style="display: flex; align-items: center; gap: 1.5rem;">
+          <a href="index.html" style="font-size: 0.9rem; font-weight: 500;">Home</a>
+          <a href="blog.html" style="font-size: 0.9rem; font-weight: 600; color: #FF9900;">Blog</a>
+          <a href="index.html#products" class="btn btn-outline" style="padding: 0.5rem 1.5rem; text-transform: none;">Shop Now</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="blog-header">
+      <div class="container">
+        <h1>Veyano Stories</h1>
+        <p>Exploring health, mindfulness, and the art of clean snacking.</p>
+      </div>
+    </section>
+
+    <section class="container">
+      <div id="blog-container" class="blog-grid">
+        <!-- Blogs will be loaded here -->
+        <div style="grid-column: 1/-1; text-align: center; padding: 4rem 0;">
+          <p>Loading the latest stories...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" style="padding: 4rem 0; background: #1a1a1a; color: #fff; margin-top: 4rem;">
+    <div class="container">
+      <div class="footer-grid" style="display: flex; justify-content: space-between; gap: 4rem;">
+        <div>
+          <h2 class="brand-logo" style="margin-bottom: 1rem;">Veyano</h2>
+          <p style="color: #888; max-width: 300px;">Thoughtfully made makhana for the modern snacker. Pure, natural, and never fried.</p>
+        </div>
+        <div style="display: flex; gap: 4rem;">
+          <div>
+            <h4 style="margin-bottom: 1rem; color: #FF9900;">Shop</h4>
+            <ul style="list-style: none; color: #888; display: flex; flex-direction: column; gap: 0.5rem;">
+              <li><a href="index.html#products">All Products</a></li>
+              <li><a href="product.html?variant=combo">Combo Pack</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 style="margin-bottom: 1rem; color: #FF9900;">Support</h4>
+            <ul style="list-style: none; color: #888; display: flex; flex-direction: column; gap: 0.5rem;">
+              <li><a href="blog.html">Blog</a></li>
+              <li><a href="mailto:hello@veyano.in">Contact Us</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div style="border-top: 1px solid #333; margin-top: 4rem; padding-top: 2rem; text-align: center; color: #666; font-size: 0.85rem;">
+        &copy; 2024 Veyano Foods. FSSAI No. 20826010000397. 
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    async function fetchBlogs() {
+      const container = document.getElementById('blog-container');
+      try {
+        const res = await fetch('/api/blog');
+        const blogs = await res.json();
+        
+        if (!blogs || blogs.length === 0) {
+          container.innerHTML = '<div style="grid-column: 1/-1; text-align: center;"><p>No stories found yet. Come back soon!</p></div>';
+          return;
+        }
+
+        container.innerHTML = blogs.map(post => `
+          <div class="blog-card">
+            <img src="${post.image_url || './assets/plain.png'}" alt="${post.title}" class="blog-card-img">
+            <div class="blog-card-content">
+              <h3 class="blog-card-title">${post.title}</h3>
+              <div class="blog-card-meta">
+                <span>By ${post.author}</span>
+                <span>${new Date(post.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+              </div>
+              <a href="blog-post.html?slug=${post.slug}" class="blog-btn">
+                Read More
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Blog load error:', err);
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: red;">Check back shortly as we update our stories.</p>';
+      }
+    }
+    window.addEventListener('load', fetchBlogs);
+  </script>
+</body>
+</html>

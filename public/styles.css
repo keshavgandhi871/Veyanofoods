@@ -941,3 +941,105 @@ a {
   .product-detail-section { grid-template-columns: 1fr; }
   .footer-grid { flex-direction: column; }
 }
+
+/* --- BLOG SYSTEM STYLES --- */
+.blog-header {
+  padding: 8rem 0 4rem;
+  text-align: center;
+  background: #fffaf5;
+}
+.blog-header h1 {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2.5rem;
+  padding: 4rem 0;
+}
+.blog-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease;
+  border: 1px solid #eee;
+}
+.blog-card:hover {
+  transform: translateY(-5px);
+}
+.blog-card-img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+.blog-card-content {
+  padding: 1.5rem;
+}
+.blog-card-title {
+  font-size: 1.4rem;
+  margin-bottom: 0.8rem;
+  color: var(--text-color);
+}
+.blog-card-meta {
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+}
+.blog-btn {
+  color: #FF9900; /* Electric Saffron */
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.blog-btn:hover {
+  gap: 10px;
+}
+
+/* Single Blog Page */
+.blog-post-hero {
+  width: 100%;
+  height: 450px;
+  object-fit: cover;
+}
+.blog-post-body {
+  max-width: 800px;
+  margin: -60px auto 4rem;
+  background: #fff;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  position: relative;
+}
+.blog-post-content {
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #444;
+}
+.blog-post-content img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+}
+.back-btn {
+  margin-top: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #FF9900;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .blog-header h1 { font-size: 2.5rem; }
+  .blog-grid { grid-template-columns: 1fr; }
+  .blog-post-body { margin-top: 0; padding: 1.5rem; border-radius: 0; }
+  .blog-post-hero { height: 300px; }
+}

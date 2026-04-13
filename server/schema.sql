@@ -77,3 +77,16 @@ CREATE TABLE IF NOT EXISTS cart_items (
 CREATE INDEX IF NOT EXISTS idx_orders_customer_phone ON orders(customer_phone);
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
+
+-- 6. Blogs Table
+CREATE TABLE IF NOT EXISTS blogs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  content TEXT NOT NULL,
+  image_url TEXT,
+  author TEXT DEFAULT 'Veyano Team',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_blogs_slug ON blogs(slug);
