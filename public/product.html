@@ -136,6 +136,14 @@
       <button class="close-cart" id="close-cart-btn">&times;</button>
     </div>
 
+    <!-- Progress Tracker -->
+    <div class="cart-progress-section" id="cart-progress-section">
+      <div class="cart-progress-text" id="cart-progress-text">Add ₹499 more for FREE DELIVERY</div>
+      <div class="cart-progress-container">
+        <div class="cart-progress-bar" id="cart-progress-bar"></div>
+      </div>
+    </div>
+
     <!-- NEW STABLE AUTH HEADER -->
     <div id="user-profile-bar" style="display: none; padding: 1rem 1.5rem; background: #fffaf5; border-bottom: 1px solid #eee; align-items: center; justify-content: space-between;">
       <div id="clerk-user-button"></div>
@@ -207,8 +215,8 @@
           <span>Subtotal</span>
           <span id="cart-subtotal">₹0</span>
         </div>
-        <div class="cart-summary-row">
-          <span>Delivery Charge (Orders under ₹499)</span>
+        <div class="cart-summary-row" id="sidebar-delivery-row" style="display: none;">
+          <span>Delivery Charge</span>
           <span id="cart-delivery">₹0</span>
         </div>
         <div class="cart-summary-row" id="cod-fee-row-summary" style="display: none;">

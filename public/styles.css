@@ -598,6 +598,31 @@ a {
   justify-content: space-between;
   align-items: center;
 }
+/* Progress Bar Styles */
+.cart-progress-section {
+  padding: 1rem 1.5rem;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+.cart-progress-text {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: #111;
+  font-weight: 600;
+}
+.cart-progress-container {
+  width: 100%;
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.cart-progress-bar {
+  height: 100%;
+  background: #FF9900; /* Electric Saffron */
+  width: 0%;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
 .close-cart {
   cursor: pointer;
   background: none;

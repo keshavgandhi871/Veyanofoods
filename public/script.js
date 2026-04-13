@@ -80,33 +80,58 @@ function updateCartUI() {
   const codFee = paymentMethod === 'cod' ? 79 : 0;
   const total = subtotalVal + deliveryFee + codFee;
 
+  // Update Base Summary
   if(subtotalEl) subtotalEl.textContent = `₹${subtotalVal}`;
-  if(deliveryEl) deliveryEl.textContent = subtotalVal >= 499 ? 'FREE' : `₹${deliveryFee}`;
-  
-  const codSummaryRow = document.getElementById('cod-fee-row-summary');
-  const codSummaryDisplay = document.getElementById('cart-cod-fee');
+  if(deliveryEl) deliveryEl.textContent = deliveryFee > 0 ? `₹${deliveryFee}` : 'FREE';
+
+  // Progress Bar Logic
+  const progSection = document.getElementById('cart-progress-section');
+  const progText = document.getElementById('cart-progress-text');
+  const progBar = document.getElementById('cart-progress-bar');
+  if (progSection && progText && progBar) {
+    if (cart.length === 0) {
+      progSection.style.display = 'none';
+    } else {
+      progSection.style.display = 'block';
+      const remaining = 499 - subtotalVal;
+      if (remaining > 0) {
+        progText.textContent = `Add ₹${remaining} more for FREE DELIVERY`;
+        progBar.style.width = `${Math.min((subtotalVal / 499) * 100, 100)}%`;
+      } else {
+        progText.textContent = `You've unlocked FREE DELIVERY!`;
+        progBar.style.width = `100%`;
+      }
+    }
+  }
+
+  // Sidebar vs Checkout Visibility
+  const isStep1 = document.getElementById('cart-step-items')?.style.display !== 'none';
+  const deliveryRow = document.getElementById('sidebar-delivery-row');
+  const codRow = document.getElementById('cod-fee-row-summary');
   const incentiveMsg = document.getElementById('checkout-incentive-msg');
-  
-  if (codSummaryRow && codSummaryDisplay) {
-    if (codFee > 0) {
-      codSummaryRow.style.display = 'flex';
-      codSummaryDisplay.textContent = `₹${codFee}`;
-    } else {
-      codSummaryRow.style.display = 'none';
+
+  if (isStep1) {
+    if (deliveryRow) deliveryRow.style.display = 'none';
+    if (codRow) codRow.style.display = 'none';
+    if (totalEl) totalEl.textContent = `₹${subtotalVal}`;
+  } else {
+    // Stage 2 (Shipping/Payment Selection)
+    if (deliveryRow) {
+      deliveryRow.style.display = deliveryFee > 0 ? 'flex' : 'none';
     }
+    if (codRow) {
+      codRow.style.display = codFee > 0 ? 'flex' : 'none';
+      const codDisp = document.getElementById('cart-cod-fee');
+      if (codDisp) codDisp.textContent = `₹${codFee}`;
+    }
+    if (totalEl) totalEl.textContent = `₹${total}`;
   }
 
+  // Fixed Savings Message
   if (incentiveMsg) {
-    if (paymentMethod === 'cod') {
-      incentiveMsg.style.display = 'block';
-      const potentialSavings = deliveryFee + codFee;
-      incentiveMsg.innerHTML = `Save <strong>₹${potentialSavings}</strong> by paying online now!`;
-    } else {
-      incentiveMsg.style.display = 'none';
-    }
+    incentiveMsg.style.display = 'block';
+    incentiveMsg.innerHTML = `Save <strong>₹79</strong> by paying online now!`;
   }
-
-  if(totalEl) totalEl.textContent = `₹${total}`;
 }
 
 window.updateQty = (id, delta) => {
@@ -217,6 +242,9 @@ function goToStep(step) {
   if (step === 1) { if(s1) s1.style.display = 'block'; if(nextBtn) { nextBtn.style.display = 'block'; nextBtn.textContent = 'Proceed to Checkout'; } if(actions) actions.style.display = 'none'; if(summary) summary.style.display = 'block'; }
   else if (step === 2) { if(s2) s2.style.display = 'block'; if(nextBtn) nextBtn.style.display = 'none'; if(actions) actions.style.display = 'flex'; if(summary) summary.style.display = 'block'; }
   else if (step === 3) { if(s3) s3.style.display = 'block'; if(nextBtn) nextBtn.style.display = 'none'; if(actions) actions.style.display = 'none'; if(summary) summary.style.display = 'none'; }
+  
+  // Trigger UI refresh to show/hide fees based on the new step
+  updateCartUI();
 }
 
 async function handleLogout() {
