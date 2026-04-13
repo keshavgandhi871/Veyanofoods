@@ -80,6 +80,22 @@ function updateCartUI() {
   const codFee = paymentMethod === 'cod' ? 79 : 0;
   const total = subtotalVal + deliveryFee + codFee;
 
+  // Track Free Delivery Milestone
+  if (typeof confetti === 'function') {
+    if (subtotalVal >= 499 && !window.freeDeliveryUnlocked) {
+      window.freeDeliveryUnlocked = true;
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#FF9900', '#FFCC00', '#FFFFFF', '#000000'],
+        zIndex: 2000
+      });
+    } else if (subtotalVal < 499) {
+      window.freeDeliveryUnlocked = false;
+    }
+  }
+
   // Update Base Summary
   if(subtotalEl) subtotalEl.textContent = `₹${subtotalVal}`;
   if(deliveryEl) deliveryEl.textContent = deliveryFee > 0 ? `₹${deliveryFee}` : 'FREE';
