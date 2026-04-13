@@ -124,16 +124,16 @@ function updateCartUI() {
   if(subtotalEl) subtotalEl.textContent = `₹${subtotalVal}`;
   if(deliveryEl) deliveryEl.textContent = deliveryFee > 0 ? `₹${deliveryFee}` : (subtotalVal === 0 ? '₹0' : 'FREE');
 
-  const isStep1 = document.getElementById('cart-step-items')?.style.display !== 'none';
+  // Robust Step Detection: Only show fees if Shipping Step is active
+  const shippingStep = document.getElementById('cart-step-shipping');
+  const isShippingStep = shippingStep && (shippingStep.style.display === 'block');
+  
   const deliveryRow = document.getElementById('sidebar-delivery-row');
   const codRow = document.getElementById('cod-fee-row-summary');
   const incentiveMsg = document.getElementById('checkout-incentive-msg');
 
-  if (isStep1) {
-    if (deliveryRow) deliveryRow.style.display = 'none';
-    if (codRow) codRow.style.display = 'none';
-    if (totalEl) totalEl.textContent = `₹${subtotalVal}`;
-  } else {
+  if (isShippingStep) {
+    // Final Checkout View: Show Fees
     if (deliveryRow) deliveryRow.style.display = deliveryFee > 0 ? 'flex' : 'none';
     if (codRow) {
       codRow.style.display = codFee > 0 ? 'flex' : 'none';
@@ -141,11 +141,13 @@ function updateCartUI() {
       if (codDisp) codDisp.textContent = `₹${codFee}`;
     }
     if (totalEl) totalEl.textContent = `₹${total}`;
-  }
-
-  if (incentiveMsg) {
-    incentiveMsg.style.display = 'block';
-    incentiveMsg.innerHTML = `Save <strong>₹79</strong> by paying online now!`;
+    if (incentiveMsg) incentiveMsg.style.display = 'block';
+  } else {
+    // Sidebar View: Hide Fees
+    if (deliveryRow) deliveryRow.style.display = 'none';
+    if (codRow) codRow.style.display = 'none';
+    if (totalEl) totalEl.textContent = `₹${subtotalVal}`;
+    if (incentiveMsg) incentiveMsg.style.display = 'none';
   }
 }
 
