@@ -82,11 +82,20 @@ function updateCartUI() {
 
   // 2. Track Free Delivery Milestone & Party Popper
   if (typeof confetti === 'function') {
-    if (subtotalVal >= 499 && !window.freeDeliveryUnlocked) {
-      window.freeDeliveryUnlocked = true;
-      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#FF9900', '#FFCC00', '#FFFFFF', '#000000'], zIndex: 2000 });
-    } else if (subtotalVal < 499) {
+    const isCartOpen = document.getElementById('cart-drawer')?.classList.contains('open');
+    if (subtotalVal >= 499) {
+      if (!window.freeDeliveryUnlocked) {
+        window.freeDeliveryUnlocked = true;
+        window.celebrationPending = true;
+      }
+      // Only blast if cart is open AND one is pending
+      if (isCartOpen && window.celebrationPending) {
+        window.celebrationPending = false;
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#FF9900', '#FFCC00', '#FFFFFF', '#000000'], zIndex: 2000 });
+      }
+    } else {
       window.freeDeliveryUnlocked = false;
+      window.celebrationPending = false;
     }
   }
 
@@ -160,7 +169,7 @@ window.addToCart = (id) => {
   if (existing) existing.quantity += 1;
   else cart.push({ ...product, quantity: 1 });
   saveCart();
-  toggleCart(true);
+  showToast(`${product.title} added to cart!`);
 };
 
 // --- AUTH LOGIC ---
@@ -237,7 +246,11 @@ async function syncUserWithBackend() {
 function toggleCart(open) {
   const drawer = document.getElementById('cart-drawer');
   const overlay = document.getElementById('cart-overlay');
-  if(open) { drawer?.classList.add('open'); overlay?.classList.add('open'); }
+  if(open) { 
+    drawer?.classList.add('open'); 
+    overlay?.classList.add('open'); 
+    updateCartUI(); // Trigger UI check (including delayed confetti)
+  }
   else { drawer?.classList.remove('open'); overlay?.classList.remove('open'); goToStep(1); }
 }
 
