@@ -42,71 +42,62 @@ function updateCartUI() {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   if(cartCount) cartCount.textContent = totalItems;
 
-  if(!cartItemsContainer) return;
-
-  if (cart.length === 0) {
-    cartItemsContainer.innerHTML = '<div class="cart-empty">Your cart is empty.</div>';
-    if(subtotalEl) subtotalEl.textContent = '₹0';
-    if(deliveryEl) deliveryEl.textContent = '₹0';
-    if(totalEl) totalEl.textContent = '₹0';
-    return;
+  let subtotal = 0;
+  if (cart.length > 0) {
+    cart.forEach(item => { subtotal += item.price * item.quantity; });
   }
 
-  let subtotal = 0;
-  cartItemsContainer.innerHTML = '';
-  cart.forEach(item => {
-    subtotal += item.price * item.quantity;
-    const itemEl = document.createElement('div');
-    itemEl.className = 'cart-item';
-    itemEl.innerHTML = `
-      <img src="${item.image}" class="cart-item-img">
-      <div class="cart-item-info">
-        <div class="cart-item-title">${item.title}</div>
-        <div class="cart-item-price">₹${item.price}</div>
-        <div class="cart-item-qty">
-          <button class="qty-btn" onclick="window.updateQty('${item.id}', -1)">-</button>
-          <span>${item.quantity}</span>
-          <button class="qty-btn" onclick="window.updateQty('${item.id}', 1)">+</button>
-          <button class="qty-btn" style="margin-left:auto; border:none; color:red;" onclick="window.removeCartItem('${item.id}')">✕</button>
-        </div>
-      </div>
-    `;
-    cartItemsContainer.appendChild(itemEl);
-  });
-
   const subtotalVal = subtotal;
-  const deliveryFee = subtotalVal >= 499 ? 0 : 50;
+  const deliveryFee = subtotalVal === 0 ? 0 : (subtotalVal >= 499 ? 0 : 50);
   const paymentMethod = (document.querySelector('input[name="paymentMethod"]:checked')?.value) || 'cod'; 
-  const codFee = paymentMethod === 'cod' ? 79 : 0;
+  const codFee = (subtotalVal === 0 || paymentMethod !== 'cod') ? 0 : 79;
   const total = subtotalVal + deliveryFee + codFee;
 
-  // Track Free Delivery Milestone
+  // 1. Update List Container
+  if (cartItemsContainer) {
+    if (cart.length === 0) {
+      cartItemsContainer.innerHTML = '<div class="cart-empty">Your cart is empty.</div>';
+    } else {
+      cartItemsContainer.innerHTML = '';
+      cart.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'cart-item';
+        itemEl.innerHTML = `
+          <img src="${item.image}" class="cart-item-img">
+          <div class="cart-item-info">
+            <div class="cart-item-title">${item.title}</div>
+            <div class="cart-item-price">₹${item.price}</div>
+            <div class="cart-item-qty">
+              <button class="qty-btn" onclick="window.updateQty('${item.id}', -1)">-</button>
+              <span>${item.quantity}</span>
+              <button class="qty-btn" onclick="window.updateQty('${item.id}', 1)">+</button>
+              <button class="qty-btn" style="margin-left:auto; border:none; color:red;" onclick="window.removeCartItem('${item.id}')">✕</button>
+            </div>
+          </div>
+        `;
+        cartItemsContainer.appendChild(itemEl);
+      });
+    }
+  }
+
+  // 2. Track Free Delivery Milestone & Party Popper
   if (typeof confetti === 'function') {
     if (subtotalVal >= 499 && !window.freeDeliveryUnlocked) {
       window.freeDeliveryUnlocked = true;
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#FF9900', '#FFCC00', '#FFFFFF', '#000000'],
-        zIndex: 2000
-      });
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#FF9900', '#FFCC00', '#FFFFFF', '#000000'], zIndex: 2000 });
     } else if (subtotalVal < 499) {
       window.freeDeliveryUnlocked = false;
     }
   }
 
-  // Update Base Summary
-  if(subtotalEl) subtotalEl.textContent = `₹${subtotalVal}`;
-  if(deliveryEl) deliveryEl.textContent = deliveryFee > 0 ? `₹${deliveryFee}` : 'FREE';
-
-  // Progress Bar Logic
+  // 3. Update Progress Bar
   const progSection = document.getElementById('cart-progress-section');
   const progText = document.getElementById('cart-progress-text');
   const progBar = document.getElementById('cart-progress-bar');
   if (progSection && progText && progBar) {
-    if (cart.length === 0) {
+    if (subtotalVal === 0) {
       progSection.style.display = 'none';
+      progBar.style.width = '0%';
     } else {
       progSection.style.display = 'block';
       const remaining = 499 - subtotalVal;
@@ -120,7 +111,10 @@ function updateCartUI() {
     }
   }
 
-  // Sidebar vs Checkout Visibility
+  // 4. Update Summary
+  if(subtotalEl) subtotalEl.textContent = `₹${subtotalVal}`;
+  if(deliveryEl) deliveryEl.textContent = deliveryFee > 0 ? `₹${deliveryFee}` : (subtotalVal === 0 ? '₹0' : 'FREE');
+
   const isStep1 = document.getElementById('cart-step-items')?.style.display !== 'none';
   const deliveryRow = document.getElementById('sidebar-delivery-row');
   const codRow = document.getElementById('cod-fee-row-summary');
@@ -131,10 +125,7 @@ function updateCartUI() {
     if (codRow) codRow.style.display = 'none';
     if (totalEl) totalEl.textContent = `₹${subtotalVal}`;
   } else {
-    // Stage 2 (Shipping/Payment Selection)
-    if (deliveryRow) {
-      deliveryRow.style.display = deliveryFee > 0 ? 'flex' : 'none';
-    }
+    if (deliveryRow) deliveryRow.style.display = deliveryFee > 0 ? 'flex' : 'none';
     if (codRow) {
       codRow.style.display = codFee > 0 ? 'flex' : 'none';
       const codDisp = document.getElementById('cart-cod-fee');
@@ -143,7 +134,6 @@ function updateCartUI() {
     if (totalEl) totalEl.textContent = `₹${total}`;
   }
 
-  // Fixed Savings Message
   if (incentiveMsg) {
     incentiveMsg.style.display = 'block';
     incentiveMsg.innerHTML = `Save <strong>₹79</strong> by paying online now!`;
