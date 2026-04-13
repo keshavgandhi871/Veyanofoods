@@ -1,8 +1,8 @@
 const productData = {
-  plain: { id: "plain", title: "Classic Plain Makhana", price: 399, hoverImage: "./assets/plain_hover.png", image: "./assets/plain.png", ingredients: "Premium Grade Fox Nuts (Makhana)." },
-  salted: { id: "salted", title: "Lightly Salted Makhana", price: 399, hoverImage: "./assets/salted_hover.png", image: "./assets/salted.png", ingredients: "Premium Grade Fox Nuts (Makhana), Himalayan Pink Salt, Rice Bran Oil." },
-  periperi: { id: "periperi", title: "Fiery Peri-Peri Makhana", price: 399, hoverImage: "./assets/periperi_hover.png", image: "./assets/periperi.png", ingredients: "Premium Grade Fox Nuts (Makhana), Peri-Peri Spice Blend, Rice Bran Oil." },
-  combo: { id: "combo", title: "The Ultimate Combo Pack", price: 999, hoverImage: "./assets/combo_hover.png", image: "./assets/combo.png", ingredients: "Contains Plain, Salted, and Peri-Peri 200g Packs." }
+  plain: { id: "plain", title: "Classic Plain Makhana", price: 399, mrp: 799, hoverImage: "./assets/plain_hover.png", image: "./assets/plain.png", ingredients: "Premium Grade Fox Nuts (Makhana)." },
+  salted: { id: "salted", title: "Lightly Salted Makhana", price: 399, mrp: 799, hoverImage: "./assets/salted_hover.png", image: "./assets/salted.png", ingredients: "Premium Grade Fox Nuts (Makhana), Himalayan Pink Salt, Rice Bran Oil." },
+  periperi: { id: "periperi", title: "Fiery Peri-Peri Makhana", price: 399, mrp: 799, hoverImage: "./assets/periperi_hover.png", image: "./assets/periperi.png", ingredients: "Premium Grade Fox Nuts (Makhana), Peri-Peri Spice Blend, Rice Bran Oil." },
+  combo: { id: "combo", title: "The Ultimate Combo Pack", price: 999, mrp: 2397, hoverImage: "./assets/combo_hover.png", image: "./assets/combo.png", ingredients: "Contains Plain, Salted, and Peri-Peri 200g Packs." }
 };
 
 let clerk = null;
@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const d = productData[v];
       if(mainImg) { mainImg.style.opacity = '0'; setTimeout(() => { mainImg.src = d.image; mainImg.style.opacity = '1'; }, 200); }
       if(title) title.textContent = d.title;
-      if(price) price.innerHTML = `₹${d.price} <span style="font-size:0.9rem; color:#666;">(${v === 'combo' ? '3 x 200g' : '200g'})</span>`;
+      if(price) price.innerHTML = `<span style="text-decoration: line-through; color: #888; font-size: 0.8em; margin-right: 8px;">₹${d.mrp}</span>₹${d.price} <span style="font-size:0.9rem; color:#666;">(${v === 'combo' ? '3 x 200g' : '200g'})</span>`;
       if(ing) ing.textContent = d.ingredients;
       btns.forEach(b => { b.classList.remove('active'); if (b.dataset.variant === v) b.classList.add('active'); });
     }
