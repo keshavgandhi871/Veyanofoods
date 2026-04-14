@@ -35,14 +35,29 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// ── Health Check ──────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => {
+// ── Health Check (With Supabase Diagnostic) ──────────────────────────────────
+app.get('/health', async (req, res) => {
+  const supabase = require('./config/supabase');
+  let dbStatus = 'testing';
+  let dbError = null;
+
+  try {
+    const { data, error } = await supabase.from('blogs').select('id').limit(1);
+    if (error) throw error;
+    dbStatus = 'connected';
+  } catch (err) {
+    dbStatus = 'error';
+    dbError = err.message;
+  }
+
   res.json({
     status: 'ok',
     service: 'Veyano Foods Backend',
-    version: '1.0.0',
+    version: '1.0.1',
+    db_status: dbStatus,
+    db_error: dbError,
     timestamp: new Date().toISOString(),
-    fssai: '20826010000397',
+    env: process.env.NODE_ENV,
   });
 });
 
