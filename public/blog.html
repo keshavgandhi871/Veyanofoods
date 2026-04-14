@@ -74,40 +74,6 @@
     </div>
   </footer>
 
-  <script>
-    async function fetchBlogs() {
-      const container = document.getElementById('blog-container');
-      try {
-        const res = await fetch('/api/blog');
-        const blogs = await res.json();
-        
-        if (!blogs || blogs.length === 0) {
-          container.innerHTML = '<div style="grid-column: 1/-1; text-align: center;"><p>No stories found yet. Come back soon!</p></div>';
-          return;
-        }
-
-        container.innerHTML = blogs.map(post => `
-          <div class="blog-card">
-            <img src="${post.image_url || './assets/plain.png'}" alt="${post.title}" class="blog-card-img">
-            <div class="blog-card-content">
-              <h3 class="blog-card-title">${post.title}</h3>
-              <div class="blog-card-meta">
-                <span>By ${post.author}</span>
-                <span>${new Date(post.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-              </div>
-              <a href="blog-post.html?slug=${post.slug}" class="blog-btn">
-                Read More
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
-              </a>
-            </div>
-          </div>
-        `).join('');
-      } catch (err) {
-        console.error('Blog load error:', err);
-        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: red;">Check back shortly as we update our stories.</p>';
-      }
-    }
-    window.addEventListener('load', fetchBlogs);
-  </script>
+  <script src="blog-logic.js"></script>
 </body>
 </html>
