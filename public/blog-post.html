@@ -4,10 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Veyano Blog | Loading Story...</title>
+  <meta name="description" content="Read the latest food stories and snacking tips from VEYANO Foods.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .blog-post-content ul { margin: 1.5rem 0; padding-left: 1.5rem; }
+    .blog-post-content li { margin-bottom: 0.75rem; line-height: 1.6; }
+    .blog-post-content p { margin-bottom: 1.5rem; line-height: 1.8; color: #444; }
+    .btn-cta { 
+      display: inline-block; 
+      padding: 1.2rem 2.5rem; 
+      background: #FF9900; 
+      color: white; 
+      text-decoration: none; 
+      border-radius: 50px; 
+      font-weight: 700; 
+      text-transform: uppercase; 
+      letter-spacing: 1px;
+      box-shadow: 0 10px 20px rgba(255, 153, 0, 0.3);
+      transition: all 0.3s ease;
+      margin: 2rem 0;
+    }
+    .btn-cta:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255, 153, 0, 0.4); }
+  </style>
 </head>
 <body>
 
@@ -78,7 +99,13 @@
         if (!res.ok) throw new Error('Not found');
         const post = await res.json();
         
-        document.title = `${post.title} | Veyano Blog`;
+        document.title = post.meta_title || `${post.title} | Veyano Blog`;
+        
+        // Update Meta Description
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc && post.meta_description) {
+          metaDesc.setAttribute('content', post.meta_description);
+        }
 
         container.innerHTML = `
           <img src="${post.image_url || './assets/plain.png'}" class="blog-post-hero" alt="${post.title}">
