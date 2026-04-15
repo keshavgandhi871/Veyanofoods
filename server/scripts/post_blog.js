@@ -86,7 +86,7 @@ const blogData = {
   title: "The Ultimate Guide to Clean Snacking: Why Roasted Makhana is the Future of Indian Tea-Time",
   slug: "ultimate-guide-clean-snacking-roasted-makhana",
   content: blogContent,
-  image_url: "./assets/makhana-tea.png",
+  image_url: "./assets/makhana-tea-premium.png",
   author: "Veyano Team"
 };
 
