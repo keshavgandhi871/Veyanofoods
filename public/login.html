@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sign in to your Veyano account to manage orders, view your profile, and more.">
+  <meta name="robots" content="noindex, nofollow">
+  
+  <title>Login | Veyano Foods</title>
+
+  <!-- Clerk Auth SDK -->
+  <script async crossorigin="anonymous" data-clerk-publishable-key="pk_test_cG9ldGljLWJ1enphcmQtMjcuY2xlcmsuYWNjb3VudHMuZGV2JA" src="https://cdn.clerk.com/v1/clerk.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-page">
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container flex justify-between items-center">
+      <a href="index.html" class="brand-logo">Veyano</a>
+      <div class="nav-actions">
+        <nav style="display: flex; align-items: center; gap: 1.5rem;">
+          <a href="blog.html" style="font-size: 0.9rem; font-weight: 500;">Blog</a>
+          <a href="index.html#products" class="btn btn-outline" style="padding: 0.5rem 1.5rem; text-transform: none;">Shop Now</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-main">
+    <div class="container auth-container">
+      <div class="auth-card">
+        <div id="clerk-signin-container"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Liquid Ether Background -->
+  <canvas id="liquid-ether"></canvas>
+  <script src="liquid-ether.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

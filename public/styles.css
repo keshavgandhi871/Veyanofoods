@@ -1043,3 +1043,69 @@ a {
   .blog-post-body { margin-top: 0; padding: 1.5rem; border-radius: 0; }
   .blog-post-hero { height: 300px; }
 }
+
+/* Auth Page Styles */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-container {
+  max-width: 500px !important;
+  width: 100%;
+}
+
+.auth-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 1rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+}
+
+#clerk-signin-container {
+  width: 100%;
+}
+
+.cl-rootBox, .cl-card {
+  width: 100% !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.cl-internal-ph9g9m {
+  display: none; /* Hide Clerk badge */
+}
+
+/* Navbar Auth Button */
+#nav-auth-container {
+  display: flex;
+  align-items: center;
+}
+
+.nav-login-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-color);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.nav-login-link:hover {
+  background: rgba(0,0,0,0.05);
+}
