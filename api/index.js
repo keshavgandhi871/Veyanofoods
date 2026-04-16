@@ -13,8 +13,46 @@ const express = require('express');
 const cors    = require('cors');
 const helmet  = require('helmet');
 const { createClient } = require('@supabase/supabase-js');
+const { createClerkClient } = require('@clerk/backend');
 
 const app = express();
+
+// ── Clerk Client ──────────────────────────────────────────────────────────────
+let _clerk = null;
+function getClerk() {
+  if (!_clerk) {
+    const secretKey = process.env.CLERK_SECRET_KEY;
+    if (!secretKey) {
+      console.warn('Missing CLERK_SECRET_KEY. Auth routes will fail.');
+      return null;
+    }
+    _clerk = createClerkClient({ secretKey });
+  }
+  return _clerk;
+}
+
+// ── Auth Middleware ───────────────────────────────────────────────────────────
+async function authMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  const clerk = getClerk();
+  if (!clerk) return res.status(500).json({ error: 'Clerk not configured.' });
+
+  try {
+    const decoded = await clerk.verifyToken(token);
+    const user = await clerk.users.getUser(decoded.sub);
+    if (!user) throw new Error('User not found');
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error('[Auth] Error:', err.message);
+    res.status(401).json({ error: 'Invalid or expired token.' });
+  }
+}
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -48,7 +86,52 @@ app.get('/api/health', async (req, res) => {
     status: 'ok',
     service: 'Veyano Foods API (Serverless)',
     db_status: dbStatus,
+    clerk_status: getClerk() ? 'initialized' : 'missing_key',
     timestamp: new Date().toISOString(),
+  });
+});
+
+// ── Auth Routes ──────────────────────────────────────────────────────────────
+/** POST /api/auth/sync — Sync Clerk user with Supabase */
+app.post('/api/auth/sync', authMiddleware, async (req, res) => {
+  try {
+    const user = req.user;
+    const db = getDB();
+
+    const clerkId = user.id;
+    const email = user.emailAddresses[0]?.emailAddress;
+    const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Valued Customer';
+    const phone = user.phoneNumbers[0]?.phoneNumber || 'N/A';
+
+    const { data: upsertedUser, error } = await db
+      .from('users')
+      .upsert({
+        clerk_id: clerkId,
+        email: email,
+        name: name,
+        phone: phone,
+        role: 'customer',
+        password: 'AUTH_MANAGED_BY_CLERK'
+      }, { onConflict: 'clerk_id' })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ message: 'User synced successfully', user: upsertedUser });
+  } catch (err) {
+    console.error('[Auth] Sync error:', err.message);
+    res.status(500).json({ error: 'Failed to sync user', detail: err.message });
+  }
+});
+
+/** GET /api/auth/me — Get current user info */
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+  res.json({
+    user: {
+      id: req.user.id,
+      name: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim(),
+      email: req.user.emailAddresses[0]?.emailAddress,
+    },
   });
 });
 

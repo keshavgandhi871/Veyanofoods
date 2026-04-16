@@ -10,6 +10,7 @@
     "build": "echo 'Build complete'"
   },
   "dependencies": {
+    "@clerk/backend": "^3.2.8",
     "@supabase/supabase-js": "^2.102.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
