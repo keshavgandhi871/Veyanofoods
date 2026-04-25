@@ -4,6 +4,10 @@
     {
       "source": "/api/:path*",
       "destination": "/api/index.js"
+    },
+    {
+      "source": "/cart",
+      "destination": "/index.html"
     }
   ]
 }

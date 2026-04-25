@@ -331,7 +331,12 @@ function showSuccess(nr) { const d = document.getElementById('order-number-displ
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   let variant = urlParams.get('variant');
-  if (window.location.pathname.includes('product.html')) {
+  
+  // Robust product page check: look for the add-to-cart button
+  const addToCartBtn = document.getElementById('add-to-cart-btn');
+  const viewCartBtn = document.getElementById('view-cart-btn');
+
+  if (addToCartBtn) {
     if (!variant || !productData[variant]) variant = 'plain';
     const mainImg = document.getElementById('main-product-image'), title = document.getElementById('product-title'), price = document.getElementById('product-price'), ing = document.getElementById('ingredients-text'), btns = document.querySelectorAll('.variant-btn');
     function update(v) {
@@ -344,7 +349,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     update(variant);
     btns.forEach(b => b.addEventListener('click', (e) => { variant = e.target.dataset.variant; update(variant); const u = window.location.pathname + '?variant=' + variant; window.history.replaceState({path:u},'',u); }));
-    document.getElementById('add-to-cart-btn')?.addEventListener('click', () => window.addToCart(variant));
+    
+    addToCartBtn.addEventListener('click', () => window.addToCart(variant));
+    
+    // VIEW CART: Immediately takes the user to the checkout flow (Step 2)
+    viewCartBtn?.addEventListener('click', () => {
+      if (cart.length === 0) {
+        toggleCart(true); // Open drawer to show empty state
+        showToast('Your cart is empty!', 'error');
+      } else {
+        toggleCart(true);
+        goToStep(2); // Immediately go to checkout flow
+      }
+    });
   }
   document.getElementById('cart-icon-btn')?.addEventListener('click', () => toggleCart(true));
   document.getElementById('nav-login-btn')?.addEventListener('click', () => toggleCart(true));
@@ -357,4 +374,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
   document.querySelectorAll('input[name="paymentMethod"]').forEach(i => i.addEventListener('change', updateCartUI));
   updateCartUI();
+
+  // Auto-open cart if URL is /cart or has ?cart=open
+  if (window.location.pathname === '/cart' || urlParams.get('cart') === 'open') {
+    setTimeout(() => {
+      toggleCart(true);
+      if (cart.length > 0) goToStep(2); // Go directly to checkout flow
+    }, 500);
+  }
 });
