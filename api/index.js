@@ -140,13 +140,22 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
 /** GET /api/blog — All published blog posts */
 app.get('/api/blog', async (req, res) => {
   try {
-    const { data, error } = await getDB()
+    const db = getDB();
+    
+    // Use Promise.race for a short timeout to prevent serverless hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Supabase Timeout')), 3000)
+    );
+
+    const supabasePromise = db
       .from('blogs')
       .select('id, title, slug, image_url, author, created_at')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    res.json(data || []);
+    const result = await Promise.race([supabasePromise, timeoutPromise]);
+    
+    if (result && result.error) throw result.error;
+    res.json(result.data || []);
   } catch (err) {
     console.error('[Blog] List error:', err.message);
     res.status(500).json({ error: 'Failed to fetch blogs', detail: err.message });
@@ -157,22 +166,31 @@ app.get('/api/blog', async (req, res) => {
 app.get('/api/blog/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    const { data, error } = await getDB()
+    const db = getDB();
+
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Supabase Timeout')), 3000)
+    );
+
+    const supabasePromise = db
       .from('blogs')
       .select('*')
       .eq('slug', slug)
       .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return res.status(404).json({ error: 'Blog not found' });
-      throw error;
+    const result = await Promise.race([supabasePromise, timeoutPromise]);
+
+    if (result && result.error) {
+      if (result.error.code === 'PGRST116') return res.status(404).json({ error: 'Blog not found' });
+      throw result.error;
     }
-    res.json(data);
+    res.json(result.data);
   } catch (err) {
     console.error('[Blog] Single post error:', err.message);
     res.status(500).json({ error: 'Failed to fetch blog post', detail: err.message });
   }
 });
+
 
 // ── Orders Route ──────────────────────────────────────────────────────────────
 
