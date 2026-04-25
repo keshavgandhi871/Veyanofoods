@@ -8,6 +8,10 @@
     {
       "source": "/cart",
       "destination": "/index.html"
+    },
+    {
+      "source": "/privacy-policy",
+      "destination": "/privacy-policy.html"
     }
   ]
 }
