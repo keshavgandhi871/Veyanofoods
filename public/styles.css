@@ -943,6 +943,9 @@ a {
 }
 
 /* --- BLOG SYSTEM STYLES --- */
+.blog-header, .blog-grid, .blog-post-body {
+  font-family: 'Montserrat', sans-serif;
+}
 .blog-header {
   padding: 8rem 0 4rem;
   text-align: center;
