@@ -181,11 +181,35 @@ window.addToCart = (id) => {
 };
 
 // --- AUTH LOGIC ---
+const clerkAppearance = {
+  elements: {
+    formButtonPrimary: {
+      backgroundColor: '#000',
+      '&:hover': { backgroundColor: '#27272a' },
+      fontSize: '0.875rem',
+      textTransform: 'none',
+      borderRadius: '0px'
+    },
+    card: {
+      boxShadow: 'none',
+      border: '1px solid #f4f4f5',
+      borderRadius: '0px'
+    },
+    headerTitle: {
+      color: '#09090b',
+      fontWeight: '700'
+    },
+    headerSubtitle: {
+      color: '#71717a'
+    }
+  }
+};
+
 async function initClerk() {
   if (window.Clerk) {
     clerk = window.Clerk;
     try {
-      await clerk.load();
+      await clerk.load({ appearance: clerkAppearance });
       console.log('Clerk SDK Loaded');
       
       clerk.addListener(({ user }) => {
@@ -229,7 +253,9 @@ function updateAuthUI(user) {
     // Navbar UI
     if (navAuthContainer && clerk) {
       navAuthContainer.innerHTML = '<div id="nav-user-button"></div>';
-      clerk.mountUserButton(document.getElementById('nav-user-button'));
+      clerk.mountUserButton(document.getElementById('nav-user-button'), {
+        afterSignOutUrl: window.location.origin
+      });
     }
 
     // Login Page Redirect
@@ -249,7 +275,11 @@ function updateAuthUI(user) {
 
     // Navbar UI
     if (navAuthContainer) {
-      navAuthContainer.innerHTML = '<a href="login.html" class="nav-login-link">Login</a>';
+      navAuthContainer.innerHTML = '<button class="nav-login-btn">Login</button>';
+      navAuthContainer.querySelector('.nav-login-btn').onclick = () => {
+        const drawer = document.getElementById('cart-drawer');
+        if (drawer) toggleCart(true); // Open drawer to show sign-in
+      };
     }
 
     // Standalone Login Page UI
@@ -260,7 +290,7 @@ function updateAuthUI(user) {
 function mountClerkSignIn() {
   const container = document.getElementById('clerk-auth-container');
   if (container && clerk && !clerk.user) {
-    clerk.mountSignIn(container, { appearance: { elements: { rootBox: { width: '100%' }, card: { boxShadow: 'none', border: '1px solid #eee' } } } });
+    clerk.mountSignIn(container, { appearance: clerkAppearance });
   }
 }
 
@@ -268,12 +298,7 @@ function mountPageSignIn() {
   const container = document.getElementById('clerk-signin-container');
   if (container && clerk && !clerk.user) {
     clerk.mountSignIn(container, { 
-      appearance: { 
-        elements: { 
-          rootBox: { width: '100%' }, 
-          card: { boxShadow: 'none', background: 'transparent' } 
-        } 
-      },
+      appearance: clerkAppearance,
       afterSignInUrl: 'index.html',
       afterSignUpUrl: 'index.html'
     });
