@@ -25,17 +25,7 @@ const PORT = process.env.PORT || 3001;
 
 // ── Security Middleware ───────────────────────────────────────────────────────
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.clerk.com", "https://checkout.razorpay.com", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'", "https://clerk.com", "https://*.clerk.com", "https://*.clerk.accounts.dev", "https://api.razorpay.com", "http://localhost:3001"],
-      imgSrc: ["'self'", "data:", "https://img.clerk.com", "https://clerk.com", "https://www.veyano.in"],
-      frameSrc: ["'self'", "https://checkout.razorpay.com", "https://*.clerk.accounts.dev"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-    },
-  },
+  contentSecurityPolicy: false,
 }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
