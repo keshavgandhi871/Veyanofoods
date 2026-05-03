@@ -24,13 +24,19 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ── Security Middleware ───────────────────────────────────────────────────────
-app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline'; font-src *;");
-  next();
-});
-// app.use(helmet({
-//   contentSecurityPolicy: false,
-// }));
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.clerk.com", "https://checkout.razorpay.com", "https://cdn.jsdelivr.net"],
+      connectSrc: ["'self'", "https://clerk.com", "https://*.clerk.com", "https://*.clerk.accounts.dev", "https://api.razorpay.com", "http://localhost:3001"],
+      imgSrc: ["'self'", "data:", "https://img.clerk.com", "https://clerk.com", "https://www.veyano.in"],
+      frameSrc: ["'self'", "https://checkout.razorpay.com", "https://*.clerk.accounts.dev"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    },
+  },
+}));
 app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
