@@ -6,12 +6,20 @@
       "destination": "/api/index.js"
     },
     {
+      "source": "/products/:variant",
+      "destination": "/product.html?variant=:variant"
+    },
+    {
       "source": "/cart",
       "destination": "/index.html"
     },
     {
       "source": "/privacy-policy",
       "destination": "/privacy-policy.html"
+    },
+    {
+      "source": "/return-policy",
+      "destination": "/return-policy.html"
     }
   ]
 }

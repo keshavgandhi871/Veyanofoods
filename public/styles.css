@@ -1158,3 +1158,108 @@ a {
     height: 28px;
   }
 }
+
+/* Soft Login Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+.modal-content {
+  background: #fff;
+  width: 90%;
+  max-width: 450px;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  position: relative;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+}
+.modal-overlay.open .modal-content {
+  transform: translateY(0);
+}
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+}
+.modal-title {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  color: #111;
+  margin-bottom: 0.5rem;
+}
+.modal-subtitle {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+.discount-badge {
+  display: inline-block;
+  background: #fff8e1;
+  color: #f57f17;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  border: 1px dashed #f57f17;
+}
+
+/* Button Added State */
+.btn.added-success {
+  background-color: #4caf50 !important;
+  color: white !important;
+  border-color: #4caf50 !important;
+}
+
+/* Trust Badges */
+.trust-badges-inline {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #fdfbf7;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+.trust-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 500;
+}
+.star-rating {
+  color: #ffb400;
+  font-size: 1.2rem;
+}
+.verified-text {
+  font-size: 0.85rem;
+  color: #4caf50;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

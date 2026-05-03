@@ -1,8 +1,8 @@
 const productData = {
-  plain: { id: "plain", title: "Classic Plain Makhana", price: 399, mrp: 799, hoverImage: "./assets/plain_hover.png", image: "./assets/plain.png", ingredients: "Premium Grade Fox Nuts (Makhana)." },
-  salted: { id: "salted", title: "Lightly Salted Makhana", price: 399, mrp: 799, hoverImage: "./assets/salted_hover.png", image: "./assets/salted.png", ingredients: "Premium Grade Fox Nuts (Makhana), Himalayan Pink Salt, Rice Bran Oil." },
-  periperi: { id: "periperi", title: "Fiery Peri-Peri Makhana", price: 399, mrp: 799, hoverImage: "./assets/periperi_hover.png", image: "./assets/periperi.png", ingredients: "Premium Grade Fox Nuts (Makhana), Peri-Peri Spice Blend, Rice Bran Oil." },
-  combo: { id: "combo", title: "The Ultimate Combo Pack", price: 999, mrp: 2397, hoverImage: "./assets/combo_hover.png", image: "./assets/combo.png", ingredients: "Contains Plain, Salted, and Peri-Peri 200g Packs." }
+  plain: { id: "plain", title: "Classic Plain Makhana", price: 399, mrp: 799, hoverImage: "./assets/plain_hover.webp", image: "./assets/plain.webp", ingredients: "Premium Grade Fox Nuts (Makhana)." },
+  salted: { id: "salted", title: "Lightly Salted Makhana", price: 399, mrp: 799, hoverImage: "./assets/salted_hover.webp", image: "./assets/salted.webp", ingredients: "Premium Grade Fox Nuts (Makhana), Himalayan Pink Salt, Rice Bran Oil." },
+  periperi: { id: "periperi", title: "Fiery Peri-Peri Makhana", price: 399, mrp: 799, hoverImage: "./assets/periperi_hover.webp", image: "./assets/periperi.webp", ingredients: "Premium Grade Fox Nuts (Makhana), Peri-Peri Spice Blend, Rice Bran Oil." },
+  combo: { id: "combo", title: "The Ultimate Combo Pack", price: 999, mrp: 2397, hoverImage: "./assets/combo_hover.webp", image: "./assets/combo.webp", ingredients: "Contains Plain, Salted, and Peri-Peri 200g Packs." }
 };
 
 let clerk = null;
@@ -122,33 +122,28 @@ function updateCartUI() {
 
   // 4. Update Summary
   if(subtotalEl) subtotalEl.textContent = `₹${subtotalVal}`;
-  if(deliveryEl) deliveryEl.textContent = deliveryFee > 0 ? `₹${deliveryFee}` : (subtotalVal === 0 ? '₹0' : 'FREE');
-
-  // Robust Step Detection: Only show fees if Shipping Step is active
-  const shippingStep = document.getElementById('cart-step-shipping');
-  const isShippingStep = shippingStep && (shippingStep.style.display === 'block');
   
+  // Dynamic Fee Preview logic: always show delivery and COD rows
   const deliveryRow = document.getElementById('sidebar-delivery-row');
   const codRow = document.getElementById('cod-fee-row-summary');
-  const incentiveMsg = document.getElementById('checkout-incentive-msg');
-
-  if (isShippingStep) {
-    // Final Checkout View: Show Fees
-    if (deliveryRow) deliveryRow.style.display = deliveryFee > 0 ? 'flex' : 'none';
-    if (codRow) {
-      codRow.style.display = codFee > 0 ? 'flex' : 'none';
-      const codDisp = document.getElementById('cart-cod-fee');
-      if (codDisp) codDisp.textContent = `₹${codFee}`;
-    }
-    if (totalEl) totalEl.textContent = `₹${total}`;
-    if (incentiveMsg) incentiveMsg.style.display = 'block';
-  } else {
-    // Sidebar View: Hide Fees
-    if (deliveryRow) deliveryRow.style.display = 'none';
-    if (codRow) codRow.style.display = 'none';
-    if (totalEl) totalEl.textContent = `₹${subtotalVal}`;
-    if (incentiveMsg) incentiveMsg.style.display = 'none';
+  
+  if (deliveryRow) {
+    deliveryRow.style.display = 'flex';
+    deliveryEl.textContent = deliveryFee > 0 ? `₹${deliveryFee} (Add ₹${499 - subtotalVal} more for FREE)` : 'FREE';
+    if (subtotalVal === 0) deliveryEl.textContent = '₹0';
   }
+  
+  if (codRow) {
+    codRow.style.display = 'flex';
+    const codDisp = document.getElementById('cart-cod-fee');
+    if (codDisp) {
+      if (subtotalVal === 0) codDisp.textContent = '₹0';
+      else if (paymentMethod === 'cod') codDisp.textContent = '₹79 (Pay Online to save this!)';
+      else codDisp.textContent = '₹0 (Online Payment)';
+    }
+  }
+
+  if(totalEl) totalEl.textContent = `₹${total}`;
 }
 
 window.updateQty = (id, delta) => {
@@ -171,7 +166,20 @@ window.addToCart = (id) => {
   if (existing) existing.quantity += 1;
   else cart.push({ ...product, quantity: 1 });
   saveCart();
-  showToast(`${product.title} added to cart!`);
+  
+  // Button Feedback
+  const btn = document.getElementById('add-to-cart-btn');
+  if (btn) {
+    const originalText = btn.textContent;
+    btn.textContent = 'Added! ✓';
+    btn.classList.add('added-success');
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.classList.remove('added-success');
+    }, 1500);
+  } else {
+    showToast(`${product.title} added to cart!`);
+  }
 };
 
 // --- AUTH LOGIC ---
@@ -252,7 +260,7 @@ function updateAuthUI(user) {
 }
 
 function mountClerkSignIn() {
-  const container = document.getElementById('clerk-auth-container');
+  const container = document.getElementById('modal-clerk-auth-container') || document.getElementById('clerk-auth-container');
   if (container && clerk && !clerk.user) {
     clerk.mountSignIn(container, { appearance: { elements: { rootBox: { width: '100%' }, card: { boxShadow: 'none', border: '1px solid #eee' } } } });
   }
@@ -346,9 +354,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if(price) price.innerHTML = `<span style="text-decoration: line-through; color: #888; font-size: 0.8em; margin-right: 8px;">₹${d.mrp}</span>₹${d.price} <span style="font-size:0.9rem; color:#666;">(${v === 'combo' ? '3 x 200g' : '200g'})</span>`;
       if(ing) ing.textContent = d.ingredients;
       btns.forEach(b => { b.classList.remove('active'); if (b.dataset.variant === v) b.classList.add('active'); });
+
+      // Dynamic SEO Title and Schema
+      document.title = `${d.title} (200g) - Healthy Gluten-Free Snack | Veyano`;
+      const schemaScript = document.getElementById('product-schema');
+      if (schemaScript) {
+        try {
+          const schema = JSON.parse(schemaScript.innerHTML);
+          schema.name = d.title;
+          schema.image = `https://www.veyano.in${d.image.replace('./', '/')}`;
+          schema.offers.url = `https://www.veyano.in/products/${v}`;
+          schema.offers.price = d.price.toString();
+          schemaScript.innerHTML = JSON.stringify(schema);
+        } catch(e) {}
+      }
     }
     update(variant);
-    btns.forEach(b => b.addEventListener('click', (e) => { variant = e.target.dataset.variant; update(variant); const u = window.location.pathname + '?variant=' + variant; window.history.replaceState({path:u},'',u); }));
+    btns.forEach(b => b.addEventListener('click', (e) => { variant = e.target.dataset.variant; update(variant); const u = '/products/' + variant; window.history.replaceState({path:u},'',u); }));
     
     addToCartBtn.addEventListener('click', () => window.addToCart(variant));
     
@@ -367,7 +389,27 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('nav-login-btn')?.addEventListener('click', () => toggleCart(true));
   document.getElementById('close-cart-btn')?.addEventListener('click', () => toggleCart(false));
   document.getElementById('cart-overlay')?.addEventListener('click', () => toggleCart(false));
-  document.getElementById('next-step-btn')?.addEventListener('click', () => { if (!cart.length) return alert("Empty!"); goToStep(2); });
+  document.getElementById('next-step-btn')?.addEventListener('click', () => { 
+    if (!cart.length) return alert("Empty!"); 
+    
+    // Soft Login Interception
+    if (clerk && !clerk.user) {
+      document.getElementById('soft-login-overlay')?.classList.add('open');
+      mountClerkSignIn(); // Ensure it's mounted
+    } else {
+      goToStep(2); 
+    }
+  });
+
+  // Soft Login Modal Actions
+  document.getElementById('close-login-modal')?.addEventListener('click', () => {
+    document.getElementById('soft-login-overlay')?.classList.remove('open');
+  });
+  document.getElementById('skip-login-btn')?.addEventListener('click', () => {
+    document.getElementById('soft-login-overlay')?.classList.remove('open');
+    goToStep(2);
+  });
+
   document.getElementById('back-to-cart-btn')?.addEventListener('click', () => goToStep(1));
   document.getElementById('place-order-btn')?.addEventListener('click', placeOrder);
   initClerk();
