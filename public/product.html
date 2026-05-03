@@ -37,6 +37,9 @@
 
   <!-- Party Popper Effect -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <!-- Razorpay SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 
@@ -218,6 +221,10 @@
             <label class="payment-option">
               <input type="radio" name="paymentMethod" value="cod" checked>
               <span>Cash on Delivery (₹79 Extra)</span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="prepaid">
+              <span>Pay Online (Safe & Secure)</span>
             </label>
           </div>
         </form>

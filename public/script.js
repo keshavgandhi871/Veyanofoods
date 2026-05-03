@@ -326,8 +326,25 @@ async function placeOrder() {
   const form = document.getElementById('checkout-form');
   if (!form?.checkValidity()) return form?.reportValidity();
   const placeBtn = document.getElementById('place-order-btn');
-  placeBtn.disabled = true; placeBtn.textContent = 'Processing...';
+  placeBtn.disabled = true; 
+  placeBtn.textContent = 'Processing...';
+
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+  
+  if (paymentMethod === 'prepaid') {
+    try {
+      await initiateRazorpayCheckout();
+    } catch (err) {
+      console.error('Razorpay Flow Error:', err);
+      showToast(err.message || 'Payment failed', 'error');
+    } finally {
+      placeBtn.disabled = false;
+      placeBtn.textContent = 'Place Order';
+    }
+    return;
+  }
+
+  // --- COD PATH (Existing) ---
   const orderData = { customerName: document.getElementById('ship-name').value, customerEmail: document.getElementById('ship-email').value, customerPhone: document.getElementById('ship-phone').value, shippingAddress: document.getElementById('ship-address').value, shippingCity: document.getElementById('ship-city').value, shippingState: document.getElementById('ship-state').value, shippingPincode: document.getElementById('ship-pincode').value, paymentMethod, items: cart.map(item => ({ sku: item.id, productName: item.title, quantity: item.quantity, unitPrice: item.price })) };
   try {
     const headers = { 'Content-Type': 'application/json' };
@@ -337,6 +354,91 @@ async function placeOrder() {
     if (!res.ok) throw new Error(result.error || 'Failed');
     showSuccess(result.orderNumber);
   } catch (err) { alert(err.message); } finally { placeBtn.disabled = false; placeBtn.textContent = 'Place Order'; }
+}
+
+async function initiateRazorpayCheckout() {
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const shippingCharge = subtotal >= 499 ? 0 : 50;
+  const totalAmountPaise = (subtotal + shippingCharge) * 100;
+
+  // 1. Get KEY_ID
+  const configRes = await fetch(`${API_BASE_URL}/api/payments/config`);
+  const { keyId } = await configRes.json();
+
+  // 2. Create Razorpay Order
+  const orderRes = await fetch(`${API_BASE_URL}/api/payments/create-order`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount: totalAmountPaise, receipt: `order_rcpt_${Date.now()}` })
+  });
+  const rzpOrder = await orderRes.json();
+  if (!orderRes.ok) throw new Error(rzpOrder.error || 'Failed to initialize payment');
+
+  // 3. Open Razorpay Modal
+  const options = {
+    key: keyId,
+    amount: rzpOrder.amount,
+    currency: rzpOrder.currency,
+    name: "VEYANO Foods",
+    description: "Premium Roasted Makhana",
+    order_id: rzpOrder.id,
+    handler: async function (response) {
+      // 4. Verify Signature
+      const verifyRes = await fetch(`${API_BASE_URL}/api/payments/verify-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(response)
+      });
+      const verifyResult = await verifyRes.json();
+      
+      if (verifyResult.success) {
+        // 5. Finalize Database Order
+        await finalizeOrderAfterPayment(rzpOrder.id);
+      } else {
+        showToast('Payment verification failed. Please contact support.', 'error');
+      }
+    },
+    prefill: {
+      name: document.getElementById('ship-name').value,
+      email: document.getElementById('ship-email').value,
+      contact: document.getElementById('ship-phone').value
+    },
+    theme: { color: "#c08b5c" }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.on('payment.failed', function (response) {
+    showToast(`Payment failed: ${response.error.description}`, 'error');
+  });
+  rzp.open();
+}
+
+async function finalizeOrderAfterPayment(razorpayOrderId) {
+  const orderData = { 
+    customerName: document.getElementById('ship-name').value, 
+    customerEmail: document.getElementById('ship-email').value, 
+    customerPhone: document.getElementById('ship-phone').value, 
+    shippingAddress: document.getElementById('ship-address').value, 
+    shippingCity: document.getElementById('ship-city').value, 
+    shippingState: document.getElementById('ship-state').value, 
+    shippingPincode: document.getElementById('ship-pincode').value, 
+    paymentMethod: 'prepaid',
+    razorpayOrderId,
+    items: cart.map(item => ({ sku: item.id, productName: item.title, quantity: item.quantity, unitPrice: item.price })) 
+  };
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (clerk?.session) headers['Authorization'] = `Bearer ${await clerk.session.getToken()}`;
+  
+  const res = await fetch(`${API_BASE_URL}/api/orders`, { 
+    method: 'POST', 
+    headers, 
+    body: JSON.stringify(orderData) 
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || 'Failed to save order');
+  
+  showSuccess(result.orderNumber);
 }
 
 function showSuccess(nr) { const d = document.getElementById('order-number-display'); if(d) d.textContent = `Order #${nr}`; goToStep(3); cart = []; saveCart(); }
