@@ -5,6 +5,11 @@ const productData = {
   combo: { id: "combo", title: "The Ultimate Combo Pack", price: 999, mrp: 2397, hoverImage: "./assets/combo_hover.png", image: "./assets/combo.png", ingredients: "Contains Plain, Salted, and Peri-Peri 200g Packs." }
 };
 
+// Configuration
+const SHIPPING_THRESHOLD = 499;
+const SHIPPING_FEE = 50;
+const COD_FEE = 79;
+
 let clerk = null;
 const CLERK_PUBLISHABLE_KEY = 'pk_test_cG9ldGljLWJ1enphcmQtMjcuY2xlcmsuYWNjb3VudHMuZGV2JA';
 
@@ -35,25 +40,32 @@ async function fetchUserCart() {}
 function updateCartUI() {
   const cartCount = document.getElementById('cart-count');
   const cartItemsContainer = document.getElementById('cart-items-container');
-  const subtotalEl = document.getElementById('cart-subtotal');
-  const deliveryEl = document.getElementById('cart-delivery');
-  const totalEl = document.getElementById('cart-total');
+  const subtotalEl = document.getElementById('display-subtotal');
+  const deliveryEl = document.getElementById('display-shipping');
+  const totalEl = document.getElementById('display-total');
+  const codRow = document.getElementById('cod-row');
+  const codFeeEl = document.getElementById('display-cod');
+  const deliveryRow = document.getElementById('sidebar-delivery-row');
+  const progSection = document.getElementById('cart-progress-section');
+  const progText = document.getElementById('shipping-msg');
+  const progBar = document.getElementById('shipping-bar');
+  const incentiveMsg = document.getElementById('checkout-incentive-msg');
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   if(cartCount) cartCount.textContent = totalItems;
 
   let subtotal = 0;
-  if (cart.length > 0) {
-    cart.forEach(item => { subtotal += item.price * item.quantity; });
-  }
+  cart.forEach(item => { subtotal += item.price * item.quantity; });
 
-  const subtotalVal = subtotal;
-  const deliveryFee = subtotalVal === 0 ? 0 : (subtotalVal >= 499 ? 0 : 50);
-  const paymentMethod = (document.querySelector('input[name="paymentMethod"]:checked')?.value) || 'cod'; 
-  const codFee = (subtotalVal === 0 || paymentMethod !== 'cod') ? 0 : 79;
-  const total = subtotalVal + deliveryFee + codFee;
+  const paymentMethod = (document.querySelector('input[name="paymentMethod"]:checked')?.value) || 'cod';
+  const isCOD = paymentMethod === 'cod';
 
-  // 1. Update List Container
+  // 1. Calculate Charges (Transparent Math)
+  const shippingCharge = (subtotal === 0 || subtotal >= SHIPPING_THRESHOLD) ? 0 : SHIPPING_FEE;
+  const codCharge = (subtotal === 0 || !isCOD) ? 0 : COD_FEE;
+  const total = subtotal + shippingCharge + codCharge;
+
+  // 2. Render Cart Items
   if (cartItemsContainer) {
     if (cart.length === 0) {
       cartItemsContainer.innerHTML = '<div class="cart-empty">Your cart is empty.</div>';
@@ -80,74 +92,68 @@ function updateCartUI() {
     }
   }
 
-  // 2. Track Free Delivery Milestone & Party Popper
-  if (typeof confetti === 'function') {
-    const isCartOpen = document.getElementById('cart-drawer')?.classList.contains('open');
-    if (subtotalVal >= 499) {
-      if (!window.freeDeliveryUnlocked) {
-        window.freeDeliveryUnlocked = true;
-        window.celebrationPending = true;
-      }
-      // Only blast if cart is open AND one is pending
-      if (isCartOpen && window.celebrationPending) {
-        window.celebrationPending = false;
-        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#FF9900', '#FFCC00', '#FFFFFF', '#000000'], zIndex: 2000 });
-      }
-    } else {
-      window.freeDeliveryUnlocked = false;
-      window.celebrationPending = false;
-    }
-  }
-
   // 3. Update Progress Bar
-  const progSection = document.getElementById('cart-progress-section');
-  const progText = document.getElementById('cart-progress-text');
-  const progBar = document.getElementById('cart-progress-bar');
   if (progSection && progText && progBar) {
-    if (subtotalVal === 0) {
+    if (subtotal === 0) {
       progSection.style.display = 'none';
-      progBar.style.width = '0%';
     } else {
       progSection.style.display = 'block';
-      const remaining = 499 - subtotalVal;
-      if (remaining > 0) {
-        progText.textContent = `Add ₹${remaining} more for FREE DELIVERY`;
-        progBar.style.width = `${Math.min((subtotalVal / 499) * 100, 100)}%`;
+      const progressNeeded = SHIPPING_THRESHOLD - subtotal;
+      if (progressNeeded > 0) {
+        let percentage = (subtotal / SHIPPING_THRESHOLD) * 100;
+        progBar.style.width = `${percentage}%`;
+        progText.innerText = `Add ₹${progressNeeded} more for FREE DELIVERY`;
       } else {
-        progText.textContent = `You've unlocked FREE DELIVERY!`;
         progBar.style.width = `100%`;
+        progText.innerText = `Congrats! You've earned FREE DELIVERY`;
       }
     }
   }
 
-  // 4. Update Summary
-  if(subtotalEl) subtotalEl.textContent = `₹${subtotalVal}`;
-  if(deliveryEl) deliveryEl.textContent = deliveryFee > 0 ? `₹${deliveryFee}` : (subtotalVal === 0 ? '₹0' : 'FREE');
-
-  // Robust Step Detection: Only show fees if Shipping Step is active
-  const shippingStep = document.getElementById('cart-step-shipping');
-  const isShippingStep = shippingStep && (shippingStep.style.display === 'block');
+  // 4. Update Price Breakdown (The "Anti-Gravity" Fix)
+  if (subtotalEl) subtotalEl.innerText = `₹${subtotal}`;
   
-  const deliveryRow = document.getElementById('sidebar-delivery-row');
-  const codRow = document.getElementById('cod-fee-row-summary');
-  const incentiveMsg = document.getElementById('checkout-incentive-msg');
+  if (deliveryEl) {
+    deliveryEl.innerText = shippingCharge === 0 ? "FREE" : `₹${shippingCharge}`;
+    deliveryEl.style.color = shippingCharge === 0 ? "#28a745" : "#000";
+    deliveryEl.style.fontWeight = shippingCharge === 0 ? "700" : "400";
+  }
 
-  if (isShippingStep) {
-    // Final Checkout View: Show Fees
-    if (deliveryRow) deliveryRow.style.display = deliveryFee > 0 ? 'flex' : 'none';
+  // Robust Step Detection
+  const shippingStep = document.getElementById('cart-step-shipping');
+  const isCheckoutView = shippingStep && (shippingStep.style.display === 'block');
+
+  // Logic: Always show shipping/total if there are items. Show COD fee only in checkout step.
+  if (deliveryRow) deliveryRow.style.display = subtotal > 0 ? 'flex' : 'none';
+  
+  if (isCheckoutView) {
     if (codRow) {
-      codRow.style.display = codFee > 0 ? 'flex' : 'none';
-      const codDisp = document.getElementById('cart-cod-fee');
-      if (codDisp) codDisp.textContent = `₹${codFee}`;
+      codRow.style.display = isCOD ? "flex" : "none";
+      if (codFeeEl) codFeeEl.innerText = `₹${codCharge}`;
     }
-    if (totalEl) totalEl.textContent = `₹${total}`;
+    if (totalEl) totalEl.innerText = `₹${total}`;
     if (incentiveMsg) incentiveMsg.style.display = 'block';
   } else {
-    // Sidebar View: Hide Fees
-    if (deliveryRow) deliveryRow.style.display = 'none';
+    // Sidebar view: Show subtotal + shipping (Transparent Math)
     if (codRow) codRow.style.display = 'none';
-    if (totalEl) totalEl.textContent = `₹${subtotalVal}`;
+    if (totalEl) totalEl.innerText = `₹${subtotal + shippingCharge}`;
     if (incentiveMsg) incentiveMsg.style.display = 'none';
+  }
+
+  // 5. Celebration (Confetti)
+  if (typeof confetti === 'function' && subtotal >= SHIPPING_THRESHOLD) {
+    const isCartOpen = document.getElementById('cart-drawer')?.classList.contains('open');
+    if (!window.freeDeliveryUnlocked) {
+      window.freeDeliveryUnlocked = true;
+      window.celebrationPending = true;
+    }
+    if (isCartOpen && window.celebrationPending) {
+      window.celebrationPending = false;
+      confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#FF9900', '#FFCC00', '#FFFFFF', '#000000'], zIndex: 2000 });
+    }
+  } else {
+    window.freeDeliveryUnlocked = false;
+    window.celebrationPending = false;
   }
 }
 
