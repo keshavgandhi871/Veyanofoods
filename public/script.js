@@ -291,12 +291,19 @@ async function syncUserWithBackend() {
 function toggleCart(open) {
   const drawer = document.getElementById('cart-drawer');
   const overlay = document.getElementById('cart-overlay');
+  const waBtn = document.querySelector('.floating-whatsapp');
   if(open) { 
     drawer?.classList.add('open'); 
     overlay?.classList.add('open'); 
+    if(waBtn) waBtn.style.display = 'none';
     updateCartUI(); // Trigger UI check (including delayed confetti)
   }
-  else { drawer?.classList.remove('open'); overlay?.classList.remove('open'); goToStep(1); }
+  else { 
+    drawer?.classList.remove('open'); 
+    overlay?.classList.remove('open'); 
+    if(waBtn) waBtn.style.display = 'flex';
+    goToStep(1); 
+  }
 }
 
 function goToStep(step) {
