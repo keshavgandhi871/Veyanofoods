@@ -400,17 +400,6 @@
             </select>
           </div>
           
-          <h4 style="margin: 1.5rem 0 1rem; color: #c08b5c;">Payment Method</h4>
-          <div class="payment-methods">
-            <label class="payment-option">
-              <input type="radio" name="paymentMethod" value="cod" checked>
-              <span>Cash on Delivery (₹79 Extra)</span>
-            </label>
-            <label class="payment-option">
-              <input type="radio" name="paymentMethod" value="prepaid">
-              <span>Pay Online (Save ₹79)</span>
-            </label>
-          </div>
         </form>
       </div>
 
@@ -424,6 +413,19 @@
       </div>
     </div>
     <div class="cart-footer" id="cart-footer">
+      <div id="payment-selection-container" style="margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+        <h4 style="margin: 0 0 0.8rem; color: #c08b5c; font-size: 0.9rem;">Payment Method</h4>
+        <div class="payment-methods" style="margin-bottom: 0;">
+          <label class="payment-option" style="padding: 0.8rem;">
+            <input type="radio" name="paymentMethod" value="prepaid">
+            <span>Pay Online (₹0 Fee)</span>
+          </label>
+          <label class="payment-option" style="padding: 0.8rem;">
+            <input type="radio" name="paymentMethod" value="cod" checked>
+            <span>Cash on Delivery (+₹79 Fee)</span>
+          </label>
+        </div>
+      </div>
       <div id="summary-section">
         <div class="cart-summary-row">
           <span>Subtotal</span>
