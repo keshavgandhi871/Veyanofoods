@@ -24,9 +24,13 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ── Security Middleware ───────────────────────────────────────────────────────
-app.use(helmet({
-  contentSecurityPolicy: false,
-}));
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline'; font-src *;");
+  next();
+});
+// app.use(helmet({
+//   contentSecurityPolicy: false,
+// }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
