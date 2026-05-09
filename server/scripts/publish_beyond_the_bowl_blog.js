@@ -21,7 +21,7 @@ const blogContent = `
 <p>In the bustling markets of India, snacks are everywhere. From street-side fried treats to colorful packets on supermarket shelves, the options are endless. But as we’ve discussed throughout this week, not all snacks are created equal. At VEYANO Foods, based in the heart of Karnal, we didn’t just set out to sell <strong>Roasted Makhana</strong>; we set out to change the way India thinks about <strong>Clean Snacking</strong>.</p>
 
 <p style="text-align: center; margin: 2rem 0;">
-  <img src="./assets/beyond_the_bowl.webp" alt="Roasted Makhana Healthy Snacks India Clean Snacking VEYANO" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+  <img src="./assets/beyond_the_bowl_v2.webp" alt="Roasted Makhana Healthy Snacks India Clean Snacking VEYANO" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
 </p>
 
 <h2>The "Real Food" Revolution Starts at Home</h2>
@@ -62,7 +62,7 @@ const blogData = {
   title: "Beyond the Bowl: Why VEYANO is a Commitment to a Better India",
   slug: "beyond-the-bowl-veyano-commitment-better-india",
   content: blogContent,
-  image_url: "./assets/beyond_the_bowl.webp",
+  image_url: "./assets/beyond_the_bowl_v2.webp",
   author: "Veyano Team"
 };
 
