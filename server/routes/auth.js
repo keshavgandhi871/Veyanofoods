@@ -6,6 +6,16 @@ const authMiddleware = require('../middleware/auth');
 const router = express.Router();
 
 /**
+ * GET /api/auth/config
+ * Exposes Clerk publishable key to frontend
+ */
+router.get('/config', (req, res) => {
+  res.json({
+    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY || 'pk_test_cG9ldGljLWJ1enphcmQtMjcuY2xlcmsuYWNjb3VudHMuZGV2JA'
+  });
+});
+
+/**
  * POST /api/auth/sync
  * Syncs Clerk user data to Supabase 'users' table
  */

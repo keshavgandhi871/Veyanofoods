@@ -135,7 +135,7 @@ let mouseY = 0;
 
 window.addEventListener('mousemove', (e) => {
     mouseX = e.clientX;
-    mouseY = u_resolution.y - e.clientY;
+    mouseY = canvas.height - e.clientY;
 });
 
 function resize() {

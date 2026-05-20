@@ -8,6 +8,10 @@
 
 // Load .env for local development (harmless no-op if file doesn't exist)
 try { require('dotenv').config(); } catch (_) {}
+try {
+  const path = require('path');
+  require('dotenv').config({ path: path.join(__dirname, '../server/.env') });
+} catch (_) {}
 
 const express = require('express');
 const cors    = require('cors');
@@ -92,6 +96,13 @@ app.get('/api/health', async (req, res) => {
 });
 
 // ── Auth Routes ──────────────────────────────────────────────────────────────
+/** GET /api/auth/config — Expose Clerk publishable key to frontend */
+app.get('/api/auth/config', (req, res) => {
+  res.json({
+    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY || 'pk_test_cG9ldGljLWJ1enphcmQtMjcuY2xlcmsuYWNjb3VudHMuZGV2JA'
+  });
+});
+
 /** POST /api/auth/sync — Sync Clerk user with Supabase */
 app.post('/api/auth/sync', authMiddleware, async (req, res) => {
   try {

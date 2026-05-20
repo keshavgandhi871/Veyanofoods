@@ -13,6 +13,51 @@ const COD_FEE = 79;
 let clerk = null;
 const CLERK_PUBLISHABLE_KEY = 'pk_test_cG9ldGljLWJ1enphcmQtMjcuY2xlcmsuYWNjb3VudHMuZGV2JA';
 
+let clerkScriptLoading = false;
+async function loadClerkSDK() {
+  if (clerkScriptLoading) return;
+  clerkScriptLoading = true;
+  
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/config`);
+    if (!res.ok) throw new Error('Failed to fetch Clerk config');
+    const config = await res.json();
+    const publishableKey = config.publishableKey || CLERK_PUBLISHABLE_KEY;
+
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.setAttribute('data-clerk-publishable-key', publishableKey);
+      script.src = 'https://cdn.clerk.com/v1/clerk.js';
+      script.onload = () => {
+        console.log('Dynamic Clerk SDK script loaded successfully.');
+        resolve();
+      };
+      script.onerror = (err) => {
+        console.error('Failed to load Clerk script dynamically:', err);
+        reject(err);
+      };
+      document.head.appendChild(script);
+    });
+  } catch (err) {
+    console.warn('Config fetch failed, falling back to local static key injection:', err);
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.setAttribute('data-clerk-publishable-key', CLERK_PUBLISHABLE_KEY);
+      script.src = 'https://cdn.clerk.com/v1/clerk.js';
+      script.onload = resolve;
+      script.onerror = () => {
+        console.error('Fallback Clerk loading failed.');
+        resolve();
+      };
+      document.head.appendChild(script);
+    });
+  }
+}
+
 function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -26,7 +71,9 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? (window.location.port === '3001' ? '' : 'http://localhost:3001')
+  : '';
 let cart = JSON.parse(localStorage.getItem('veyano_cart')) || [];
 let currentUser = null;
 
@@ -259,7 +306,7 @@ function updateAuthUI(user) {
     }
 
     // Login Page Redirect
-    if (window.location.pathname.includes('login.html')) {
+    if (window.location.pathname.includes('login.html') || window.location.pathname === '/login') {
       window.location.href = 'index.html';
     }
 
@@ -275,11 +322,7 @@ function updateAuthUI(user) {
 
     // Navbar UI
     if (navAuthContainer) {
-      navAuthContainer.innerHTML = '<button class="nav-login-btn">Login</button>';
-      navAuthContainer.querySelector('.nav-login-btn').onclick = () => {
-        const drawer = document.getElementById('cart-drawer');
-        if (drawer) toggleCart(true); // Open drawer to show sign-in
-      };
+      navAuthContainer.innerHTML = '<a href="/login" class="nav-login-btn" style="text-decoration: none; display: inline-block;">Login</a>';
     }
 
     // Standalone Login Page UI
@@ -504,12 +547,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   document.getElementById('cart-icon-btn')?.addEventListener('click', () => toggleCart(true));
-  document.getElementById('nav-login-btn')?.addEventListener('click', () => toggleCart(true));
   document.getElementById('close-cart-btn')?.addEventListener('click', () => toggleCart(false));
   document.getElementById('cart-overlay')?.addEventListener('click', () => toggleCart(false));
   document.getElementById('next-step-btn')?.addEventListener('click', () => { if (!cart.length) return alert("Empty!"); goToStep(2); });
   document.getElementById('back-to-cart-btn')?.addEventListener('click', () => goToStep(1));
   document.getElementById('place-order-btn')?.addEventListener('click', placeOrder);
+  loadClerkSDK();
   initClerk();
   document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
   document.querySelectorAll('input[name="paymentMethod"]').forEach(i => i.addEventListener('change', updateCartUI));
