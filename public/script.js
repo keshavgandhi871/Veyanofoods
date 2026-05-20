@@ -13,6 +13,41 @@ const COD_FEE = 79;
 let clerk = null;
 const CLERK_PUBLISHABLE_KEY = 'pk_test_cG9ldGljLWJ1enphcmQtMjcuY2xlcmsuYWNjb3VudHMuZGV2JA';
 
+function getClerkFrontendApi(publishableKey) {
+  try {
+    let payload = publishableKey.split('_')[2].replace(/-/g, '+').replace(/_/g, '/');
+    payload = payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), '=');
+    return atob(payload).replace(/\$$/, '');
+  } catch (err) {
+    console.error('Unable to derive Clerk frontend API from publishable key:', err);
+    return null;
+  }
+}
+
+function injectScript(src, attrs = {}) {
+  return new Promise((resolve, reject) => {
+    const existing = Array.from(document.scripts).find((script) => script.src === src);
+    if (existing) {
+      existing.addEventListener('load', resolve, { once: true });
+      existing.addEventListener('error', reject, { once: true });
+      if (existing.dataset.loaded === 'true') resolve();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.src = src;
+    Object.entries(attrs).forEach(([key, value]) => script.setAttribute(key, value));
+    script.onload = () => {
+      script.dataset.loaded = 'true';
+      resolve();
+    };
+    script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
 let clerkScriptLoading = false;
 async function loadClerkSDK() {
   if (clerkScriptLoading) return;
@@ -23,37 +58,22 @@ async function loadClerkSDK() {
     if (!res.ok) throw new Error('Failed to fetch Clerk config');
     const config = await res.json();
     const publishableKey = config.publishableKey || CLERK_PUBLISHABLE_KEY;
+    const clerkFrontendApi = getClerkFrontendApi(publishableKey);
+    if (!clerkFrontendApi) throw new Error('Invalid Clerk publishable key');
 
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      script.setAttribute('data-clerk-publishable-key', publishableKey);
-      script.src = 'https://cdn.clerk.com/v1/clerk.js';
-      script.onload = () => {
-        console.log('Dynamic Clerk SDK script loaded successfully.');
-        resolve();
-      };
-      script.onerror = (err) => {
-        console.error('Failed to load Clerk script dynamically:', err);
-        reject(err);
-      };
-      document.head.appendChild(script);
+    await injectScript(`https://${clerkFrontendApi}/npm/@clerk/ui@1/dist/ui.browser.js`);
+    await injectScript(`https://${clerkFrontendApi}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, {
+      'data-clerk-publishable-key': publishableKey
     });
+    console.log('Clerk SDK scripts loaded successfully.');
   } catch (err) {
-    console.warn('Config fetch failed, falling back to local static key injection:', err);
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      script.setAttribute('data-clerk-publishable-key', CLERK_PUBLISHABLE_KEY);
-      script.src = 'https://cdn.clerk.com/v1/clerk.js';
-      script.onload = resolve;
-      script.onerror = () => {
-        console.error('Fallback Clerk loading failed.');
-        resolve();
-      };
-      document.head.appendChild(script);
+    console.warn('Config fetch failed, falling back to local static Clerk key:', err);
+    const clerkFrontendApi = getClerkFrontendApi(CLERK_PUBLISHABLE_KEY);
+    if (!clerkFrontendApi) throw err;
+
+    await injectScript(`https://${clerkFrontendApi}/npm/@clerk/ui@1/dist/ui.browser.js`);
+    await injectScript(`https://${clerkFrontendApi}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, {
+      'data-clerk-publishable-key': CLERK_PUBLISHABLE_KEY
     });
   }
 }
@@ -259,7 +279,10 @@ async function initClerk() {
   if (window.Clerk) {
     clerk = window.Clerk;
     try {
-      await clerk.load({ appearance: clerkAppearance });
+      await clerk.load({
+        appearance: clerkAppearance,
+        ui: { ClerkUI: window.__internal_ClerkUICtor }
+      });
       console.log('Clerk SDK Loaded');
       
       clerk.addListener(({ user }) => {
