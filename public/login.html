@@ -44,7 +44,17 @@
   <main class="auth-main">
     <div class="container auth-container">
       <div class="auth-card">
-        <div id="clerk-signin-container"></div>
+        <div id="clerk-signin-container">
+          <div id="clerk-loading" style="text-align: center; padding: 3rem 2rem;">
+            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid #e4e4e7; border-top-color: #000; border-radius: 50%; animation: clerkSpin 0.8s linear infinite;"></div>
+            <p style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; color: #71717a; margin-top: 1rem;">Loading sign-in...</p>
+          </div>
+          <style>
+            @keyframes clerkSpin {
+              to { transform: rotate(360deg); }
+            }
+          </style>
+        </div>
       </div>
     </div>
   </main>

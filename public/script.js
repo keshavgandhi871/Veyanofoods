@@ -252,6 +252,9 @@ const clerkAppearance = {
   }
 };
 
+let clerkInitRetries = 0;
+const MAX_CLERK_RETRIES = 50; // 50 * 100ms = 5 seconds max wait
+
 async function initClerk() {
   if (window.Clerk) {
     clerk = window.Clerk;
@@ -276,9 +279,28 @@ async function initClerk() {
       }
     } catch (err) {
       console.error('Clerk Initialization Error:', err);
+      showClerkError();
     }
   } else {
-    setTimeout(initClerk, 100);
+    clerkInitRetries++;
+    if (clerkInitRetries < MAX_CLERK_RETRIES) {
+      setTimeout(initClerk, 100);
+    } else {
+      console.error('Clerk SDK failed to load after max retries');
+      showClerkError();
+    }
+  }
+}
+
+function showClerkError() {
+  const container = document.getElementById('clerk-signin-container');
+  if (container) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 2rem;">
+        <p style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; color: #71717a; margin-bottom: 1rem;">Unable to load the sign-in widget.</p>
+        <button onclick="window.location.reload()" style="font-family: 'Outfit', sans-serif; padding: 0.75rem 2rem; background: #000; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem;">Try Again</button>
+      </div>
+    `;
   }
 }
 
@@ -340,6 +362,9 @@ function mountClerkSignIn() {
 function mountPageSignIn() {
   const container = document.getElementById('clerk-signin-container');
   if (container && clerk && !clerk.user) {
+    // Remove loading indicator
+    const loadingEl = document.getElementById('clerk-loading');
+    if (loadingEl) loadingEl.remove();
     clerk.mountSignIn(container, { 
       appearance: clerkAppearance,
       afterSignInUrl: 'index.html',
@@ -552,8 +577,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('next-step-btn')?.addEventListener('click', () => { if (!cart.length) return alert("Empty!"); goToStep(2); });
   document.getElementById('back-to-cart-btn')?.addEventListener('click', () => goToStep(1));
   document.getElementById('place-order-btn')?.addEventListener('click', placeOrder);
-  loadClerkSDK();
-  initClerk();
+  loadClerkSDK().then(() => {
+    initClerk();
+  }).catch((err) => {
+    console.error('Failed to load Clerk SDK:', err);
+    initClerk(); // Try anyway in case it loaded via other means
+  });
   document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
   document.querySelectorAll('input[name="paymentMethod"]').forEach(i => i.addEventListener('change', updateCartUI));
   updateCartUI();
