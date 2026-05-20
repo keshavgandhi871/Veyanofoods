@@ -30,3 +30,5 @@ out/
 scratch/
 server/scratch/
 
+
+.vercel
