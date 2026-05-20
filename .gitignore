@@ -25,3 +25,8 @@ dist/
 build/
 .next/
 out/
+
+# Scratch files
+scratch/
+server/scratch/
+
