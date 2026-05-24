@@ -6,6 +6,10 @@
       "destination": "/api/index.js"
     },
     {
+      "source": "/blog/:slug",
+      "destination": "/blog-post.html?slug=:slug"
+    },
+    {
       "source": "/cart",
       "destination": "/index.html"
     },
@@ -19,3 +23,4 @@
     }
   ]
 }
+
