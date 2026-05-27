@@ -114,7 +114,7 @@ const blogData = {
   content: blogContent,
   image_url: "./assets/sourcing_trap.png",
   author: "Veyano Team",
-  created_at: "2026-05-17T10:00:00Z"
+  created_at: "2026-05-27T10:00:00Z"
 };
 
 async function publish() {
