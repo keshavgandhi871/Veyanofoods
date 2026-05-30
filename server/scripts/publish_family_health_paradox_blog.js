@@ -27,7 +27,7 @@ const blogContent = `
 <p>At <strong>VEYANO Foods</strong>, we believe your family's trust deserves absolute protection. Your desire to safeguard your household is admirable, but the commercial food industry is exploiting your good intentions. You aren't failing your family; you are simply purchasing convenience foods designed to maximize corporate shelf-life at the expense of your family's biological vitality.</p>
 
 <p style="text-align: center; margin: 3rem 0;">
-  <img src="./assets/family_health_paradox.png" alt="VEYANO Roasted Makhana Healthy Snacks India Clean Snacking standing pouches sitting inside modern pantry" style="max-width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;" />
+  <img src="./assets/makhana_combo_1775492571341.png" alt="VEYANO Roasted Makhana Healthy Snacks India Clean Snacking standing pouches sitting inside modern pantry" style="max-width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;" />
 </p>
 
 <h2 style="font-size: 2.2rem; color: #111; border-bottom: 2px solid #FF9900; padding-bottom: 0.5rem; margin-top: 3rem; margin-bottom: 1.5rem; font-family: 'Outfit', sans-serif;">The Hidden Metabolic Toll on Young and Developing Systems</h2>
@@ -125,7 +125,7 @@ const blogData = {
   title: "The Family Health Paradox: Why Commercial 'Family Pack' Snacks are Secretly Sabotaging Household Wellness",
   slug: "family-health-paradox-commercial-family-pack-snacks",
   content: blogContent,
-  image_url: "./assets/family_health_paradox.png",
+  image_url: "./assets/makhana_combo_1775492571341.png",
   author: "Veyano Team",
   created_at: new Date("2026-05-29T10:00:00Z")
 };
