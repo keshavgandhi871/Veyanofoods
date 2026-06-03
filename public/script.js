@@ -624,7 +624,7 @@ function initPincodeAutofill() {
             }
           }
 
-          if (cityInput && !cityInput.value) {
+          if (cityInput) {
             cityInput.value = district;
           }
         }
