@@ -1081,13 +1081,13 @@ a {
 
 #clerk-signin-container {
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.cl-rootBox, .cl-card {
-  width: 100% !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  border: none !important;
+.cl-rootBox {
+  margin: 0 auto !important;
 }
 
 .cl-internal-ph9g9m {

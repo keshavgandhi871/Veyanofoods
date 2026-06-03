@@ -259,8 +259,13 @@ const clerkAppearance = {
     },
     card: {
       boxShadow: 'none',
-      border: '1px solid #f4f4f5',
-      borderRadius: '0px'
+      border: 'none',
+      backgroundColor: 'transparent'
+    },
+    cardBox: {
+      boxShadow: 'none',
+      border: 'none',
+      backgroundColor: 'transparent'
     },
     headerTitle: {
       color: '#09090b',
