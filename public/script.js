@@ -286,7 +286,9 @@ async function initClerk() {
     try {
       await clerk.load({
         appearance: clerkAppearance,
-        ui: { ClerkUI: window.__internal_ClerkUICtor }
+        ui: { ClerkUI: window.__internal_ClerkUICtor },
+        signInUrl: '/login',
+        signUpUrl: '/signup'
       });
       console.log('Clerk SDK Loaded');
       
@@ -355,8 +357,9 @@ function updateAuthUI(user) {
       });
     }
 
-    // Login Page Redirect
-    if (window.location.pathname.includes('login.html') || window.location.pathname === '/login') {
+    // Login & Signup Page Redirect
+    if (window.location.pathname.includes('login.html') || window.location.pathname === '/login' ||
+        window.location.pathname.includes('signup.html') || window.location.pathname === '/signup') {
       window.location.href = 'index.html';
     }
 
@@ -377,13 +380,22 @@ function updateAuthUI(user) {
 
     // Standalone Login Page UI
     mountPageSignIn();
+
+    // Standalone Signup Page UI
+    mountPageSignUp();
   }
 }
 
 function mountClerkSignIn() {
   const container = document.getElementById('clerk-auth-container');
   if (container && clerk && !clerk.user) {
-    clerk.mountSignIn(container, { appearance: clerkAppearance });
+    clerk.mountSignIn(container, { 
+      appearance: clerkAppearance,
+      signInUrl: '/login',
+      signUpUrl: '/signup',
+      afterSignInUrl: '/index.html',
+      afterSignUpUrl: '/index.html'
+    });
   }
 }
 
@@ -395,8 +407,26 @@ function mountPageSignIn() {
     if (loadingEl) loadingEl.remove();
     clerk.mountSignIn(container, { 
       appearance: clerkAppearance,
-      afterSignInUrl: 'index.html',
-      afterSignUpUrl: 'index.html'
+      signInUrl: '/login',
+      signUpUrl: '/signup',
+      afterSignInUrl: '/index.html',
+      afterSignUpUrl: '/index.html'
+    });
+  }
+}
+
+function mountPageSignUp() {
+  const container = document.getElementById('clerk-signup-container');
+  if (container && clerk && !clerk.user) {
+    // Remove loading indicator
+    const loadingEl = document.getElementById('clerk-loading');
+    if (loadingEl) loadingEl.remove();
+    clerk.mountSignUp(container, { 
+      appearance: clerkAppearance,
+      signInUrl: '/login',
+      signUpUrl: '/signup',
+      afterSignInUrl: '/index.html',
+      afterSignUpUrl: '/index.html'
     });
   }
 }

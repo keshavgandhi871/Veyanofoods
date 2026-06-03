@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Create your Veyano account to manage orders, view your profile, and more.">
+  <meta name="robots" content="noindex, nofollow">
+  
+  <title>Sign Up | Veyano Foods</title>
+  <!-- Favicon & Search Engine Icons -->
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#fdfbf7">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-page">
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container flex justify-between items-center">
+      <a href="index.html" class="brand-logo">
+        <img src="assets/logo.png" alt="Veyano Foods" style="height: 48px; width: auto; display: block;">
+      </a>
+      <div class="nav-actions">
+        <nav style="display: flex; align-items: center; gap: 1.5rem;">
+          <a href="blog.html" style="font-size: 0.9rem; font-weight: 500;">Blog</a>
+          <a href="index.html#products" class="btn btn-outline" style="padding: 0.5rem 1.5rem; text-transform: none;">Shop Now</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-main">
+    <div class="container auth-container">
+      <div class="auth-card">
+        <div id="clerk-signup-container">
+          <div id="clerk-loading" style="text-align: center; padding: 3rem 2rem;">
+            <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid #e4e4e7; border-top-color: #000; border-radius: 50%; animation: clerkSpin 0.8s linear infinite;"></div>
+            <p style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; color: #71717a; margin-top: 1rem;">Loading sign-up...</p>
+          </div>
+          <style>
+            @keyframes clerkSpin {
+              to { transform: rotate(360deg); }
+            }
+          </style>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Liquid Ether Background -->
+  <canvas id="liquid-ether"></canvas>
+  <script src="liquid-ether.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
