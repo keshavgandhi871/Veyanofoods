@@ -3,9 +3,12 @@
  * High-performance WebGL shader for a fluid, ethereal aesthetic.
  */
 
-const canvas = document.createElement('canvas');
-canvas.id = 'liquid-ether';
-document.body.prepend(canvas);
+let canvas = document.getElementById('liquid-ether');
+if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'liquid-ether';
+    document.body.prepend(canvas);
+}
 
 const gl = canvas.getContext('webgl');
 
@@ -131,23 +134,45 @@ if (!gl) {
 
     let mouseX = 0;
     let mouseY = 0;
+    let currentScale = 1.0;
 
     window.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = canvas.height - e.clientY;
+        mouseX = e.clientX * currentScale;
+        mouseY = canvas.height - (e.clientY * currentScale);
     });
 
+    window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
+            mouseX = touch.clientX * currentScale;
+            mouseY = canvas.height - (touch.clientY * currentScale);
+        }
+    }, { passive: true });
+
     function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Render at lower resolution to massively improve performance on both mobile and desktop.
+        // For a smooth, organic background fluid shader, sharp high-DPI is completely unnecessary.
+        currentScale = window.innerWidth < 768 ? 0.25 : 0.50;
+        canvas.width = Math.floor(window.innerWidth * currentScale);
+        canvas.height = Math.floor(window.innerHeight * currentScale);
         gl.viewport(0, 0, canvas.width, canvas.height);
     }
 
     window.addEventListener('resize', resize);
     resize();
 
+    let lastRenderTime = 0;
+    const fpsInterval = 1000 / 30; // Cap at 30 FPS for ambient fluid background
+
     function render(time) {
-        time *= 0.001; // convert to seconds
+        requestAnimationFrame(render);
+
+        const elapsed = time - lastRenderTime;
+        if (elapsed < fpsInterval) return;
+
+        lastRenderTime = time - (elapsed % fpsInterval);
+
+        const timeInSeconds = time * 0.001; // convert to seconds
 
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -158,13 +183,11 @@ if (!gl) {
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-        gl.uniform1f(timeLocation, time);
+        gl.uniform1f(timeLocation, timeInSeconds);
         gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
         gl.uniform2f(mouseLocation, mouseX, mouseY);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-        requestAnimationFrame(render);
     }
 
     requestAnimationFrame(render);

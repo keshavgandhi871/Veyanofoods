@@ -1,8 +1,8 @@
 const productData = {
-  plain: { id: "plain", title: "Classic Plain Makhana", price: 399, mrp: 799, hoverImage: "./assets/plain_hover.png", image: "./assets/plain.png", ingredients: "Premium Grade Fox Nuts (Makhana)." },
-  salted: { id: "salted", title: "Lightly Salted Makhana", price: 399, mrp: 799, hoverImage: "./assets/salted_hover.png", image: "./assets/salted.png", ingredients: "Premium Grade Fox Nuts (Makhana), Himalayan Pink Salt, Rice Bran Oil." },
-  periperi: { id: "periperi", title: "Fiery Peri-Peri Makhana", price: 399, mrp: 799, hoverImage: "./assets/periperi_hover.png", image: "./assets/periperi.png", ingredients: "Premium Grade Fox Nuts (Makhana), Peri-Peri Spice Blend, Rice Bran Oil." },
-  combo: { id: "combo", title: "The Ultimate Combo Pack", price: 999, mrp: 2397, hoverImage: "./assets/combo_hover.png", image: "./assets/combo.png", ingredients: "Contains Plain, Salted, and Peri-Peri 200g Packs." }
+  plain: { id: "plain", title: "Classic Plain Makhana", price: 399, mrp: 799, hoverImage: "./assets/plain_hover.webp", image: "./assets/plain.webp", ingredients: "Premium Grade Fox Nuts (Makhana)." },
+  salted: { id: "salted", title: "Lightly Salted Makhana", price: 399, mrp: 799, hoverImage: "./assets/salted_hover.webp", image: "./assets/salted.webp", ingredients: "Premium Grade Fox Nuts (Makhana), Himalayan Pink Salt, Rice Bran Oil." },
+  periperi: { id: "periperi", title: "Fiery Peri-Peri Makhana", price: 399, mrp: 799, hoverImage: "./assets/periperi_hover.webp", image: "./assets/periperi.webp", ingredients: "Premium Grade Fox Nuts (Makhana), Peri-Peri Spice Blend, Rice Bran Oil." },
+  combo: { id: "combo", title: "The Ultimate Combo Pack", price: 999, mrp: 2397, hoverImage: "./assets/combo_hover.webp", image: "./assets/combo.webp", ingredients: "Contains Plain, Salted, and Peri-Peri 200g Packs." }
 };
 
 // Configuration
