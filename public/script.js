@@ -594,6 +594,49 @@ async function finalizeOrderAfterPayment(razorpayOrderId) {
 
 function showSuccess(nr) { const d = document.getElementById('order-number-display'); if(d) d.textContent = `Order #${nr}`; goToStep(3); cart = []; saveCart(); }
 
+function initPincodeAutofill() {
+  const pincodeInput = document.getElementById('ship-pincode');
+  const stateSelect = document.getElementById('ship-state');
+  const cityInput = document.getElementById('ship-city');
+
+  if (!pincodeInput) return;
+
+  pincodeInput.addEventListener('input', async () => {
+    const pincode = pincodeInput.value.trim();
+    if (/^[1-9][0-9]{5}$/.test(pincode)) {
+      pincodeInput.style.borderColor = '#c08b5c';
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        if (!res.ok) throw new Error('Pincode API error');
+        const data = await res.json();
+        
+        if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length > 0) {
+          const postOffice = data[0].PostOffice[0];
+          const state = postOffice.State;
+          const district = postOffice.District;
+
+          if (stateSelect) {
+            const matchedOption = Array.from(stateSelect.options).find(opt => 
+              opt.value.toLowerCase() === state.toLowerCase()
+            );
+            if (matchedOption) {
+              stateSelect.value = matchedOption.value;
+            }
+          }
+
+          if (cityInput && !cityInput.value) {
+            cityInput.value = district;
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching state from pincode:', err);
+      } finally {
+        pincodeInput.style.borderColor = '';
+      }
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   let variant = urlParams.get('variant');
@@ -644,6 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
   document.querySelectorAll('input[name="paymentMethod"]').forEach(i => i.addEventListener('change', updateCartUI));
   updateCartUI();
+  initPincodeAutofill();
 
   // Auto-open cart if URL is /cart or has ?cart=open
   if (window.location.pathname === '/cart' || urlParams.get('cart') === 'open') {
