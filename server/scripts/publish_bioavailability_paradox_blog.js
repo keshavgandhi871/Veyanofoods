@@ -115,7 +115,7 @@ const blogData = {
   content: blogContent,
   image_url: "./assets/bioavailability_paradox.png",
   author: "Veyano Team",
-  created_at: "2026-06-13T18:00:00Z"
+  created_at: "2026-06-12T18:00:00Z"
 };
 
 async function publishBlog() {
