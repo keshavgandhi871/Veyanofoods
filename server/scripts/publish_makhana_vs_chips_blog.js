@@ -194,7 +194,7 @@ const blogData = {
   content: blogContent,
   image_url: "./assets/makhana_vs_chips_faceoff.png",
   author: "Veyano Team",
-  created_at: new Date("2026-06-21T10:00:00Z") // Scheduled specifically for 21 June 2026
+  created_at: new Date("2026-06-22T10:00:00Z") // Scheduled specifically for 22 June 2026
 };
 
 async function publish() {
