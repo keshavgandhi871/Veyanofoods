@@ -194,8 +194,9 @@ const blogData = {
   content: blogContent,
   image_url: "./assets/makhana_vs_popcorn_comparison.png",
   author: "Veyano Team",
-  created_at: new Date()
+  created_at: new Date("2026-06-14T10:00:00Z")
 };
+
 
 async function publish() {
   console.log('🚀 Syncing local database and publishing makhana vs popcorn blog...');
