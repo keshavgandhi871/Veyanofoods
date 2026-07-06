@@ -1,6 +1,6 @@
 /**
  * VEYANO Foods — Blog Post Insertion Script
- * This script inserts the "What is Palm Oil? Why This Hidden Fat is Sabotaging India’s Health Snacks" blog post.
+ * This script inserts/updates the "What is Palm Oil? Why This Hidden Fat is Sabotaging India’s Health Snacks" blog post.
  */
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
@@ -16,9 +16,9 @@ if (supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder')) {
   supabase = createClient(supabaseUrl, supabaseKey);
 }
 
-const blogContent = `<p>Yesterday, we cracked the code on <a href="blog-post.html?slug=how-to-read-food-labels-indian-consumers-guide">How to Read Food Labels</a>, establishing a strict four-step back-label audit framework to unmask misleading corporate claims like "Made with Whole Grains" or "No Added Sugar."</p>
+const blogContent = `<p>Yesterday, we took a comprehensive look at <a href="blog-post.html?slug=makhana-side-effects-overeating-truth">Makhana Side Effects</a>, analyzing why overeating dry insoluble fibers without proper hydration can temporarily slow down your digestion and mask your physical progress under a layer of bloating.</p>
 
-<p>Today, on Thursday, June 25, 2026, we advance our 100-Day SEO Traffic Campaign into the deep science of ingredient transparency by addressing one of the most widespread, metabolic-disrupting industrial inputs hidden across the Indian consumer market: palm oil.</p>
+<p>Today, on Sunday, June 28, 2026, we advance our food transparency framework into the deep science of ingredient auditing by addressing one of the most widespread, metabolic-disrupting industrial inputs hidden across the packaged market: palm oil.</p>
 
 <p>The demand for <strong>Healthy Snacks in India</strong> is shifting rapidly. Health-conscious professionals, active gym-goers, and busy parents are intentionally moving away from traditional deep-fried snacks, seeking cleaner fuel to support their focus, heart parameters, and fat-loss goals. To capture this shift, corporate food manufacturers have introduced lines of snacks labeled with reassuring callouts: "Baked, Not Fried," "Low Fat," "Heart Healthy," or "The Ultimate Fitness Selection."</p>
 
@@ -31,7 +31,7 @@ const blogContent = `<p>Yesterday, we cracked the code on <a href="blog-post.htm
 <p>To break free from this cycle and shield your cells from hidden metabolic strain, you must learn exactly what this processed fat does to your internal biology and choose authentic <strong>Clean Snacking</strong> alternatives.</p>
 
 <h2>What is Palm Oil?</h2>
-<p>From an agricultural perspective, <strong>what is palm oil</strong>? It is an edible vegetable oil derived from the mesocarp (the reddish-pulp) of the fruit of the oil palm tree (Elaeis guineensis). Because it delivers exceptionally high crop yields per hectare compared to sunflower, soybean, or mustard crops, it has become the cheapest and most heavily produced agricultural oil globally.</p>
+<p>From an agricultural perspective, <strong>what is palm oil</strong>? It is an edible vegetable oil derived from the mesocarp (the reddish pulp) of the fruit of the oil palm tree (Elaeis guineensis). Because it delivers exceptionally high crop yields per hectare compared to sunflower, soybean, or mustard crops, it has become the cheapest and most heavily produced agricultural oil globally.</p>
 
 <p>However, the oil running through mass-market factories is far removed from a natural agricultural crop. To make raw palm oil usable in packaged snacks, it is subjected to an extreme, multi-stage chemical refining process: degumming, neutralizing, bleaching, and high-heat deodorizing (RBD).</p>
 
@@ -93,7 +93,7 @@ const blogContent = `<p>Yesterday, we cracked the code on <a href="blog-post.htm
 <h2>Processed vs. Ultra-Processed Foods: The Line in the Sand</h2>
 <p>Building a lifestyle centered around true Clean Snacking does not mean you have to raw-eat un-prepped ingredients; it simply requires understanding the definitive line between minimal structural processing and chemical ultra-processing.</p>
 
-<p>Under the notified food safety guidelines across India, <strong>Processed vs Ultra Processed Foods</strong> have very different biological consequences. Minimally Processed Foods are defined as raw, single-ingredient agricultural commodities slightly altered mainly for preservation or safety—such as through sorting, milling, vacuum sealing, or precise dry-roasting—without causing any fundamental change to the native nutritional matrix or biological matrix of the food.</p>
+<p>Under the current food safety guidelines across India, <strong>Processed vs Ultra Processed Foods</strong> have very different biological consequences. Minimally Processed Foods are defined as raw, single-ingredient agricultural commodities slightly altered mainly for preservation or safety—such as through sorting, milling, vacuum sealing, or precise dry-roasting—without causing any fundamental change to the native nutritional matrix or biological matrix of the food.</p>
 
 <p>Ultra-Processed Foods, by contrast, are industrial formulations built by stripping whole foods down to their cheapest chemical isolates (like corn or potato starch), modifying them with factory texturizers like maltodextrin, and post-spraying them with heated palm oils and chemical flavor enhancers to trigger neurological over-eating reflexes.</p>
 
@@ -113,8 +113,8 @@ const blogContent = `<p>Yesterday, we cracked the code on <a href="blog-post.htm
 <p>Protecting your longevity requires an active defensive strategy. The next time you evaluate a packaged product, ignore the front marketing slogans and perform a disciplined back-label audit using these three steps:</p>
 
 <ul>
-  <li><strong>Examine the Exact Lipid Terminology:</strong> Look past the generic phrase "Edible Vegetable Oil." Scan the fine print or parenthesis for words like refined palmolein, fractionated palm oil, hydrogenated vegetable fat, palm kernel oil, or vegetable fat. If you spot any variant of palm oil occupying a top slot in the ingredient deck, that snack is an ultra-processed option, regardless of whatever green fitness leaf image is printed on the front. Scan carefully so you know <strong>how to read food labels</strong> properly.</li>
-  <li><strong>Look for High Saturated Fat Ratios:</strong> Turn to the nutrition facts panel and check the breakdown under "Total Fat." If the saturated fat contribution accounts for nearly 40% to 50% of the total fat content in a snack that claims to be a light grain puff or seed pop, it is a definitive sign that the product has been heavily post-sprayed with hidden factory oils.</li>
+  <li><strong>Examine the Exact Lipid Terminology:</strong> Look past the generic phrase "Edible Vegetable Oil." Scan the fine print or parenthesis for words like refined palmolein, fractionated palm oil, hydrogenated vegetable fat, palm kernel oil, or vegetable fat. If you spot any variant of palm oil occupying a top slot in the ingredient deck, that snack is an ultra-processed option, regardless of any green fitness leaf image printed on the front. Scan carefully so you know <strong>how to read food labels</strong> properly.</li>
+  <li><strong>Look for High Saturated Fat Ratios:</strong> Turn to the nutrition facts panel and check the breakdown under "Total Fat". If the saturated fat contribution accounts for nearly 40% to 50% of the total fat content in a snack that claims to be a light grain puff or seed pop, it is a definitive sign that the product has been heavily post-sprayed with hidden factory oils.</li>
   <li><strong>Check for "Trans-Fat" Triggers:</strong> When palm oil is industrially processed or partially hydrogenated to adjust melting points for snack coatings, it creates a risk of trans-fat contamination. Look for clean, verified certificates on the back that explicitly display 0g Trans-Fat alongside an entirely oil-free ingredient list.</li>
 </ul>
 
@@ -187,11 +187,11 @@ const blogData = {
   content: blogContent,
   image_url: "./assets/what_is_palm_oil_clean.png",
   author: "Veyano Team",
-  created_at: new Date("2026-06-25T10:00:00Z") // Scheduled specifically for 25 June 2026
+  created_at: new Date("2026-06-28T10:00:00Z") // Updated specifically to 28 June 2026
 };
 
 async function publish() {
-  console.log('🚀 Syncing local database and publishing what is palm oil blog...');
+  console.log('🚀 Syncing local database and publishing updated palm oil blog...');
   try {
     // 1. Publish to local SQLite database
     await sequelize.sync();
