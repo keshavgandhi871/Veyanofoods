@@ -1,6 +1,6 @@
 /**
  * VEYANO Foods — Blog Post Insertion Script
- * This script inserts the "Fox Nuts Nutrition: The Micronutrient Science of India's Premium Real Food" blog post.
+ * This script inserts the "Fox Nuts Nutrition: The Micronutrient Science of India's Premium Real Food" blog post with updated links.
  */
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
@@ -143,10 +143,10 @@ const blogContent = `<p>Yesterday, we executed a comprehensive technical breakdo
 
 <h2>Internal Linking Optimization</h2>
 <ul style="line-height: 1.8;">
-  <li><strong>Silo Link 1 (Food Transparency):</strong> Protect your gut from corporate chemical shortcuts by reading our complete analysis on <a href="blog-post.html?slug=what-is-maltodextrin-hidden-sugar-food-labels">What is Maltodextrin and Why It is Hidden in Packaged Fitness Snacks</a>.</li>
-  <li><strong>Silo Link 2 (Food Transparency):</strong> Learn how to navigate grocery aisles like an expert by reading our step-by-step framework on <a href="blog-post.html?slug=how-to-read-food-labels-indian-consumers-guide">How to Read Food Labels Without Getting Tricked by Marketing Copy</a>.</li>
-  <li><strong>Cross-Silo Link (Makhana Authority):</strong> Discover the natural nutritional metrics of an unadulterated whole seed in our definitive list of the <a href="blog-post.html?slug=roasted-makhana-benefits-healthy-indian-snack">10 Proven Roasted Makhana Benefits for Long-Term Health</a>.</li>
-  <li><strong>Cross-Silo Link (Healthy Snacks):</strong> Upgrade your corporate desk routine by exploring our workspace guide on <a href="blog-post.html?slug=healthy-snacks-for-office-desk-drawers-productivity-fuel">15 Healthy Snacks for Office Desk Drawers to Maintain Focus</a>.</li>
+  <li><strong>Silo Link 1 (Makhana Authority):</strong> Confused between popular volume options? Read our comprehensive analysis of <a href="blog-post.html?slug=makhana-vs-popcorn-weight-loss-snack-comparison">Makhana vs Popcorn: Which is the Best Healthy Snack for Weight Loss?</a>.</li>
+  <li><strong>Silo Link 2 (Makhana Authority):</strong> Master your daily caloric targets by reviewing our clear numerical guide on <a href="blog-post.html?slug=makhana-calories-weight-loss-deficit-volume-snacking">Makhana Calories: How to Snack Volume-Heavy Without Wrecking Your Deficit</a>.</li>
+  <li><strong>Silo Link 3 (Makhana Authority):</strong> Discover the full biological facts behind the superfood seed by reviewing our ultimate guide to the <a href="blog-post.html?slug=roasted-makhana-benefits-healthy-indian-snack">10 Proven Roasted Makhana Benefits for Long-Term Health</a>.</li>
+  <li><strong>Cross-Silo Link (Food Transparency):</strong> Protect your gut from corporate chemical shortcuts by reading our investigation on <a href="blog-post.html?slug=what-is-maltodextrin-hidden-sugar-food-labels">What is Maltodextrin and Why It is Hidden in Packaged Fitness Snacks</a>.</li>
 </ul>
 
 <div style="background: linear-gradient(135deg, #FF9900 0%, #FF6600 100%); padding: 3rem; border-radius: 16px; text-align: center; color: white; margin-top: 4rem; box-shadow: 0 10px 25px rgba(255, 153, 0, 0.25); font-family: 'Outfit', sans-serif;">
