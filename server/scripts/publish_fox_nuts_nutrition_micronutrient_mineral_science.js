@@ -80,7 +80,7 @@ const blogContent = `<p>Yesterday, we executed a comprehensive technical breakdo
 <p>For individuals following plant-based or dairy-free lifestyles, keeping your bones strong requires a steady supply of highly bioavailable calcium and phosphorus. Makhana naturally carries a robust mineral balance, ensuring that your skeletal structure receives the raw components it needs to maintain high bone density and protect your joints as you age.</p>
 
 <p style="text-align: center; margin: 2.5rem 0;">
-  <img src="./assets/fox_nuts_nutrition_minerals.png" alt="Makhana Puffed Seeds and Natural Mineral Ingredients" style="max-width: 100%; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);" />
+  <img src="./assets/fox_nuts_nutrition_minerals.webp" alt="Makhana Puffed Seeds and Natural Mineral Ingredients" style="max-width: 100%; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);" />
 </p>
 
 <h2>Why This Matters for Everyday Snacking</h2>
@@ -146,7 +146,7 @@ const blogContent = `<p>Yesterday, we executed a comprehensive technical breakdo
   <li><strong>Silo Link 1 (Makhana Authority):</strong> Confused between popular volume options? Read our comprehensive analysis of <a href="blog-post.html?slug=makhana-vs-popcorn-weight-loss-snack-comparison">Makhana vs Popcorn: Which is the Best Healthy Snack for Weight Loss?</a>.</li>
   <li><strong>Silo Link 2 (Makhana Authority):</strong> Master your daily caloric targets by reviewing our clear numerical guide on <a href="blog-post.html?slug=makhana-calories-weight-loss-deficit-volume-snacking">Makhana Calories: How to Snack Volume-Heavy Without Wrecking Your Deficit</a>.</li>
   <li><strong>Silo Link 3 (Makhana Authority):</strong> Discover the full biological facts behind the superfood seed by reviewing our ultimate guide to the <a href="blog-post.html?slug=roasted-makhana-benefits-healthy-indian-snack">10 Proven Roasted Makhana Benefits for Long-Term Health</a>.</li>
-  <li><strong>Cross-Silo Link (Food Transparency):</strong> Protect your gut from corporate chemical shortcuts by reading our investigation on <a href="blog-post.html?slug=what-is-maltodextrin-hidden-sugar-food-labels">What is Maltodextrin and Why It is Hidden in Packaged Fitness Snacks</a>.</li>
+  <li><strong>Cross-Silo Link (Food Transparency):</strong> Gut health issue? Read our investigation on <a href="blog-post.html?slug=what-is-maltodextrin-hidden-sugar-food-labels">What is Maltodextrin and Why It is Hidden in Packaged Fitness Snacks</a>.</li>
 </ul>
 
 <div style="background: linear-gradient(135deg, #FF9900 0%, #FF6600 100%); padding: 3rem; border-radius: 16px; text-align: center; color: white; margin-top: 4rem; box-shadow: 0 10px 25px rgba(255, 153, 0, 0.25); font-family: 'Outfit', sans-serif;">
@@ -160,7 +160,7 @@ const blogData = {
   title: "Fox Nuts Nutrition: The Micronutrient Science of India's Premium Real Food",
   slug: "fox-nuts-nutrition-micronutrient-mineral-science",
   content: blogContent,
-  image_url: "./assets/fox_nuts_nutrition_minerals.png",
+  image_url: "./assets/fox_nuts_nutrition_minerals.webp",
   author: "Veyano Team",
   created_at: new Date("2026-07-05T10:00:00Z") // Scheduled specifically for 5 July 2026
 };
