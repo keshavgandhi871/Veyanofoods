@@ -36,9 +36,13 @@ async function fetchBlogs() {
 
     container.innerHTML = blogs.map(post => `
       <div class="blog-card">
-        <img src="${post.image_url || './assets/plain.png'}" alt="${post.title}" class="blog-card-img">
+        <a href="blog-post.html?slug=${post.slug}">
+          <img src="${post.image_url || './assets/plain.png'}" alt="${post.title}" class="blog-card-img">
+        </a>
         <div class="blog-card-content">
-          <h3 class="blog-card-title">${post.title}</h3>
+          <h3 class="blog-card-title">
+            <a href="blog-post.html?slug=${post.slug}" style="color: inherit; text-decoration: none;">${post.title}</a>
+          </h3>
           <div class="blog-card-meta">
             <span>By ${post.author}</span>
             <span>${new Date(post.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>

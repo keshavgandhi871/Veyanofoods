@@ -985,6 +985,14 @@ a {
   margin-bottom: 0.8rem;
   color: var(--text-color);
 }
+.blog-card-title a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.blog-card-title a:hover {
+  color: #FF9900;
+}
 .blog-card-meta {
   font-size: 0.85rem;
   color: #888;
