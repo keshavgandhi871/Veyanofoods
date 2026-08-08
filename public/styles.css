@@ -1171,3 +1171,121 @@ a {
     height: 28px;
   }
 }
+
+/* Mobile Responsive Optimizations */
+@media (max-width: 768px) {
+  .view-cart-text {
+    display: none !important;
+  }
+  .navbar {
+    padding: 0.8rem 0 !important;
+  }
+  .brand-logo img {
+    height: 36px !important;
+  }
+  .nav-actions {
+    gap: 0.6rem !important;
+  }
+  .nav-actions nav {
+    gap: 0.6rem !important;
+  }
+  .nav-login-btn,
+  .nav-shop-btn {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 20px !important;
+  }
+  .hero {
+    min-height: 60vh !important;
+    padding: 3rem 0;
+  }
+  .hero h1 {
+    font-size: 2.2rem !important;
+    line-height: 1.2 !important;
+  }
+  .hero p {
+    font-size: 1rem !important;
+  }
+  .section-title {
+    font-size: 1.8rem !important;
+    margin-bottom: 2rem !important;
+  }
+  .products,
+  .use-cases,
+  .story,
+  .trust {
+    padding: 3.5rem 0 !important;
+  }
+  .product-image-container {
+    height: 280px !important;
+  }
+  .use-img-wrapper {
+    height: 200px !important;
+  }
+  .story-quote {
+    font-size: 1.4rem !important;
+  }
+  .story-text {
+    font-size: 0.95rem !important;
+  }
+  .product-detail-section {
+    padding: 1.5rem 0 !important;
+    gap: 2rem !important;
+  }
+  .product-meta h1 {
+    font-size: 1.8rem !important;
+    margin-top: 1rem !important;
+  }
+  .product-price {
+    font-size: 1.3rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .variant-selector {
+    margin-bottom: 1.5rem !important;
+  }
+  .variant-btn {
+    padding: 0.6rem 1rem !important;
+    margin-bottom: 0.5rem !important;
+    margin-right: 0.4rem !important;
+    font-size: 0.8rem !important;
+  }
+  .whatsapp-cta {
+    padding: 2.5rem 0 !important;
+  }
+  .whatsapp-cta h2 {
+    font-size: 1.8rem !important;
+  }
+  .whatsapp-cta p {
+    font-size: 1rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .whatsapp-cta a.btn {
+    padding: 0.8rem 1.8rem !important;
+    font-size: 0.95rem !important;
+  }
+  .trust-bar-item {
+    justify-content: center !important;
+  }
+  .checkout-form .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  #checkout-actions {
+    flex-direction: column;
+  }
+  #checkout-actions button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-image-container {
+    height: 210px !important;
+  }
+  .hero h1 {
+    font-size: 1.8rem !important;
+  }
+  .navbar .brand-logo img {
+    height: 32px !important;
+  }
+}
