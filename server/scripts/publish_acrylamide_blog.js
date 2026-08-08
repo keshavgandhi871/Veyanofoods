@@ -20,7 +20,7 @@ if (supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder')) {
 }
 
 // 1. Process and copy the image
-const sourceImage = "C:\\Users\\Kesha\\.gemini\\antigravity\\brain\\e7bae294-20cb-440f-b490-3d24fd5c43e9\\acrylamide_healthy_snacks_1785607565694.jpg";
+const sourceImage = "C:\\Users\\Kesha\\.gemini\\antigravity\\brain\\645f47fc-0717-47cc-b1ac-ebfbbc5852cb\\acrylamide_healthy_snacks_1786183918653.jpg";
 const targetPng = path.join(__dirname, '../../public/assets/acrylamide_healthy_snacks.png');
 const targetWebp = path.join(__dirname, '../../public/assets/acrylamide_healthy_snacks.webp');
 
@@ -52,7 +52,7 @@ async function processImage() {
 
 const blogContent = `<p>Yesterday, we unmasked the operational mechanics behind industrial extrusion machinery, proving why the high-heat, high-pressure barrels used to build mass-market fitness puffs degrade complex carbohydrates into fast-digesting starches that spike your storage hormones and cause severe afternoon energy drops.</p>
 
-<p>Today, on Tuesday, July 7, 2026, we advance our food transparency framework into advanced culinary toxicology. We are investigating a dangerous, heat-generated chemical byproduct hidden across the Healthy Snacks India market: acrylamide [2.1, 2.3].</p>
+<p>Today, on Wednesday, July 8, 2026, we advance our food transparency framework into advanced culinary toxicology. We are investigating a dangerous, heat-generated chemical byproduct hidden across the Healthy Snacks India market: acrylamide [2.1, 2.3].</p>
 
 <p>The collective demand for lifestyle changes across urban India has reached an all-time high [1.1]. Millions of health-conscious professionals, corporate executives, and wellness trackers are actively replacing standard commercial junk food with modern alternatives [1.1]. When afternoon hunger hits, you deliberately look past ordinary deep-fried snacks, choosing premium packages carrying comforting lifestyle slogans [1.1]: "Gourmet Potato Crisps," "Thinly Sliced Vegetable Wafers," or "Hand-Cooked Kettle Crackers."</p>
 
@@ -195,7 +195,7 @@ const blogData = {
   content: blogContent,
   image_url: "./assets/acrylamide_healthy_snacks.png",
   author: "Veyano Team",
-  created_at: new Date("2026-07-07T10:00:00Z") // Tuesday, July 7, 2026
+  created_at: new Date("2026-07-08T10:00:00Z") // Wednesday, July 8, 2026
 };
 
 async function publish() {
