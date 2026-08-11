@@ -106,11 +106,17 @@ app.get('/api/health', async (req, res) => {
   } catch (e) {
     dbStatus = `error: ${e.message}`;
   }
+
+  const rzp = getRazorpay();
+  const rzpKeyId = process.env.RAZORPAY_KEY_ID;
+
   res.json({
     status: 'ok',
     service: 'Veyano Foods API (Serverless)',
     db_status: dbStatus,
     clerk_status: getClerk() ? 'initialized' : 'missing_key',
+    razorpay_status: rzp ? 'initialized' : 'missing_key',
+    razorpay_key_id_preview: rzpKeyId ? `${rzpKeyId.slice(0, 8)}...` : 'not_found',
     timestamp: new Date().toISOString(),
   });
 });
