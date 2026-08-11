@@ -685,12 +685,15 @@ function initPincodeAutofill() {
 
 // --- SAVED ADDRESSES SYSTEM ---
 
+window.editingAddressId = null;
+
 // Open the addresses modal for profile address management
 window.openAddressesModal = () => {
   if (!clerk || !clerk.user) {
     showToast('Please login to manage addresses.', 'error');
     return;
   }
+  window.editingAddressId = null;
 
   // Create modal element if it doesn't exist
   let modalOverlay = document.getElementById('addresses-modal');
@@ -718,7 +721,8 @@ window.openAddressesModal = () => {
           Phone: ${escapeHtml(addr.phone)} | Email: ${escapeHtml(addr.email)}<br>
           ${escapeHtml(addr.address)}, ${addr.landmark ? 'Landmark: ' + escapeHtml(addr.landmark) + ', ' : ''}${escapeHtml(addr.city)}, ${escapeHtml(addr.state)} - ${escapeHtml(addr.pincode)}
         </div>
-        <div class="address-item-actions">
+        <div class="address-item-actions" style="display: flex; gap: 8px;">
+          <button class="address-edit-btn" onclick="window.editSavedAddress('${addr.id}')" style="background:none; border:none; color:#c08b5c; cursor:pointer; font-size:0.85rem; font-weight:600; text-decoration:underline; padding:0.2rem;">Edit</button>
           <button class="address-delete-btn" onclick="window.deleteSavedAddress('${addr.id}')">Delete</button>
         </div>
       </div>
@@ -822,23 +826,72 @@ window.deleteSavedAddress = async (id) => {
   }
 };
 
+window.editSavedAddress = (id) => {
+  if (!clerk || !clerk.user) return;
+  const addresses = clerk.user.unsafeMetadata.addresses || [];
+  const addr = addresses.find(a => a.id === id);
+  if (!addr) return;
+
+  window.editingAddressId = id;
+
+  // Change form header and submit button text
+  const formHeader = document.querySelector('.addr-modal-form h4');
+  if (formHeader) formHeader.textContent = 'Edit Address';
+  
+  const submitBtn = document.querySelector('#modal-add-address-form button[type="submit"]');
+  if (submitBtn) submitBtn.textContent = 'Update Address';
+
+  // Populate form fields
+  document.getElementById('modal-addr-name').value = addr.name || '';
+  document.getElementById('modal-addr-email').value = addr.email || '';
+  document.getElementById('modal-addr-phone').value = addr.phone || '';
+  document.getElementById('modal-addr-address').value = addr.address || '';
+  document.getElementById('modal-addr-landmark').value = addr.landmark || '';
+  document.getElementById('modal-addr-city').value = addr.city || '';
+  document.getElementById('modal-addr-pincode').value = addr.pincode || '';
+  document.getElementById('modal-addr-state').value = addr.state || '';
+
+  // Scroll form into view
+  document.getElementById('modal-add-address-form')?.scrollIntoView({ behavior: 'smooth' });
+};
+
 window.saveNewAddress = async (e) => {
   e.preventDefault();
   
-  const newAddr = {
-    id: Date.now().toString(),
-    name: document.getElementById('modal-addr-name').value.trim(),
-    email: document.getElementById('modal-addr-email').value.trim(),
-    phone: document.getElementById('modal-addr-phone').value.trim(),
-    address: document.getElementById('modal-addr-address').value.trim(),
-    landmark: document.getElementById('modal-addr-landmark').value.trim(),
-    city: document.getElementById('modal-addr-city').value.trim(),
-    pincode: document.getElementById('modal-addr-pincode').value.trim(),
-    state: document.getElementById('modal-addr-state').value
-  };
-
   const currentAddresses = clerk.user.unsafeMetadata.addresses || [];
-  currentAddresses.push(newAddr);
+  
+  if (window.editingAddressId) {
+    // Edit existing address
+    const index = currentAddresses.findIndex(addr => addr.id === window.editingAddressId);
+    if (index !== -1) {
+      currentAddresses[index] = {
+        ...currentAddresses[index],
+        name: document.getElementById('modal-addr-name').value.trim(),
+        email: document.getElementById('modal-addr-email').value.trim(),
+        phone: document.getElementById('modal-addr-phone').value.trim(),
+        address: document.getElementById('modal-addr-address').value.trim(),
+        landmark: document.getElementById('modal-addr-landmark').value.trim(),
+        city: document.getElementById('modal-addr-city').value.trim(),
+        pincode: document.getElementById('modal-addr-pincode').value.trim(),
+        state: document.getElementById('modal-addr-state').value
+      };
+    }
+    window.editingAddressId = null; // reset
+  } else {
+    // Create new address
+    const newAddr = {
+      id: Date.now().toString(),
+      name: document.getElementById('modal-addr-name').value.trim(),
+      email: document.getElementById('modal-addr-email').value.trim(),
+      phone: document.getElementById('modal-addr-phone').value.trim(),
+      address: document.getElementById('modal-addr-address').value.trim(),
+      landmark: document.getElementById('modal-addr-landmark').value.trim(),
+      city: document.getElementById('modal-addr-city').value.trim(),
+      pincode: document.getElementById('modal-addr-pincode').value.trim(),
+      state: document.getElementById('modal-addr-state').value
+    };
+    currentAddresses.push(newAddr);
+  }
 
   try {
     showToast('Saving address...');
@@ -998,6 +1051,7 @@ function syncCheckoutAddressSelector() {
   const cityInput = document.getElementById('ship-city');
   const pincodeInput = document.getElementById('ship-pincode');
   const stateSelect = document.getElementById('ship-state');
+  const formFieldsContainer = document.getElementById('checkout-form-fields');
 
   const autofill = () => {
     const selectedId = addressSelect.value;
@@ -1015,6 +1069,9 @@ function syncCheckoutAddressSelector() {
         
         // Hide the save checkbox since this address is already saved
         if (saveGroup) saveGroup.style.display = 'none';
+        
+        // Hide form fields container
+        if (formFieldsContainer) formFieldsContainer.style.display = 'none';
       }
     } else {
       // Clear fields for new address entry
@@ -1029,15 +1086,25 @@ function syncCheckoutAddressSelector() {
       
       // Show the save checkbox
       if (saveGroup) saveGroup.style.display = 'flex';
+      
+      // Show form fields container
+      if (formFieldsContainer) formFieldsContainer.style.display = 'block';
     }
   };
 
   addressSelect.addEventListener('change', autofill);
   
   // Trigger initial populate if there is a saved address and nothing has been typed yet
-  if (addresses.length > 0 && addressSelect.value === "") {
-    addressSelect.value = addresses[0].id;
+  if (addresses.length > 0) {
+    if (container) container.style.display = 'block';
+    if (addressSelect.value === "") {
+      addressSelect.value = addresses[0].id;
+    }
     autofill();
+  } else {
+    if (container) container.style.display = 'none';
+    if (formFieldsContainer) formFieldsContainer.style.display = 'block';
+    if (saveGroup) saveGroup.style.display = 'flex';
   }
 }
 
