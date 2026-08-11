@@ -116,7 +116,7 @@ app.get('/api/health', async (req, res) => {
     db_status: dbStatus,
     clerk_status: getClerk() ? 'initialized' : 'missing_key',
     razorpay_status: rzp ? 'initialized' : 'missing_key',
-    razorpay_key_id_preview: rzpKeyId ? `${rzpKeyId.slice(0, 8)}...` : 'not_found',
+    razorpay_key_id_preview: rzpKeyId ? `...${rzpKeyId.slice(-4)}` : 'not_found',
     timestamp: new Date().toISOString(),
   });
 });
