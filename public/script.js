@@ -337,17 +337,11 @@ function showClerkError() {
 function updateAuthUI(user) {
   console.log('Updating UI for user:', user);
   const authContainer = document.getElementById('clerk-auth-container');
-  const profileBar = document.getElementById('user-profile-bar');
-  const userButtonContainer = document.getElementById('clerk-user-button');
   const navAuthContainer = document.getElementById('nav-auth-container');
 
   if (user) {
     // Drawer UI
     if (authContainer) authContainer.style.display = 'none';
-    if (profileBar) profileBar.style.display = 'flex';
-    if (userButtonContainer && clerk) {
-      clerk.mountUserButton(userButtonContainer);
-    }
 
     // Navbar UI
     if (navAuthContainer && clerk) {
@@ -370,7 +364,6 @@ function updateAuthUI(user) {
   } else {
     // Drawer UI
     if (authContainer) authContainer.style.display = 'block';
-    if (profileBar) profileBar.style.display = 'none';
     mountClerkSignIn();
 
     // Navbar UI
