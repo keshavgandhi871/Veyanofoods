@@ -1291,3 +1291,117 @@ a {
     height: 32px !important;
   }
 }
+
+/* Address Management Modal */
+.addr-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.addr-modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+.addr-modal-card {
+  background: #fdfbf7;
+  width: 90%;
+  max-width: 550px;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  transform: scale(0.95);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(192, 139, 92, 0.1);
+}
+.addr-modal-overlay.open .addr-modal-card {
+  transform: scale(1);
+}
+.addr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 0.8rem;
+}
+.addr-modal-header h3 {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  color: #c08b5c;
+  font-size: 1.4rem;
+}
+.addr-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s;
+}
+.addr-close-btn:hover {
+  color: #000;
+}
+.address-item-card {
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.address-item-card:hover {
+  border-color: #c08b5c;
+  box-shadow: 0 4px 12px rgba(192, 139, 92, 0.05);
+}
+.address-item-details {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #4b5563;
+}
+.address-item-details strong {
+  color: #111827;
+  font-size: 0.95rem;
+}
+.address-item-actions {
+  margin-left: 1rem;
+}
+.address-delete-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 0.2rem;
+}
+.address-delete-btn:hover {
+  color: #b91c1c;
+}
+.addr-modal-form {
+  margin-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 1.5rem;
+}
+.addr-modal-form h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #c08b5c;
+}

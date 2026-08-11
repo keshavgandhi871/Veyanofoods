@@ -345,9 +345,17 @@ function updateAuthUI(user) {
 
     // Navbar UI
     if (navAuthContainer && clerk) {
-      navAuthContainer.innerHTML = '<div id="nav-user-button"></div>';
+      navAuthContainer.innerHTML = `
+        <button id="nav-addresses-btn" style="background: none; border: none; font-size: 0.85rem; font-weight: 600; color: var(--text-color); cursor: pointer; margin-right: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Outfit', sans-serif;">My Addresses</button>
+        <div id="nav-user-button"></div>
+      `;
       clerk.mountUserButton(document.getElementById('nav-user-button'), {
         afterSignOutUrl: window.location.origin
+      });
+      document.getElementById('nav-addresses-btn')?.addEventListener('click', () => {
+        if (typeof window.openAddressesModal === 'function') {
+          window.openAddressesModal();
+        }
       });
     }
 
@@ -455,7 +463,13 @@ function goToStep(step) {
   const nextBtn = document.getElementById('next-step-btn'), actions = document.getElementById('checkout-actions'), summary = document.getElementById('summary-section');
   [s1, s2, s3].forEach(s => { if(s) s.style.display = 'none'; });
   if (step === 1) { if(s1) s1.style.display = 'block'; if(nextBtn) { nextBtn.style.display = 'block'; nextBtn.textContent = 'Proceed to Checkout'; } if(actions) actions.style.display = 'none'; if(summary) summary.style.display = 'block'; }
-  else if (step === 2) { if(s2) s2.style.display = 'block'; if(nextBtn) nextBtn.style.display = 'none'; if(actions) actions.style.display = 'flex'; if(summary) summary.style.display = 'block'; }
+  else if (step === 2) { 
+    if(s2) s2.style.display = 'block'; 
+    if(nextBtn) nextBtn.style.display = 'none'; 
+    if(actions) actions.style.display = 'flex'; 
+    if(summary) summary.style.display = 'block'; 
+    if (typeof syncCheckoutAddressSelector === 'function') syncCheckoutAddressSelector();
+  }
   else if (step === 3) { if(s3) s3.style.display = 'block'; if(nextBtn) nextBtn.style.display = 'none'; if(actions) actions.style.display = 'none'; if(summary) summary.style.display = 'none'; }
   
   // Trigger UI refresh to show/hide fees based on the new step
@@ -472,6 +486,39 @@ async function placeOrder() {
   const placeBtn = document.getElementById('place-order-btn');
   placeBtn.disabled = true; 
   placeBtn.textContent = 'Processing...';
+
+  // Save new address on checkout if checked
+  const saveCheckbox = document.getElementById('checkout-save-address');
+  const addressSelect = document.getElementById('checkout-address-select');
+  if (clerk?.user && saveCheckbox?.checked && (!addressSelect || addressSelect.value === "")) {
+    try {
+      const newAddr = {
+        id: Date.now().toString(),
+        name: document.getElementById('ship-name').value.trim(),
+        email: document.getElementById('ship-email').value.trim(),
+        phone: document.getElementById('ship-phone').value.trim(),
+        address: document.getElementById('ship-address').value.trim(),
+        city: document.getElementById('ship-city').value.trim(),
+        pincode: document.getElementById('ship-pincode').value.trim(),
+        state: document.getElementById('ship-state').value
+      };
+      const currentAddresses = clerk.user.unsafeMetadata.addresses || [];
+      const isDuplicate = currentAddresses.some(a => 
+        a.address.toLowerCase() === newAddr.address.toLowerCase() && 
+        a.pincode === newAddr.pincode
+      );
+      if (!isDuplicate) {
+        currentAddresses.push(newAddr);
+        await clerk.user.update({
+          unsafeMetadata: {
+            addresses: currentAddresses
+          }
+        });
+      }
+    } catch (saveErr) {
+      console.error('Failed to auto-save address on checkout:', saveErr);
+    }
+  }
 
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
   
@@ -628,6 +675,357 @@ function initPincodeAutofill() {
       }
     }
   });
+}
+
+// --- SAVED ADDRESSES SYSTEM ---
+
+// Open the addresses modal for profile address management
+window.openAddressesModal = () => {
+  if (!clerk || !clerk.user) {
+    showToast('Please login to manage addresses.', 'error');
+    return;
+  }
+
+  // Create modal element if it doesn't exist
+  let modalOverlay = document.getElementById('addresses-modal');
+  if (!modalOverlay) {
+    modalOverlay = document.createElement('div');
+    modalOverlay.id = 'addresses-modal';
+    modalOverlay.className = 'addr-modal-overlay';
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        window.closeAddressesModal();
+      }
+    });
+    document.body.appendChild(modalOverlay);
+  }
+
+  const renderAddressesList = () => {
+    const addresses = clerk.user.unsafeMetadata.addresses || [];
+    if (addresses.length === 0) {
+      return '<p style="text-align: center; color: #71717a; font-size: 0.95rem; margin: 2rem 0;">No saved addresses found.</p>';
+    }
+    return addresses.map(addr => `
+      <div class="address-item-card" id="addr-card-${addr.id}">
+        <div class="address-item-details">
+          <strong>${escapeHtml(addr.name)}</strong><br>
+          Phone: ${escapeHtml(addr.phone)} | Email: ${escapeHtml(addr.email)}<br>
+          ${escapeHtml(addr.address)}, ${escapeHtml(addr.city)}, ${escapeHtml(addr.state)} - ${escapeHtml(addr.pincode)}
+        </div>
+        <div class="address-item-actions">
+          <button class="address-delete-btn" onclick="window.deleteSavedAddress('${addr.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  };
+
+  modalOverlay.innerHTML = `
+    <div class="addr-modal-card">
+      <div class="addr-modal-header">
+        <h3>My Saved Addresses</h3>
+        <button class="addr-close-btn" onclick="window.closeAddressesModal()">&times;</button>
+      </div>
+      <div id="modal-addresses-list-container">
+        ${renderAddressesList()}
+      </div>
+      <div class="addr-modal-form">
+        <h4>+ Add New Address</h4>
+        <form id="modal-add-address-form" onsubmit="window.saveNewAddress(event)">
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <input type="text" id="modal-addr-name" placeholder="Full Name" required minlength="3" style="width:100%; padding:0.75rem; border:1px solid #ddd; border-radius:8px; font-family:'Outfit',sans-serif;">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <input type="email" id="modal-addr-email" placeholder="Email Address" required style="width:100%; padding:0.75rem; border:1px solid #ddd; border-radius:8px; font-family:'Outfit',sans-serif;">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <input type="tel" id="modal-addr-phone" placeholder="Mobile Number (10 Digits)" required pattern="[6-9][0-9]{9}" style="width:100%; padding:0.75rem; border:1px solid #ddd; border-radius:8px; font-family:'Outfit',sans-serif;">
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <textarea id="modal-addr-address" placeholder="Full Delivery Address" required style="width:100%; padding:0.75rem; border:1px solid #ddd; border-radius:8px; height: 80px; resize: none; font-family:'Outfit',sans-serif;"></textarea>
+          </div>
+          <div class="form-row" style="display:flex; gap:10px; margin-bottom: 1rem;">
+            <input type="text" id="modal-addr-city" placeholder="City" required minlength="2" style="flex:1; padding:0.75rem; border:1px solid #ddd; border-radius:8px; font-family:'Outfit',sans-serif;">
+            <input type="text" id="modal-addr-pincode" placeholder="Pincode" required pattern="[0-9]{6}" style="flex:1; padding:0.75rem; border:1px solid #ddd; border-radius:8px; font-family:'Outfit',sans-serif;">
+          </div>
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <select id="modal-addr-state" required style="width:100%; padding:0.75rem; border:1px solid #ddd; border-radius:8px; background:#fff; font-family:'Outfit',sans-serif;">
+              <option value="" disabled selected>Select State</option>
+              ${getStateOptionsHTML()}
+            </select>
+          </div>
+          <button type="submit" class="btn" style="width:100%; padding:0.8rem; font-family:'Outfit',sans-serif;">Save Address</button>
+        </form>
+      </div>
+    </div>
+  `;
+
+  // Autoload email/name if empty
+  const nameInput = document.getElementById('modal-addr-name');
+  const emailInput = document.getElementById('modal-addr-email');
+  if (nameInput) nameInput.value = clerk.user.fullName || clerk.user.firstName || '';
+  if (emailInput) emailInput.value = clerk.user.primaryEmailAddress?.emailAddress || '';
+
+  // Setup pincode auto-fill for modal form as well
+  initModalPincodeAutofill();
+
+  modalOverlay.classList.add('open');
+};
+
+window.closeAddressesModal = () => {
+  const modalOverlay = document.getElementById('addresses-modal');
+  if (modalOverlay) {
+    modalOverlay.classList.remove('open');
+  }
+};
+
+window.deleteSavedAddress = async (id) => {
+  if (!confirm('Are you sure you want to delete this address?')) return;
+  
+  const currentAddresses = clerk.user.unsafeMetadata.addresses || [];
+  const updatedAddresses = currentAddresses.filter(addr => addr.id !== id);
+  
+  try {
+    showToast('Deleting address...');
+    await clerk.user.update({
+      unsafeMetadata: {
+        addresses: updatedAddresses
+      }
+    });
+    
+    // Refresh modal UI
+    const listContainer = document.getElementById('modal-addresses-list-container');
+    if (listContainer) {
+      const addresses = clerk.user.unsafeMetadata.addresses || [];
+      if (addresses.length === 0) {
+        listContainer.innerHTML = '<p style="text-align: center; color: #71717a; font-size: 0.95rem; margin: 2rem 0;">No saved addresses found.</p>';
+      } else {
+        const itemCard = document.getElementById(`addr-card-${id}`);
+        if (itemCard) itemCard.remove();
+      }
+    }
+    
+    // Sync to checkout selector if visible
+    syncCheckoutAddressSelector();
+    showToast('Address deleted successfully.');
+  } catch (err) {
+    console.error('Delete Address Error:', err);
+    showToast('Failed to delete address.', 'error');
+  }
+};
+
+window.saveNewAddress = async (e) => {
+  e.preventDefault();
+  
+  const newAddr = {
+    id: Date.now().toString(),
+    name: document.getElementById('modal-addr-name').value.trim(),
+    email: document.getElementById('modal-addr-email').value.trim(),
+    phone: document.getElementById('modal-addr-phone').value.trim(),
+    address: document.getElementById('modal-addr-address').value.trim(),
+    city: document.getElementById('modal-addr-city').value.trim(),
+    pincode: document.getElementById('modal-addr-pincode').value.trim(),
+    state: document.getElementById('modal-addr-state').value
+  };
+
+  const currentAddresses = clerk.user.unsafeMetadata.addresses || [];
+  currentAddresses.push(newAddr);
+
+  try {
+    showToast('Saving address...');
+    await clerk.user.update({
+      unsafeMetadata: {
+        addresses: currentAddresses
+      }
+    });
+
+    window.closeAddressesModal();
+    syncCheckoutAddressSelector();
+    showToast('Address saved successfully!');
+  } catch (err) {
+    console.error('Save Address Error:', err);
+    showToast('Failed to save address.', 'error');
+  }
+};
+
+// Populate state dropdown options helper
+function getStateOptionsHTML() {
+  const states = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
+    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", 
+    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", 
+    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", 
+    "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
+    "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+  ];
+  return states.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+// XSS prevention helper
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+}
+
+function initModalPincodeAutofill() {
+  const pincodeInput = document.getElementById('modal-addr-pincode');
+  const cityInput = document.getElementById('modal-addr-city');
+  const stateSelect = document.getElementById('modal-addr-state');
+
+  if (!pincodeInput) return;
+
+  pincodeInput.addEventListener('input', async () => {
+    const pincode = pincodeInput.value.trim();
+    if (/^[1-9][0-9]{5}$/.test(pincode)) {
+      pincodeInput.style.borderColor = '#c08b5c';
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        if (!res.ok) throw new Error('Pincode API error');
+        const data = await res.json();
+        
+        if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length > 0) {
+          const postOffice = data[0].PostOffice[0];
+          const state = postOffice.State;
+          const district = postOffice.District;
+
+          if (stateSelect) {
+            const matchedOption = Array.from(stateSelect.options).find(opt => 
+              opt.value.toLowerCase() === state.toLowerCase()
+            );
+            if (matchedOption) {
+              stateSelect.value = matchedOption.value;
+            }
+          }
+
+          if (cityInput) {
+            cityInput.value = district;
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching state from pincode:', err);
+      } finally {
+        pincodeInput.style.borderColor = '';
+      }
+    }
+  });
+}
+
+function syncCheckoutAddressSelector() {
+  const checkoutForm = document.getElementById('checkout-form');
+  if (!checkoutForm) return;
+
+  // Only show if user is signed in
+  if (!clerk || !clerk.user) {
+    const existing = document.getElementById('checkout-address-selector-container');
+    if (existing) existing.remove();
+    const existingSaveCheckbox = document.getElementById('checkout-save-address-group');
+    if (existingSaveCheckbox) existingSaveCheckbox.remove();
+    return;
+  }
+
+  let container = document.getElementById('checkout-address-selector-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'checkout-address-selector-container';
+    container.style.marginBottom = '1.5rem';
+    
+    // Insert at the top of the form
+    checkoutForm.prepend(container);
+  }
+
+  const addresses = clerk.user.unsafeMetadata.addresses || [];
+  
+  let optionsHTML = '<option value="">-- Enter New Address --</option>';
+  addresses.forEach(addr => {
+    optionsHTML += `
+      <option value="${addr.id}">
+        ${escapeHtml(addr.name)} (${escapeHtml(addr.city)}, ${escapeHtml(addr.pincode)})
+      </option>
+    `;
+  });
+
+  container.innerHTML = `
+    <label style="font-size: 0.85rem; font-weight: 600; color: #c08b5c; display: block; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; font-family:'Outfit',sans-serif;">Select Delivery Address</label>
+    <select id="checkout-address-select" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: 'Outfit', sans-serif; background: #fff; font-size: 0.9rem;">
+      ${optionsHTML}
+    </select>
+  `;
+
+  // Insert Save Address Checkbox if not already present
+  let saveGroup = document.getElementById('checkout-save-address-group');
+  if (!saveGroup) {
+    saveGroup = document.createElement('div');
+    saveGroup.id = 'checkout-save-address-group';
+    saveGroup.className = 'form-group';
+    saveGroup.style.margin = '1rem 0';
+    saveGroup.style.display = 'flex';
+    saveGroup.style.alignItems = 'center';
+    saveGroup.style.gap = '8px';
+    
+    // Insert it before the payment methods title
+    const paymentMethodsTitle = Array.from(checkoutForm.querySelectorAll('h4')).find(h => h.textContent.includes('Payment Method'));
+    if (paymentMethodsTitle) {
+      checkoutForm.insertBefore(saveGroup, paymentMethodsTitle);
+    } else {
+      checkoutForm.appendChild(saveGroup);
+    }
+  }
+
+  saveGroup.innerHTML = `
+    <input type="checkbox" id="checkout-save-address" checked style="width: auto; cursor: pointer;">
+    <label for="checkout-save-address" style="font-size: 0.85rem; color: #4b5563; cursor: pointer; user-select: none;">Save this address for future purchases</label>
+  `;
+
+  const addressSelect = document.getElementById('checkout-address-select');
+  const nameInput = document.getElementById('ship-name');
+  const emailInput = document.getElementById('ship-email');
+  const phoneInput = document.getElementById('ship-phone');
+  const addressInput = document.getElementById('ship-address');
+  const cityInput = document.getElementById('ship-city');
+  const pincodeInput = document.getElementById('ship-pincode');
+  const stateSelect = document.getElementById('ship-state');
+
+  const autofill = () => {
+    const selectedId = addressSelect.value;
+    if (selectedId) {
+      const addr = addresses.find(a => a.id === selectedId);
+      if (addr) {
+        if (nameInput) nameInput.value = addr.name;
+        if (emailInput) emailInput.value = addr.email;
+        if (phoneInput) phoneInput.value = addr.phone;
+        if (addressInput) addressInput.value = addr.address;
+        if (cityInput) cityInput.value = addr.city;
+        if (pincodeInput) pincodeInput.value = addr.pincode;
+        if (stateSelect) stateSelect.value = addr.state;
+        
+        // Hide the save checkbox since this address is already saved
+        if (saveGroup) saveGroup.style.display = 'none';
+      }
+    } else {
+      // Clear fields for new address entry
+      if (nameInput) nameInput.value = clerk.user.fullName || clerk.user.firstName || '';
+      if (emailInput) emailInput.value = clerk.user.primaryEmailAddress?.emailAddress || '';
+      if (phoneInput) phoneInput.value = '';
+      if (addressInput) addressInput.value = '';
+      if (cityInput) cityInput.value = '';
+      if (pincodeInput) pincodeInput.value = '';
+      if (stateSelect) stateSelect.value = '';
+      
+      // Show the save checkbox
+      if (saveGroup) saveGroup.style.display = 'flex';
+    }
+  };
+
+  addressSelect.addEventListener('change', autofill);
+  
+  // Trigger initial populate if there is a saved address and nothing has been typed yet
+  if (addresses.length > 0 && addressSelect.value === "") {
+    addressSelect.value = addresses[0].id;
+    autofill();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
