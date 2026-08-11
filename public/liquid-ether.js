@@ -152,7 +152,7 @@ if (!gl) {
     function resize() {
         // Render at lower resolution to massively improve performance on both mobile and desktop.
         // For a smooth, organic background fluid shader, sharp high-DPI is completely unnecessary.
-        currentScale = window.innerWidth < 768 ? 0.25 : 0.50;
+        currentScale = window.innerWidth < 768 ? 0.12 : 0.30;
         canvas.width = Math.floor(window.innerWidth * currentScale);
         canvas.height = Math.floor(window.innerHeight * currentScale);
         gl.viewport(0, 0, canvas.width, canvas.height);

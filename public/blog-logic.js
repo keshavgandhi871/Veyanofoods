@@ -3,34 +3,6 @@
  * Externalized to comply with Content Security Policy (CSP).
  */
 
-// Scroll position restoration utility
-function saveScroll() {
-  sessionStorage.setItem('scroll_' + window.location.href, window.scrollY);
-}
-
-let scrollTimeout;
-window.addEventListener('scroll', () => {
-  if (scrollTimeout) return;
-  scrollTimeout = setTimeout(() => {
-    saveScroll();
-    scrollTimeout = null;
-  }, 100);
-});
-
-function restoreScroll() {
-  const savedScroll = sessionStorage.getItem('scroll_' + window.location.href);
-  if (savedScroll) {
-    const scrollPos = parseInt(savedScroll, 10);
-    window.scrollTo(0, scrollPos);
-    
-    // Multiple scroll attempts to handle dynamic layout adjustments as assets load
-    setTimeout(() => window.scrollTo(0, scrollPos), 50);
-    setTimeout(() => window.scrollTo(0, scrollPos), 150);
-    setTimeout(() => window.scrollTo(0, scrollPos), 300);
-    setTimeout(() => window.scrollTo(0, scrollPos), 500);
-  }
-}
-
 async function fetchBlogs() {
   const container = document.getElementById('blog-container');
   if (!container) return; // Exit if not on blog.html
@@ -82,7 +54,6 @@ async function fetchBlogs() {
         </div>
       </div>
     `).join('');
-    restoreScroll();
   } catch (err) {
     console.error('Blog load error:', err);
     container.innerHTML = `
@@ -149,7 +120,6 @@ async function fetchPost() {
         </div>
       </div>
     `;
-    restoreScroll();
   } catch (err) {
     console.error('Post load error:', err);
     container.innerHTML = `

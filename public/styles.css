@@ -561,18 +561,20 @@ a {
 .cart-drawer {
   position: fixed;
   top: 0;
-  right: -400px;
+  right: 0;
   width: 400px;
   height: 100%;
   background: #fff;
   z-index: 1000;
   box-shadow: -10px 0 30px rgba(0,0,0,0.1);
-  transition: right 0.2s cubic-bezier(0, 0, 0.2, 1);
+  transform: translateX(100%);
+  transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  will-change: transform;
 }
 .cart-drawer.open {
-  right: 0;
+  transform: translateX(0);
 }
 .cart-overlay {
   position: fixed;
@@ -927,7 +929,7 @@ a {
 @media (max-width: 450px) {
   .cart-drawer {
     width: 100%;
-    right: -100%;
+    right: 0;
   }
 }
 @media (max-width: 768px) {
