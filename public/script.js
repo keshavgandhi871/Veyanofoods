@@ -536,7 +536,10 @@ async function placeOrder() {
   }
 
   // --- COD PATH (Existing) ---
-  const orderData = { customerName: document.getElementById('ship-name').value, customerEmail: document.getElementById('ship-email').value, customerPhone: document.getElementById('ship-phone').value, shippingAddress: document.getElementById('ship-address').value, shippingCity: document.getElementById('ship-city').value, shippingState: document.getElementById('ship-state').value, shippingPincode: document.getElementById('ship-pincode').value, paymentMethod, items: cart.map(item => ({ sku: item.id, productName: item.title, quantity: item.quantity, unitPrice: item.price })) };
+  const landmarkVal = document.getElementById('ship-landmark').value.trim();
+  const baseAddressVal = document.getElementById('ship-address').value.trim();
+  const shippingAddress = landmarkVal ? `${baseAddressVal} (Landmark: ${landmarkVal})` : baseAddressVal;
+  const orderData = { customerName: document.getElementById('ship-name').value, customerEmail: document.getElementById('ship-email').value, customerPhone: document.getElementById('ship-phone').value, shippingAddress, shippingCity: document.getElementById('ship-city').value, shippingState: document.getElementById('ship-state').value, shippingPincode: document.getElementById('ship-pincode').value, paymentMethod, items: cart.map(item => ({ sku: item.id, productName: item.title, quantity: item.quantity, unitPrice: item.price })) };
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (clerk?.session) headers['Authorization'] = `Bearer ${await clerk.session.getToken()}`;
@@ -605,11 +608,14 @@ async function initiateRazorpayCheckout() {
 }
 
 async function finalizeOrderAfterPayment(razorpayOrderId) {
+  const landmarkVal = document.getElementById('ship-landmark').value.trim();
+  const baseAddressVal = document.getElementById('ship-address').value.trim();
+  const shippingAddress = landmarkVal ? `${baseAddressVal} (Landmark: ${landmarkVal})` : baseAddressVal;
   const orderData = { 
     customerName: document.getElementById('ship-name').value, 
     customerEmail: document.getElementById('ship-email').value, 
     customerPhone: document.getElementById('ship-phone').value, 
-    shippingAddress: document.getElementById('ship-address').value, 
+    shippingAddress, 
     shippingCity: document.getElementById('ship-city').value, 
     shippingState: document.getElementById('ship-state').value, 
     shippingPincode: document.getElementById('ship-pincode').value, 
@@ -710,7 +716,7 @@ window.openAddressesModal = () => {
         <div class="address-item-details">
           <strong>${escapeHtml(addr.name)}</strong><br>
           Phone: ${escapeHtml(addr.phone)} | Email: ${escapeHtml(addr.email)}<br>
-          ${escapeHtml(addr.address)}, ${escapeHtml(addr.city)}, ${escapeHtml(addr.state)} - ${escapeHtml(addr.pincode)}
+          ${escapeHtml(addr.address)}, ${addr.landmark ? 'Landmark: ' + escapeHtml(addr.landmark) + ', ' : ''}${escapeHtml(addr.city)}, ${escapeHtml(addr.state)} - ${escapeHtml(addr.pincode)}
         </div>
         <div class="address-item-actions">
           <button class="address-delete-btn" onclick="window.deleteSavedAddress('${addr.id}')">Delete</button>
@@ -742,6 +748,9 @@ window.openAddressesModal = () => {
           </div>
           <div class="form-group" style="margin-bottom: 1rem;">
             <textarea id="modal-addr-address" placeholder="Full Delivery Address" required style="width:100%; padding:0.75rem; border:1px solid #ddd; border-radius:8px; height: 80px; resize: none; font-family:'Outfit',sans-serif;"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <input type="text" id="modal-addr-landmark" placeholder="Landmark (e.g. Near Temple)" required minlength="3" style="width:100%; padding:0.75rem; border:1px solid #ddd; border-radius:8px; font-family:'Outfit',sans-serif;">
           </div>
           <div class="form-row" style="display:flex; gap:10px; margin-bottom: 1rem;">
             <input type="text" id="modal-addr-city" placeholder="City" required minlength="2" style="flex:1; padding:0.75rem; border:1px solid #ddd; border-radius:8px; font-family:'Outfit',sans-serif;">
@@ -822,6 +831,7 @@ window.saveNewAddress = async (e) => {
     email: document.getElementById('modal-addr-email').value.trim(),
     phone: document.getElementById('modal-addr-phone').value.trim(),
     address: document.getElementById('modal-addr-address').value.trim(),
+    landmark: document.getElementById('modal-addr-landmark').value.trim(),
     city: document.getElementById('modal-addr-city').value.trim(),
     pincode: document.getElementById('modal-addr-pincode').value.trim(),
     state: document.getElementById('modal-addr-state').value
@@ -984,6 +994,7 @@ function syncCheckoutAddressSelector() {
   const emailInput = document.getElementById('ship-email');
   const phoneInput = document.getElementById('ship-phone');
   const addressInput = document.getElementById('ship-address');
+  const landmarkInput = document.getElementById('ship-landmark');
   const cityInput = document.getElementById('ship-city');
   const pincodeInput = document.getElementById('ship-pincode');
   const stateSelect = document.getElementById('ship-state');
@@ -997,6 +1008,7 @@ function syncCheckoutAddressSelector() {
         if (emailInput) emailInput.value = addr.email;
         if (phoneInput) phoneInput.value = addr.phone;
         if (addressInput) addressInput.value = addr.address;
+        if (landmarkInput) landmarkInput.value = addr.landmark || '';
         if (cityInput) cityInput.value = addr.city;
         if (pincodeInput) pincodeInput.value = addr.pincode;
         if (stateSelect) stateSelect.value = addr.state;
@@ -1010,6 +1022,7 @@ function syncCheckoutAddressSelector() {
       if (emailInput) emailInput.value = clerk.user.primaryEmailAddress?.emailAddress || '';
       if (phoneInput) phoneInput.value = '';
       if (addressInput) addressInput.value = '';
+      if (landmarkInput) landmarkInput.value = '';
       if (cityInput) cityInput.value = '';
       if (pincodeInput) pincodeInput.value = '';
       if (stateSelect) stateSelect.value = '';
