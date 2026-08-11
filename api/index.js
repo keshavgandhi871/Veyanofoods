@@ -18,8 +18,28 @@ const cors    = require('cors');
 const helmet  = require('helmet');
 const { createClient } = require('@supabase/supabase-js');
 const { createClerkClient } = require('@clerk/backend');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
 
 const app = express();
+
+// ── Razorpay Client ──────────────────────────────────────────────────────────
+let _razorpay = null;
+function getRazorpay() {
+  if (!_razorpay) {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!keyId || !keySecret) {
+      console.warn('Missing RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET. Payments will fail.');
+      return null;
+    }
+    _razorpay = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
+    });
+  }
+  return _razorpay;
+}
 
 // ── Clerk Client ──────────────────────────────────────────────────────────────
 let _clerk = null;
@@ -266,6 +286,68 @@ app.post('/api/orders', async (req, res) => {
   } catch (err) {
     console.error('[Orders] Create error:', err.message);
     res.status(500).json({ error: 'Failed to create order', detail: err.message });
+  }
+});
+
+// ── Payments Route ───────────────────────────────────────────────────────────
+
+/** GET /api/payments/config — Expose Razorpay key_id */
+app.get('/api/payments/config', (req, res) => {
+  res.json({ keyId: process.env.RAZORPAY_KEY_ID || '' });
+});
+
+/** POST /api/payments/create-order — Create Razorpay order */
+app.post('/api/payments/create-order', async (req, res) => {
+  try {
+    const { amount, currency = 'INR', receipt } = req.body;
+
+    if (!amount || amount < 100) {
+      return res.status(400).json({ error: 'Amount must be at least 100 paise (₹1).' });
+    }
+
+    const rzp = getRazorpay();
+    if (!rzp) return res.status(500).json({ error: 'Razorpay is not configured.' });
+
+    const options = {
+      amount: Math.round(amount), // amount in paise
+      currency,
+      receipt: receipt || `receipt_${Date.now()}`,
+    };
+
+    const order = await rzp.orders.create(options);
+    res.json(order);
+  } catch (error) {
+    console.error('[Razorpay] Create Order Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to create Razorpay order.' });
+  }
+});
+
+/** POST /api/payments/verify-payment — Verify Razorpay payment signature */
+app.post('/api/payments/verify-payment', async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: 'Missing required Razorpay fields.' });
+    }
+
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) return res.status(500).json({ error: 'Razorpay is not configured.' });
+
+    const body = razorpay_order_id + '|' + razorpay_payment_id;
+    const computedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(body.toString())
+      .digest('hex');
+
+    if (computedSignature === razorpay_signature) {
+      res.json({ success: true, message: 'Payment verified successfully.' });
+    } else {
+      res.status(400).json({ success: false, error: 'Invalid signature. Payment verification failed.' });
+    }
+  } catch (error) {
+    console.error('[Razorpay] Verify Payment Error:', error);
+    res.status(500).json({ error: 'Internal Server Error during verification.' });
   }
 });
 
