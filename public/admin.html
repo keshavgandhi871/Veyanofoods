@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin Portal | VEYANO Foods</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: #f8fafc; color: #1e293b; }
+    .admin-container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 1.25rem 2rem; border-radius: var(--radius-lg); border: 1px solid #e2e8f0; box-shadow: var(--shadow-sm); margin-bottom: 2rem; }
+    .admin-nav { display: flex; gap: 0.5rem; margin-bottom: 2rem; background: #ffffff; padding: 0.5rem; border-radius: var(--radius-lg); border: 1px solid #e2e8f0; }
+    .admin-nav-item { padding: 0.65rem 1.25rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; background: transparent; color: #64748b; transition: all 0.2s ease; }
+    .admin-nav-item.active { background: #0f172a; color: #ffffff; }
+    .admin-card { background: #ffffff; border-radius: var(--radius-lg); border: 1px solid #e2e8f0; padding: 2rem; box-shadow: var(--shadow-sm); margin-bottom: 2rem; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .admin-table th { background: #f1f5f9; padding: 0.85rem 1rem; text-align: left; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
+    .admin-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+    .admin-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 5000; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
+    .admin-modal.open { display: flex; }
+    .admin-modal-content { background: #ffffff; border-radius: var(--radius-xl); width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; padding: 2rem; box-shadow: var(--shadow-xl); }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Gate -->
+  <div id="admin-auth-gate" style="position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1.5rem;">
+    <div style="background: #ffffff; padding: 2.5rem; border-radius: var(--radius-xl); width: 100%; max-width: 400px; text-align: center; box-shadow: var(--shadow-xl);">
+      <img src="assets/logo.png" alt="VEYANO" style="height: 44px; margin: 0 auto 1.5rem;">
+      <h2 style="font-size: 1.35rem; margin-bottom: 0.5rem;">Founder & Team Access</h2>
+      <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Enter the admin passcode to manage products, pricing, stock, and customer orders.</p>
+      <form onsubmit="handleAdminLogin(event)">
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <input type="password" id="admin-passcode" class="form-control" placeholder="Enter Passcode" required autofocus style="text-align:center; font-size:1.1rem; letter-spacing: 2px;">
+        </div>
+        <button type="submit" class="btn btn-accent" style="width: 100%;">Unlock Admin Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-container">
+    <!-- Header -->
+    <div class="admin-header">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <img src="assets/logo.png" alt="VEYANO" style="height: 38px;">
+        <div>
+          <h1 style="font-size: 1.25rem;">Store & Catalog Manager</h1>
+          <p style="font-size: 0.8rem; color: #64748b;">No-code product management & live customer insights</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 0.75rem;">
+        <a href="index.html" class="btn btn-sm btn-outline" target="_blank">View Live Store ↗</a>
+        <button onclick="handleAdminLogout()" class="btn btn-sm" style="background: #fee2e2; color: #ef4444; border: none;">Logout</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="admin-nav">
+      <button class="admin-nav-item active" data-tab="tab-products">📦 Product Catalog & Pricing</button>
+      <button class="admin-nav-item" data-tab="tab-orders">🛒 Customer Orders</button>
+      <button class="admin-nav-item" data-tab="tab-leads">💼 B2B & Bulk Leads</button>
+      <button class="admin-nav-item" data-tab="tab-settings">⚙️ System Defaults</button>
+    </div>
+
+    <!-- Tab 1: Products Management -->
+    <div id="tab-products" class="admin-tab-content">
+      <div class="admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <div>
+            <h2 style="font-size: 1.25rem;">Live Product Catalog</h2>
+            <p style="font-size: 0.85rem; color: #64748b;">Add new snack categories, trial packs, change prices, or update stock without editing code.</p>
+          </div>
+          <button onclick="openProductModal(false)" class="btn btn-accent btn-sm">+ Add New SKU</button>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Product Name & SKU</th>
+                <th>Category</th>
+                <th>Weight</th>
+                <th>Price</th>
+                <th>Stock & Status</th>
+                <th>Badges</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-products-table-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Orders Viewer -->
+    <div id="tab-orders" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Customer Orders</h2>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Live orders synced from the database.</p>
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Contact & City</th>
+                <th>Payment</th>
+                <th>Amount</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-table-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: B2B Leads -->
+    <div id="tab-leads" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Corporate & Bulk Inquiries</h2>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Leads submitted through the /bulk-orders inquiry form.</p>
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Contact Person</th>
+                <th>Email & Phone</th>
+                <th>City</th>
+                <th>Quantity</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="admin-leads-table-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: System Settings -->
+    <div id="tab-settings" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Catalog Maintenance</h2>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Reset custom modifications and restore factory catalog definitions if needed.</p>
+        <button onclick="resetCatalogDefaults()" class="btn btn-outline" style="color: #ef4444; border-color: #fca5a5;">
+          Reset Catalog to Factory Defaults
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upsert Product Modal -->
+  <div id="product-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <h3 id="modal-form-title" style="font-size: 1.2rem;">Add Product SKU</h3>
+        <button onclick="closeProductModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <form id="product-upsert-form" onsubmit="handleProductFormSubmit(event)">
+        <input type="hidden" id="p-form-id">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Product Name *</label>
+            <input type="text" id="p-form-name" class="form-control" placeholder="e.g. Roasted Makhana Classic Plain" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">SKU Code *</label>
+            <input type="text" id="p-form-sku" class="form-control" placeholder="e.g. PLAIN-200" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category *</label>
+            <select id="p-form-category" class="form-control" required>
+              <option value="makhana">Roasted Makhana</option>
+              <option value="roasted-snacks">Roasted Snacks (Future Expansion)</option>
+              <option value="trial-packs">Trial Packs</option>
+              <option value="combos">Combos & Bundles</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pack Weight / Size *</label>
+            <input type="text" id="p-form-weight" class="form-control" placeholder="e.g. 200g or 3x35g" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Selling Price (₹) *</label>
+            <input type="number" id="p-form-price" class="form-control" placeholder="399" required min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Actual Declared MRP (₹) *</label>
+            <input type="number" id="p-form-mrp" class="form-control" placeholder="399" required min="1">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Short Description (for cards) *</label>
+          <input type="text" id="p-form-short-desc" class="form-control" placeholder="Brief summary of taste and texture..." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Full Description (for product page) *</label>
+          <textarea id="p-form-desc" class="form-control" rows="3" placeholder="Detailed product story, sourcing and taste profile..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Image Path / URL *</label>
+          <input type="text" id="p-form-image" class="form-control" placeholder="./assets/plain.webp" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Full Ingredients List</label>
+          <input type="text" id="p-form-ingredients" class="form-control" placeholder="e.g. 100% Lotus Seeds (Fox Nuts / Makhana)">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Available Stock Quantity *</label>
+            <input type="number" id="p-form-stock" class="form-control" placeholder="200" required min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stock Status *</label>
+            <select id="p-form-status" class="form-control" required>
+              <option value="in_stock">In Stock</option>
+              <option value="coming_soon">Coming Soon</option>
+              <option value="out_of_stock">Out of Stock</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1.5rem; margin: 1.25rem 0; padding: 0.75rem; background: #f8fafc; border-radius: var(--radius-md);">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+            <input type="checkbox" id="p-form-featured"> Featured
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+            <input type="checkbox" id="p-form-trial"> Trial Pack
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+            <input type="checkbox" id="p-form-new"> Mark as New
+          </label>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" onclick="closeProductModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Save SKU to Catalog</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="products-data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

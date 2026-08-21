@@ -3,28 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="VEYANO Journal — Honest articles on clean snacking, makhana science, ingredient transparency, reading food labels, and mindful nutrition.">
-  <meta name="keywords" content="Makhana health benefits, clean snacking blog, how to read food labels india, makhana vs popcorn, veyano journal">
+  <meta name="description" content="Why choose VEYANO? Learn about our commitment to product quality, consumer education, small-batch roasting, and customer feedback-driven innovation.">
+  <meta name="keywords" content="Why VEYANO, clean snacking brand philosophy, small-batch roasted makhana, food transparency india">
   <meta name="robots" content="index, follow">
   
-  <title>VEYANO Journal | Clean Snacking & Food Transparency</title>
+  <title>Why VEYANO | Our Standards & Brand Philosophy</title>
   
   <link rel="shortcut icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
   <meta name="theme-color" content="#fdfbf7">
-  <link rel="canonical" href="https://veyano.in/blog.html">
+  <link rel="canonical" href="https://veyano.in/why-veyano.html">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 </head>
 <body>
 
-  <!-- Announcement Bar -->
+  <!-- Top Announcement Bar -->
   <div class="announcement-bar">
     <span>🚚 <strong>FREE Pan-India Delivery</strong> on orders above ₹499</span>
     <span class="announcement-sep" style="opacity: 0.4;">|</span>
@@ -44,12 +45,16 @@
           <li><a href="try-veyano.html" class="nav-link">Try VEYANO</a></li>
           <li><a href="our-story.html" class="nav-link">Our Story</a></li>
           <li><a href="transparency.html" class="nav-link">Transparency</a></li>
-          <li><a href="blog.html" class="nav-link active">Journal</a></li>
+          <li><a href="blog.html" class="nav-link">Journal</a></li>
           <li><a href="bulk-orders.html" class="nav-link">Bulk Orders</a></li>
         </ul>
       </nav>
       <div class="nav-actions">
-        <a href="shop.html" class="btn btn-sm btn-outline">Shop Now</a>
+        <div id="nav-auth-container"><a href="login.html" class="nav-link">Sign In</a></div>
+        <button class="cart-icon-btn cart-trigger-btn" aria-label="Open Cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span class="cart-badge" id="cart-count">0</span>
+        </button>
         <button class="mobile-menu-toggle" id="mobile-nav-toggle" aria-label="Open Menu">
           <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
@@ -57,47 +62,48 @@
     </div>
   </header>
 
-  <!-- Mobile Drawer Menu -->
-  <div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
-  <div class="mobile-menu-drawer" id="mobile-menu-drawer">
-    <div class="mobile-drawer-header">
-      <img src="assets/logo.png" alt="VEYANO" style="height: 36px; width: auto;">
-      <button id="mobile-drawer-close" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
-    </div>
-    <ul class="mobile-nav-list">
-      <li class="mobile-nav-item"><a href="index.html">Home</a></li>
-      <li class="mobile-nav-item"><a href="shop.html">Shop All Snacks</a></li>
-      <li class="mobile-nav-item"><a href="try-veyano.html">Try VEYANO</a></li>
-      <li class="mobile-nav-item"><a href="our-story.html">Our Story</a></li>
-      <li class="mobile-nav-item"><a href="transparency.html">Ingredient Transparency</a></li>
-      <li class="mobile-nav-item"><a href="blog.html">Journal</a></li>
-      <li class="mobile-nav-item"><a href="bulk-orders.html">Bulk Orders</a></li>
-      <li class="mobile-nav-item"><a href="contact.html">Contact Us</a></li>
-    </ul>
-  </div>
-
   <main class="section">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">VEYANO Journal</span>
-        <h1 class="section-title">Knowledge for Mindful Snacking</h1>
-        <p class="section-subtitle">Factual deep-dives into Indian snacking culture, ingredient science, and transparent food labeling.</p>
+    <div class="container-narrow">
+      <div class="section-header" style="text-align: left; margin-bottom: 2.5rem;">
+        <span class="section-tag">Brand Philosophy</span>
+        <h1 class="section-title">What We Choose to Stand For.</h1>
+        <p class="section-subtitle">In a market filled with marketing buzzwords, here is the clear philosophy that guides every product we create.</p>
       </div>
 
-      <!-- Category Filter Pills -->
-      <div class="category-filter-bar" id="blog-category-bar">
-        <button class="filter-pill active" onclick="filterBlogCategory('all')">All Articles</button>
-        <button class="filter-pill" onclick="filterBlogCategory('Makhana')">Makhana</button>
-        <button class="filter-pill" onclick="filterBlogCategory('Food Transparency')">Food Transparency</button>
-        <button class="filter-pill" onclick="filterBlogCategory('Snacking')">Snacking</button>
-        <button class="filter-pill" onclick="filterBlogCategory('Ingredients')">Ingredients</button>
-      </div>
-
-      <!-- Blog Grid Container -->
-      <div id="blog-container" class="blog-grid">
-        <div style="grid-column: 1/-1; text-align: center; padding: 4rem 0;">
-          <p>Loading journal stories...</p>
+      <div style="display: flex; flex-direction: column; gap: 2rem; font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary);">
+        
+        <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+          <h2 style="font-size: 1.35rem; color: var(--text-primary); margin-bottom: 0.75rem;">1. Radical Product Quality First</h2>
+          <p>
+            Before we think about marketing or brand campaigns, we focus on the physical product in your hands. That means sourcing top-grade raw makhana from certified harvest clusters, sorting out unpopped kernels, and perfecting hot-air roasting parameters so every bite delivers a light, airy crunch.
+          </p>
         </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+          <h2 style="font-size: 1.35rem; color: var(--text-primary); margin-bottom: 0.75rem;">2. Transparent Consumer Education</h2>
+          <p>
+            We don't believe in asking customers to blindly trust slogans like "100% Guilt-Free" or "Miracle Superfood". Instead, we provide clear macronutrient data, declare exact oil percentages, and publish guides on how to read Indian food packaging labels. An informed customer makes better choices.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+          <h2 style="font-size: 1.35rem; color: var(--text-primary); margin-bottom: 0.75rem;">3. Small-Batch Development & Agility</h2>
+          <p>
+            Unlike massive industrial manufacturing that produces millions of units to sit in warehouse chains for months, our small-batch approach allows us to maintain strict freshness control and iterate rapidly on customer suggestions.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm);">
+          <h2 style="font-size: 1.35rem; color: var(--text-primary); margin-bottom: 0.75rem;">4. Direct Learning from Customers</h2>
+          <p>
+            We treat every customer interaction as an opportunity to improve. Whether it's dialing in the spice balance of our Peri-Peri blend, optimizing jar seals for monsoon humidity, or designing smaller discovery packs, customer feedback is our primary product roadmap.
+          </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 1.5rem;">
+          <a href="shop.html" class="btn btn-lg btn-accent">Taste the VEYANO Difference</a>
+        </div>
+
       </div>
     </div>
   </main>
@@ -156,21 +162,7 @@
     </div>
   </footer>
 
-  <a href="https://wa.me/919350598909" class="floating-whatsapp" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
-    <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
-  </a>
-
-  <script src="blog-logic.js"></script>
+  <script src="products-data.js"></script>
   <script src="script.js"></script>
-  <script>
-    function filterBlogCategory(cat) {
-      document.querySelectorAll('#blog-category-bar .filter-pill').forEach(p => p.classList.remove('active'));
-      const activeBtn = Array.from(document.querySelectorAll('#blog-category-bar .filter-pill')).find(p => p.textContent.trim().toLowerCase() === (cat === 'all' ? 'all articles' : cat.toLowerCase()));
-      if (activeBtn) activeBtn.classList.add('active');
-      
-      const articles = window.CURRENT_BLOG_POSTS || [];
-      renderBlogCards(articles, cat);
-    }
-  </script>
 </body>
 </html>

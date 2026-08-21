@@ -28,6 +28,7 @@ const publicAuthRouter     = require('./_public/auth');
 const publicBlogRouter     = require('./_public/blog');
 const publicOrdersRouter   = require('./_public/orders');
 const publicPaymentsRouter = require('./_public/payments');
+const publicProductsRouter = require('./_public/products');
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use('/api/auth', publicAuthRouter);
 app.use('/api/blog', publicBlogRouter);
 app.use('/api/orders', publicOrdersRouter);
 app.use('/api/payments', publicPaymentsRouter);
+app.use('/api/products', publicProductsRouter);
 
 // ── Mount Private Protected Routes (Requires Admin Authorization) ─────────────
 app.use('/api/private', privateAuthMiddleware);

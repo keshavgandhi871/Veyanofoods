@@ -3,38 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Shop Veyano Premium Roasted Makhana. Choose from Plain, Salted, and Peri-Peri flavors. Pure, wholesome, and guilt-free snacking.">
-  <meta name="keywords" content="Buy Makhana, Peri Peri Makhana, Roasted Fox Nuts, Healthy Snacking India, Veyano Products">
+  <meta name="description" content="Shop VEYANO Clean Roasted Makhana. Choose from Classic Plain (0% Oil), Lightly Salted, and Fiery Peri-Peri. Pure ingredients, zero palm oil, roasted to perfection.">
+  <meta name="keywords" content="Buy Roasted Makhana, VEYANO plain makhana, peri peri fox nuts, salted makhana, healthy snacks india">
   <meta name="robots" content="index, follow">
   
-  <title>Buy Premium Roasted Makhana | Veyano Foods</title>
-  <!-- Favicon & Search Engine Icons -->
+  <title>Buy Premium Roasted Makhana | VEYANO Foods</title>
+  
+  <!-- Favicon & Touch Icons -->
   <link rel="shortcut icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
   <meta name="theme-color" content="#fdfbf7">
 
   <!-- Canonical URL -->
-  <link rel="canonical" href="https://www.veyano.in/product.html">
+  <link rel="canonical" href="https://veyano.in/product.html">
 
   <!-- Open Graph -->
   <meta property="og:type" content="product">
-  <meta property="og:url" content="https://www.veyano.in/product.html">
-  <meta property="og:title" content="Buy Premium Roasted Makhana | Veyano">
-  <meta property="og:description" content="Choose your favorite flavor: Plain, Salted, or Peri-Peri. Freshly roasted for the perfect crunch.">
-  <meta property="og:image" content="https://www.veyano.in/assets/combo.webp">
+  <meta property="og:url" content="https://veyano.in/product.html">
+  <meta property="og:title" content="Buy Premium Roasted Makhana | VEYANO Foods">
+  <meta property="og:description" content="100% Hot-air roasted makhana with clean ingredients and zero palm oil. Free delivery above ₹499.">
+  <meta property="og:image" content="https://veyano.in/assets/plain.webp">
 
-
-
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
-
-  <!-- Party Popper Effect -->
+  
+  <!-- Confetti Effect -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
   
   <!-- Razorpay SDK -->
@@ -42,249 +41,452 @@
 </head>
 <body>
 
+  <!-- Top Announcement Bar -->
+  <div class="announcement-bar">
+    <span>🚚 <strong>FREE Pan-India Delivery</strong> on orders above ₹499</span>
+    <span class="announcement-sep" style="opacity: 0.4;">|</span>
+    <span>🌿 FSSAI Lic. No. <strong>20826010000397</strong></span>
+  </div>
+
   <!-- Navbar -->
   <header class="navbar">
-    <div class="container flex justify-between items-center">
-      <a href="index.html" class="brand-logo">
-        <img src="assets/logo.webp" alt="VEYANO" style="height: 48px; width: auto; display: block;">
+    <div class="container nav-container">
+      <a href="index.html" class="nav-brand" aria-label="VEYANO Foods">
+        <img src="assets/logo.png" alt="VEYANO Logo" width="140" height="42">
       </a>
+      
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="shop.html" class="nav-link active">Shop</a></li>
+          <li><a href="try-veyano.html" class="nav-link">Try VEYANO</a></li>
+          <li><a href="our-story.html" class="nav-link">Our Story</a></li>
+          <li><a href="transparency.html" class="nav-link">Transparency</a></li>
+          <li><a href="blog.html" class="nav-link">Journal</a></li>
+          <li><a href="bulk-orders.html" class="nav-link">Bulk Orders</a></li>
+        </ul>
+      </nav>
+
       <div class="nav-actions">
-        <nav style="display: flex; align-items: center; gap: 1.5rem;">
-          <a href="blog.html" style="font-size: 0.9rem; font-weight: 500;">Blog</a>
-          <a href="index.html#products" class="btn btn-outline nav-shop-btn" style="padding: 0.5rem 1.5rem; text-transform: none;">All Products</a>
-        </nav>
-        <div id="nav-auth-container" style="margin-right: 0.5rem;">
-          <a href="/login" class="nav-login-btn" style="text-decoration: none; display: inline-block;">Login</a>
+        <div id="nav-auth-container">
+          <a href="login.html" class="nav-link" style="font-size: 0.88rem; font-weight: 600;">Sign In</a>
         </div>
-        <div class="cart-icon" id="cart-icon-btn" style="display: flex; align-items: center; gap: 8px;">
-          <div style="position: relative;">
-            <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: none; stroke: var(--text-color); stroke-width: 2;"><path d="M9 20a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm7 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm1.75-2.25L19 7H5.21l-.94-2H1V3h3.27l4.42 9.39L7 15.12c0 .07 0 .13.01.2.06.82.74 1.43 1.56 1.43h10.18v-1.5H8.75c-.07 0-.13-.03-.16-.09l.03-.06 1.13-2.1h7.45c.56 0 1.06-.31 1.3-.78z"/></svg>
-            <span class="cart-badge" id="cart-count">0</span>
-          </div>
-          <span class="view-cart-text" style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 4px;">View Cart</span>
-        </div>
+        <button class="cart-icon-btn cart-trigger-btn" aria-label="Open Cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <span class="cart-badge" id="cart-count">0</span>
+        </button>
+        <button class="mobile-menu-toggle" id="mobile-nav-toggle" aria-label="Open Mobile Menu">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
       </div>
     </div>
   </header>
 
-  <main>
-    <section class="product-detail-section container" id="product-details">
-      <!-- Image Gallery Column -->
-      <div class="product-gallery">
-        <div class="product-image-container" id="main-gallery-container" style="height:auto; max-height:600px;">
-          <img id="main-product-image" src="./assets/plain.webp" alt="Veyano Premium Makhana" class="product-img base-img" style="max-height:600px;" width="600" height="600" loading="eager" decoding="async">
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
+  <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+    <div class="mobile-drawer-header">
+      <img src="assets/logo.png" alt="VEYANO" style="height: 36px; width: auto;">
+      <button id="mobile-drawer-close" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+    </div>
+    <ul class="mobile-nav-list">
+      <li class="mobile-nav-item"><a href="index.html">Home</a></li>
+      <li class="mobile-nav-item"><a href="shop.html">Shop All Snacks</a></li>
+      <li class="mobile-nav-item"><a href="try-veyano.html">Try VEYANO</a></li>
+      <li class="mobile-nav-item"><a href="our-story.html">Our Story</a></li>
+      <li class="mobile-nav-item"><a href="transparency.html">Ingredient Transparency</a></li>
+      <li class="mobile-nav-item"><a href="blog.html">Snacking Journal</a></li>
+      <li class="mobile-nav-item"><a href="bulk-orders.html">Bulk Orders</a></li>
+      <li class="mobile-nav-item"><a href="contact.html">Contact Us</a></li>
+    </ul>
+    <div class="mobile-drawer-footer">
+      <a href="shop.html" class="btn btn-accent" style="width: 100%; margin-bottom: 0.75rem;">Shop Now</a>
+      <a href="https://wa.me/919350598909" class="btn btn-whatsapp btn-sm" style="width: 100%;">Chat on WhatsApp</a>
+    </div>
+  </div>
+
+  <main style="padding: 2.5rem 0 5rem;">
+    <div class="container">
+      
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb-trail" aria-label="Breadcrumb">
+        <a href="index.html">Home</a>
+        <span>/</span>
+        <a href="shop.html">Shop</a>
+        <span>/</span>
+        <span id="breadcrumb-current-product" style="color: var(--text-primary); font-weight: 600;">Product</span>
+      </nav>
+
+      <!-- Main Product Details Grid -->
+      <div class="product-detail-grid">
+        
+        <!-- Gallery Column -->
+        <div class="product-gallery-wrapper">
+          <div class="product-main-image-box">
+            <img id="main-product-image" src="./assets/plain.webp" alt="VEYANO Roasted Makhana" fetchpriority="high">
+          </div>
+          <div class="product-thumbs-strip" id="product-thumbnails-container">
+            <!-- Thumbs populated by product script -->
+          </div>
         </div>
-      </div>
 
-      <!-- Info Column -->
-      <div class="product-meta">
-        <a href="https://veyano.in" style="font-size: 0.8rem; color: var(--accent-color); text-decoration: none; display: block; margin-bottom: 1rem; font-weight: 500;">← Back to Home</a>
-        <h1 id="product-title">Classic Plain Makhana</h1>
-        <div class="product-price" id="product-price"><span style="text-decoration: line-through; color: #888; font-size: 0.8em; margin-right: 8px;">₹799</span>₹399 <span style="font-size:0.9rem; color:#666;">(200g)</span></div>
-
-        <div class="variant-selector">
-          <p style="margin-bottom: 0.5rem; color:#aaa; font-size: 0.9rem; text-transform:uppercase; letter-spacing:1px;">Select Variant:</p>
-          <button class="variant-btn active" data-variant="plain">Plain</button>
-          <button class="variant-btn" data-variant="salted">Salted</button>
-          <button class="variant-btn" data-variant="periperi">Peri-Peri</button>
-          <button class="variant-btn" data-variant="combo">Combo (Pack of 3)</button>
-        </div>
-
-        <button class="btn" id="add-to-cart-btn" style="width: 100%; text-align: center; margin-bottom: 1rem;">Add to Cart</button>
-        <button class="btn btn-outline" id="view-cart-btn" style="width: 100%; text-align: center; margin-bottom: 1rem;">View Cart</button>
-        <a href="https://wa.me/919350598909?text=Hi%20Veyano!%20I'd%20like%20to%20order%20the%20Makhana%20I'm%20viewing." class="btn" style="background: #25D366; color: white; width: 100%; text-align: center; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; border: none;">
-          <svg style="width: 20px; height: 20px; fill: white;" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
-          Quick Order on WhatsApp
-        </a>
-
-        <ul class="benefits-list">
-          <li>100% Roasted, Not Fried</li>
-          <li>High in Protein & Fiber</li>
-          <li>Zero Cholesterol</li>
-          <li>Gluten-Free & Vegan Friendly</li>
-          <li><b>Free delivery on orders above ₹499</b></li>
-        </ul>
-
-        <div class="ingredients-box">
-          <h4 style="margin-bottom: 0.5rem; color:#c08b5c;">Shipping & Charges:</h4>
-          <ul style="color:#aaa; font-size:0.9rem; list-style:none; padding:0; margin-bottom:1rem;">
-             <li style="margin-bottom:4px;">🚚 <b>FREE Delivery</b> on orders above ₹499.</li>
-             <li style="margin-bottom:4px;">📦 <b>Standard Shipping:</b> ₹50 if order is under ₹499.</li>
-             <li>💸 <b>Cash on Delivery (COD):</b> ₹79 handling fee applies.</li>
-          </ul>
-
-          <h4 style="margin-bottom: 0.5rem;">Ingredients:</h4>
-          <p id="ingredients-text" style="color:#aaa; font-size:0.9rem;">Premium Grade Fox Nuts (Makhana).</p>
+        <!-- Buy Box & Disclosures Column -->
+        <div class="product-info-panel">
+          <div id="product-badge-mount" style="margin-bottom: 0.75rem;"></div>
           
-          <h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Shelf Life:</h4>
-          <p style="color:#aaa; font-size:0.9rem;">3 Months from the date of packaging.</p>
+          <h1 class="product-detail-title" id="detail-product-name">Classic Plain Roasted Makhana</h1>
+          <p id="detail-product-short-desc" style="font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Pure, slow-roasted fox nuts with a crisp, airy crunch. 0% added oil.
+          </p>
+
+          <div class="product-detail-price-row">
+            <span class="product-detail-price" id="detail-product-price">₹399</span>
+            <span id="detail-product-mrp" class="product-price-mrp" style="font-size: 1.1rem; display: none;"></span>
+            <span class="badge" style="background: var(--bg-subtle); color: var(--text-secondary); font-size: 0.85rem;" id="detail-product-weight">200g</span>
+            <span class="badge badge-featured" id="detail-product-stock-badge">In Stock</span>
+          </div>
+
+          <!-- Flavor / Variant Switcher -->
+          <div class="product-variant-picker">
+            <div class="variant-picker-label">Choose Flavor / Format:</div>
+            <div class="variant-options-group">
+              <a href="product.html?slug=classic-plain" class="variant-btn" id="vbtn-plain">Classic Plain (200g)</a>
+              <a href="product.html?slug=lightly-salted" class="variant-btn" id="vbtn-salted">Lightly Salted (200g)</a>
+              <a href="product.html?slug=fiery-peri-peri" class="variant-btn" id="vbtn-periperi">Fiery Peri-Peri (200g)</a>
+              <a href="product.html?slug=ultimate-combo" class="variant-btn" id="vbtn-combo">Trio Combo (600g)</a>
+            </div>
+          </div>
+
+          <!-- Quantity Counter & Primary Actions -->
+          <div class="quantity-add-row" id="buy-action-area">
+            <div class="qty-counter">
+              <button onclick="decrementProductQty()" aria-label="Decrease quantity">-</button>
+              <span id="product-detail-qty">1</span>
+              <button onclick="incrementProductQty()" aria-label="Increase quantity">+</button>
+            </div>
+            <button class="btn btn-accent" id="detail-add-cart-btn" style="flex: 1;" onclick="handleDetailAddToCart()">Add to Cart</button>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-bottom: 1.75rem;">
+            <button class="btn btn-outline" id="detail-buy-now-btn" style="flex: 1;" onclick="handleDetailBuyNow()">Buy Now</button>
+            <a id="detail-whatsapp-btn" href="#" class="btn btn-whatsapp" style="flex: 1;" target="_blank" rel="noopener">
+              <svg style="width: 18px; height: 18px; fill: currentColor;" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
+              WhatsApp Order
+            </a>
+          </div>
+
+          <!-- Trust Highlights Box -->
+          <div style="background: var(--bg-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; border: 1px solid var(--border-subtle); margin-bottom: 1.5rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">
+              <div>🚚 <strong>Free Shipping</strong> above ₹499</div>
+              <div>💸 <strong>COD Available</strong> (+₹79)</div>
+              <div>🌿 <strong>Zero Palm Oil</strong></div>
+              <div>🛡️ <strong>FSSAI Registered</strong></div>
+            </div>
+          </div>
+
+          <!-- Structured Information Accordions -->
+          <div class="info-tabs-container">
+            
+            <div class="info-accordion-item open">
+              <button class="info-accordion-btn">
+                <span>Why You'll Like It</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="info-accordion-content">
+                <ul id="detail-why-like-list" style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;"></ul>
+              </div>
+            </div>
+
+            <div class="info-accordion-item">
+              <button class="info-accordion-btn">
+                <span>Taste Profile</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="info-accordion-content">
+                <p id="detail-taste-profile"></p>
+              </div>
+            </div>
+
+            <div class="info-accordion-item">
+              <button class="info-accordion-btn">
+                <span>Ingredients & Oil Disclosure</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="info-accordion-content">
+                <p><strong>Ingredients:</strong> <span id="detail-ingredients"></span></p>
+                <p style="margin-top: 0.5rem;"><strong>Oil Information:</strong> <span id="detail-oil-info"></span></p>
+                <p style="margin-top: 0.5rem;"><strong>Preservatives:</strong> <span id="detail-preservatives"></span></p>
+                <p style="margin-top: 0.5rem;"><strong>Allergen Info:</strong> <span id="detail-allergens"></span></p>
+              </div>
+            </div>
+
+            <div class="info-accordion-item">
+              <button class="info-accordion-btn">
+                <span>Nutritional Facts</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="info-accordion-content">
+                <table class="transparency-table" id="detail-nutrition-table">
+                  <thead>
+                    <tr>
+                      <th>Nutrient</th>
+                      <th>Per 100g</th>
+                      <th>Per Serving (30g)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detail-nutrition-tbody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="info-accordion-item">
+              <button class="info-accordion-btn">
+                <span>Storage, Shelf Life & FSSAI</span>
+                <span class="faq-icon">+</span>
+              </button>
+              <div class="info-accordion-content">
+                <p><strong>Shelf Life:</strong> <span id="detail-shelf-life"></span></p>
+                <p style="margin-top: 0.5rem;"><strong>Storage Instructions:</strong> <span id="detail-storage"></span></p>
+                <p style="margin-top: 0.5rem;"><strong>FSSAI Registration:</strong> <span id="detail-fssai"></span></p>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
-    </section>
+
+      <!-- "Not Sure Which One To Try?" Helper -->
+      <section style="margin-top: 5rem; background: var(--bg-subtle); padding: 3rem 2rem; border-radius: var(--radius-xl); border: 1px solid var(--border-card); text-align: center;">
+        <h2 style="font-size: 1.6rem; margin-bottom: 0.5rem;">Not sure which one to try?</h2>
+        <p style="color: var(--text-secondary); max-width: 540px; margin: 0 auto 1.75rem;">
+          Get our <strong>Trio Discovery Combo</strong> to taste all three flavors (Classic Plain, Lightly Salted, Fiery Peri-Peri) or explore upcoming pocket-sized trial packs.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="product.html?slug=ultimate-combo" class="btn btn-accent">Get Trio Combo (Save ₹298)</a>
+          <a href="try-veyano.html" class="btn btn-outline">Explore Trial Packs</a>
+        </div>
+      </section>
+
+      <!-- Related Products -->
+      <section style="margin-top: 5rem;">
+        <div class="section-header">
+          <span class="section-tag">Explore More</span>
+          <h2 class="section-title">You Might Also Like</h2>
+        </div>
+        <div class="products-grid" id="related-products-grid">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+    </div>
   </main>
 
+  <!-- Global Footer -->
   <footer class="footer">
     <div class="container footer-grid">
       <div class="footer-col">
-        <div class="brand-logo" style="margin-bottom: 1rem;">Veyano</div>
-        <p style="color:#888; max-width:250px;">A better alternative to fried snacks. Freshly roasted, never compromised.</p>
-        
-        <!-- Legal & Compliance -->
-        <div class="fssai-section" style="margin-top: 1.5rem;">
-          <div class="fssai-box">
-            <svg class="fssai-logo" viewBox="0 0 100 40" width="80" height="32" fill="#888">
-              <rect width="100" height="40" rx="4" fill="none" stroke="#888" stroke-width="1"/>
-              <text x="50" y="25" text-anchor="middle" font-weight="700" font-size="12">FSSAI</text>
-            </svg>
-            <div style="font-size: 0.7rem; color: #888; margin-top: 0.3rem;">
-              Lic No. 20826010000397
-            </div>
-          </div>
+        <a href="index.html" class="nav-brand" style="margin-bottom: 0.75rem;">
+          <img src="assets/logo.png" alt="VEYANO Logo" width="130" height="39" style="mix-blend-mode: screen; filter: invert(1);">
+        </a>
+        <p class="footer-tagline">"Thoughtfully Made for You"<br>Clean roasted snacks crafted with quality, transparency, and honest ingredients.</p>
+        <div class="footer-fssai-box">
+          <span style="background: #3f3f46; padding: 2px 6px; border-radius: 3px; font-weight: 700; font-size: 0.7rem; color: #fff;">FSSAI</span>
+          <span>Lic. No. 20826010000397</span>
         </div>
-        
-        <p style="color:#666; font-size:0.9rem; margin-top:1rem;"><a href="mailto:veyanofoods@gmail.com">veyanofoods@gmail.com</a></p>
       </div>
-      <div class="footer-col" style="text-align:right;">
-         <div style="margin-bottom: 0.5rem;"><a href="blog.html" style="color:#888;">Blog</a></div>
-         <div style="margin-bottom: 0.5rem;"><a href="https://wa.me/919350598909" style="color:#888;">Order via WhatsApp</a></div>
-         <div style="margin-bottom: 0.5rem;"><a href="mailto:veyanofoods@gmail.com?subject=Corporate%20and%20Bulk%20Order%20Inquiry" style="color: #FF9900; font-weight: 600;">💼 B2B & Corporate Orders</a></div>
-         <div style="margin-bottom: 0.5rem;"><a href="privacy-policy.html" style="color:#888;">Privacy Policy</a></div>
-         <div style="margin-bottom: 1rem;"><a href="https://www.instagram.com/veyanofoods/?hl=en" target="_blank" style="color:#888;">Follow on Instagram</a></div>
-         <div class="cod-badge">COD (₹79 extra) | Free Delivery above ₹499</div>
+
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All Products</a></li>
+          <li><a href="shop.html?category=makhana">Roasted Makhana</a></li>
+          <li><a href="shop.html?category=combos">Discovery Combos</a></li>
+          <li><a href="try-veyano.html">Trial Packs</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>About</h4>
+        <ul>
+          <li><a href="our-story.html">Our Story</a></li>
+          <li><a href="why-veyano.html">Why VEYANO</a></li>
+          <li><a href="transparency.html">Ingredient Transparency</a></li>
+          <li><a href="blog.html">Snacking Journal</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Help & Business</h4>
+        <ul>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><a href="bulk-orders.html">Corporate & Bulk Orders</a></li>
+          <li><a href="https://wa.me/919350598909">WhatsApp Support</a></li>
+          <li><a href="shipping-policy.html">Shipping Policy</a></li>
+          <li><a href="refund-policy.html">Refund Policy</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="https://www.instagram.com/veyanofoods" target="_blank" rel="noopener">Instagram (@veyanofoods)</a></li>
+          <li><a href="mailto:veyanofoods@gmail.com">veyanofoods@gmail.com</a></li>
+          <li style="font-size: 0.85rem; color: #71717a; margin-top: 0.5rem;">
+            39, Jernaily Colony,<br>Karnal, Haryana — 132001
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <div>&copy; 2026 VEYANO Foods. All rights reserved.</div>
+      <div style="display: flex; gap: 1.5rem;">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <a href="shipping-policy.html">Shipping Policy</a>
+        <a href="refund-policy.html">Refund Policy</a>
       </div>
     </div>
   </footer>
 
-  <!-- Cart UI Elements -->
+  <!-- Slide-Out Cart Drawer -->
   <div class="cart-overlay" id="cart-overlay"></div>
   <div class="cart-drawer" id="cart-drawer">
     <div class="cart-header">
-      <h3>Your Cart</h3>
-      <button class="close-cart" id="close-cart-btn">&times;</button>
+      <h3>Your Shopping Cart</h3>
+      <button class="close-cart" id="close-cart-btn" aria-label="Close Cart">&times;</button>
     </div>
 
-    <!-- Progress Tracker -->
     <div class="cart-progress-section" id="cart-progress-section">
-      <div class="cart-progress-text" id="shipping-msg">Add ₹499 more for FREE DELIVERY</div>
+      <div class="cart-progress-text" id="shipping-msg">Add ₹499 more for FREE Pan-India Delivery</div>
       <div class="cart-progress-container">
         <div class="cart-progress-bar" id="shipping-bar"></div>
       </div>
     </div>
 
-
-
     <div class="cart-body" id="cart-drawer-body">
-      <!-- Clerk Auth Container -->
-      <div id="clerk-auth-container" style="margin-bottom: 1.5rem;"></div>
-
-      <!-- Step 1: Cart Items -->
       <div id="cart-step-items">
         <div id="cart-items-container">
           <div class="cart-empty">Your cart is empty.</div>
         </div>
       </div>
 
-      <!-- Step 2: Shipping Form -->
       <div id="cart-step-shipping" style="display: none;">
-        <h4 style="margin-bottom: 1rem; color: #c08b5c;">Shipping Details</h4>
-        <form id="checkout-form" class="checkout-form">
-          <div id="checkout-form-fields">
+        <h4 style="margin-bottom: 1rem; color: var(--accent-color);">Delivery Details</h4>
+        <div id="checkout-saved-addresses" style="display: none;"></div>
+        <form id="checkout-form">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" id="ship-name" class="form-control" placeholder="e.g. Rahul Sharma" required minlength="3">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mobile Phone Number *</label>
+            <input type="tel" id="ship-phone" class="form-control" placeholder="10-digit mobile number" required pattern="[6-9][0-9]{9}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input type="email" id="ship-email" class="form-control" placeholder="For order invoice & tracking" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Delivery Street Address *</label>
+            <textarea id="ship-address" class="form-control" placeholder="House/Flat No, Building, Street" rows="2" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Landmark (Optional)</label>
+            <input type="text" id="ship-landmark" class="form-control" placeholder="e.g. Near Metro Station / Park">
+          </div>
+          <div class="form-row">
             <div class="form-group">
-              <input type="text" id="ship-name" placeholder="Full Name" required minlength="3">
+              <label class="form-label">Pincode *</label>
+              <input type="text" id="ship-pincode" class="form-control" placeholder="6-digit PIN" required pattern="[0-9]{6}">
             </div>
             <div class="form-group">
-              <input type="email" id="ship-email" placeholder="Email Address" required>
-            </div>
-            <div class="form-group">
-              <input type="tel" id="ship-phone" placeholder="Mobile Number (10 Digits)" required pattern="[6-9][0-9]{9}">
-            </div>
-            <div class="form-group">
-              <textarea id="ship-address" placeholder="Full Delivery Address" required></textarea>
-            </div>
-            <div class="form-group">
-              <input type="text" id="ship-landmark" placeholder="Landmark (e.g. Near Temple, Opp Station)" required minlength="3">
-            </div>
-            <div class="form-row">
-              <input type="text" id="ship-city" placeholder="City" required minlength="2">
-              <input type="text" id="ship-pincode" placeholder="Pincode (6 Digits)" required pattern="[0-9]{6}">
-            </div>
-            <div class="form-group">
-              <select id="ship-state" required>
-                <option value="" disabled selected>Select State</option>
-                <option value="Andhra Pradesh">Andhra Pradesh</option>
-                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                <option value="Assam">Assam</option>
-                <option value="Bihar">Bihar</option>
-                <option value="Chhattisgarh">Chhattisgarh</option>
-                <option value="Goa">Goa</option>
-                <option value="Gujarat">Gujarat</option>
-                <option value="Haryana">Haryana</option>
-                <option value="Himachal Pradesh">Himachal Pradesh</option>
-                <option value="Jharkhand">Jharkhand</option>
-                <option value="Karnataka">Karnataka</option>
-                <option value="Kerala">Kerala</option>
-                <option value="Madhya Pradesh">Madhya Pradesh</option>
-                <option value="Maharashtra">Maharashtra</option>
-                <option value="Manipur">Manipur</option>
-                <option value="Meghalaya">Meghalaya</option>
-                <option value="Mizoram">Mizoram</option>
-                <option value="Nagaland">Nagaland</option>
-                <option value="Odisha">Odisha</option>
-                <option value="Punjab">Punjab</option>
-                <option value="Rajasthan">Rajasthan</option>
-                <option value="Sikkim">Sikkim</option>
-                <option value="Tamil Nadu">Tamil Nadu</option>
-                <option value="Telangana">Telangana</option>
-                <option value="Tripura">Tripura</option>
-                <option value="Uttar Pradesh">Uttar Pradesh</option>
-                <option value="Uttarakhand">Uttarakhand</option>
-                <option value="West Bengal">West Bengal</option>
-                <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
-                <option value="Chandigarh">Chandigarh</option>
-                <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Jammu and Kashmir">Jammu and Kashmir</option>
-                <option value="Ladakh">Ladakh</option>
-                <option value="Lakshadweep">Lakshadweep</option>
-                <option value="Puducherry">Puducherry</option>
-              </select>
+              <label class="form-label">City *</label>
+              <input type="text" id="ship-city" class="form-control" placeholder="City / District" required>
             </div>
           </div>
-          
-          <h4 style="margin: 1.5rem 0 1rem; color: #c08b5c;">Payment Method</h4>
-          <div class="payment-methods">
-            <label class="payment-option">
-              <input type="radio" name="paymentMethod" value="cod" checked>
-              <span>Cash on Delivery (₹79 Extra)</span>
-            </label>
-            <label class="payment-option">
-              <input type="radio" name="paymentMethod" value="prepaid">
-              <span>Pay Online (Safe & Secure)</span>
-            </label>
+          <div class="form-group">
+            <label class="form-label">State *</label>
+            <select id="ship-state" class="form-control" required>
+              <option value="" disabled selected>Select State</option>
+              <option value="Andhra Pradesh">Andhra Pradesh</option>
+              <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+              <option value="Assam">Assam</option>
+              <option value="Bihar">Bihar</option>
+              <option value="Chhattisgarh">Chhattisgarh</option>
+              <option value="Goa">Goa</option>
+              <option value="Gujarat">Gujarat</option>
+              <option value="Haryana">Haryana</option>
+              <option value="Himachal Pradesh">Himachal Pradesh</option>
+              <option value="Jharkhand">Jharkhand</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Kerala">Kerala</option>
+              <option value="Madhya Pradesh">Madhya Pradesh</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Manipur">Manipur</option>
+              <option value="Meghalaya">Meghalaya</option>
+              <option value="Mizoram">Mizoram</option>
+              <option value="Nagaland">Nagaland</option>
+              <option value="Odisha">Odisha</option>
+              <option value="Punjab">Punjab</option>
+              <option value="Rajasthan">Rajasthan</option>
+              <option value="Sikkim">Sikkim</option>
+              <option value="Tamil Nadu">Tamil Nadu</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Tripura">Tripura</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Uttarakhand">Uttarakhand</option>
+              <option value="West Bengal">West Bengal</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Chandigarh">Chandigarh</option>
+              <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+              <option value="Ladakh">Ladakh</option>
+            </select>
+          </div>
+
+          <div style="margin-top: 1.25rem;">
+            <label class="form-label">Payment Method *</label>
+            <div class="payment-methods">
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="prepaid" checked>
+                <span><strong>Pay Online (UPI / Card)</strong> — <span style="color:var(--brand-green); font-weight:700;">Save ₹79</span></span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="cod">
+                <span>Cash on Delivery (₹79 Courier Fee)</span>
+              </label>
+            </div>
           </div>
         </form>
-        <!-- Info moved to Checkout Page ONLY -->
-        <div id="checkout-incentive-msg" style="display: block; color: #c08b5c; font-weight: bold; font-size: 0.85rem; text-align: center; margin: 1rem 0; padding: 0.5rem; border: 1px dashed var(--accent-color); border-radius: 8px;">
-           Save ₹79 by paying online now!
-        </div>
       </div>
 
-      <!-- Step 3: Success Screen -->
-      <div id="cart-step-success" style="display: none; text-align: center; padding: 2rem 0;">
-        <svg viewBox="0 0 24 24" width="64" height="64" fill="#4caf50" style="margin-bottom: 1rem;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-        <h3>Order Placed!</h3>
-        <p id="order-number-display" style="color: #666; margin: 1rem 0;">Order #VFO-2024-00001</p>
-        <button class="btn btn-outline" style="margin-top: 2rem;" onclick="location.reload()">Continue Shopping</button>
+      <div id="cart-step-success" style="display: none; text-align: center; padding: 2.5rem 1rem;">
+        <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="var(--brand-green)" stroke-width="2" style="margin-bottom: 1rem;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
+        <h3 style="margin-bottom: 0.5rem;">Order Placed!</h3>
+        <p id="order-number-display" style="font-weight: 700; color: var(--accent-color); margin-bottom: 1rem;">Order #VFO-2026-00001</p>
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Thank you for choosing VEYANO! We will send you dispatch details and tracking updates via email and WhatsApp.
+        </p>
+        <button class="btn btn-sm btn-outline" onclick="location.reload()">Continue Shopping</button>
       </div>
     </div>
-    <div class="cart-footer">
+
+    <div class="cart-footer" id="cart-footer">
       <div id="summary-section">
         <div class="cart-summary-row">
           <span>Subtotal</span>
           <span id="display-subtotal">₹0</span>
         </div>
-        <div class="cart-summary-row" id="sidebar-delivery-row">
-          <span>Delivery Charge</span>
+        <div class="cart-summary-row">
+          <span>Pan-India Delivery</span>
           <span id="display-shipping">₹0</span>
         </div>
         <div class="cart-summary-row" id="cod-row" style="display: none;">
@@ -296,23 +498,225 @@
           <span id="display-total">₹0</span>
         </div>
       </div>
-      <button class="btn" id="next-step-btn" style="width: 100%;">Proceed to Checkout</button>
-      <div id="checkout-actions" style="display: none; gap:10px;">
+      <button class="btn btn-accent" id="next-step-btn" style="width: 100%;">Proceed to Checkout</button>
+      <div id="checkout-actions" style="display: none; gap: 10px;">
         <button class="btn btn-outline" id="back-to-cart-btn" style="flex: 1;">Back</button>
-        <button class="btn" id="place-order-btn" style="flex: 2;">Place Order</button>
+        <button class="btn btn-accent" id="place-order-btn" style="flex: 2;">Place Order</button>
       </div>
     </div>
   </div>
 
-  <script src="script.js?v=2.2.0"></script>
-  <script src="liquid-ether.js"></script>
-
-  <!-- Toast Container -->
-  <div id="toast-container" class="toast-container"></div>
-
-  <!-- Floating WhatsApp Button -->
-  <a href="https://wa.me/919350598909" class="floating-whatsapp" target="_blank" aria-label="Chat on WhatsApp">
+  <!-- Floating WhatsApp CTA -->
+  <a href="https://wa.me/919350598909" class="floating-whatsapp" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
     <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
   </a>
+
+  <!-- Controllers -->
+  <script src="products-data.js"></script>
+  <script src="script.js"></script>
+
+  <!-- Product Detail Page Controller Script -->
+  <script>
+    let currentProduct = null;
+    let selectedQuantity = 1;
+
+    function incrementProductQty() {
+      selectedQuantity++;
+      document.getElementById('product-detail-qty').textContent = selectedQuantity;
+    }
+
+    function decrementProductQty() {
+      if (selectedQuantity > 1) {
+        selectedQuantity--;
+        document.getElementById('product-detail-qty').textContent = selectedQuantity;
+      }
+    }
+
+    function handleDetailAddToCart() {
+      if (currentProduct) {
+        window.addToCart(currentProduct.id, selectedQuantity);
+      }
+    }
+
+    function handleDetailBuyNow() {
+      if (currentProduct) {
+        window.addToCart(currentProduct.id, selectedQuantity);
+        setTimeout(() => goToStep(2), 200);
+      }
+    }
+
+    function loadProductPageData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const slugOrVariant = urlParams.get('slug') || urlParams.get('variant') || 'classic-plain';
+      
+      const catalog = window.VeyanoProducts ? window.VeyanoProducts.getAll() : (window.DEFAULT_PRODUCTS || []);
+      currentProduct = catalog.find(p => 
+        p.slug === slugOrVariant || 
+        p.id === slugOrVariant || 
+        (p.sku && p.sku.toLowerCase() === slugOrVariant.toLowerCase())
+      ) || catalog[0];
+
+      if (!currentProduct) return;
+
+      // Update Meta Tags & Document Title
+      document.title = `${currentProduct.name} | VEYANO Foods`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) metaDesc.content = currentProduct.description || currentProduct.short_description;
+
+      // Populate Elements
+      document.getElementById('breadcrumb-current-product').textContent = currentProduct.name;
+      document.getElementById('detail-product-name').textContent = currentProduct.name;
+      document.getElementById('detail-product-short-desc').textContent = currentProduct.short_description;
+      document.getElementById('detail-product-price').textContent = `₹${currentProduct.price}`;
+      document.getElementById('detail-product-weight').textContent = currentProduct.weight;
+
+      const mrpEl = document.getElementById('detail-product-mrp');
+      if (currentProduct.mrp && currentProduct.mrp > currentProduct.price) {
+        mrpEl.style.display = 'inline';
+        mrpEl.textContent = `₹${currentProduct.mrp}`;
+      } else {
+        mrpEl.style.display = 'none';
+      }
+
+      // Stock Status
+      const stockBadge = document.getElementById('detail-product-stock-badge');
+      const buyArea = document.getElementById('buy-action-area');
+      const buyNowBtn = document.getElementById('detail-buy-now-btn');
+      
+      if (currentProduct.stock_status === 'coming_soon' || currentProduct.stock <= 0) {
+        stockBadge.className = 'badge badge-coming-soon';
+        stockBadge.textContent = 'Coming Soon';
+        if (buyArea) buyArea.innerHTML = `
+          <button class="btn btn-outline" style="width: 100%;" onclick="window.addToCart('${currentProduct.id}')">Notify Me on WhatsApp</button>
+        `;
+        if (buyNowBtn) buyNowBtn.style.display = 'none';
+      } else {
+        stockBadge.className = 'badge badge-featured';
+        stockBadge.textContent = 'In Stock';
+        if (buyNowBtn) buyNowBtn.style.display = 'block';
+      }
+
+      // Main Image & Thumbs
+      const mainImg = document.getElementById('main-product-image');
+      if (mainImg && currentProduct.images?.length > 0) {
+        mainImg.src = currentProduct.images[0];
+        mainImg.alt = currentProduct.name;
+      }
+
+      const thumbsContainer = document.getElementById('product-thumbnails-container');
+      if (thumbsContainer && currentProduct.images?.length > 0) {
+        thumbsContainer.innerHTML = currentProduct.images.map((img, idx) => `
+          <div class="product-thumb ${idx === 0 ? 'active' : ''}" data-src="${img}">
+            <img src="${img}" alt="${escapeHtml(currentProduct.name)} angle ${idx + 1}">
+          </div>
+        `).join('');
+
+        thumbsContainer.querySelectorAll('.product-thumb').forEach(thumb => {
+          thumb.addEventListener('click', () => {
+            thumbsContainer.querySelectorAll('.product-thumb').forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+            if (mainImg) {
+              mainImg.style.opacity = '0';
+              setTimeout(() => {
+                mainImg.src = thumb.dataset.src;
+                mainImg.style.opacity = '1';
+              }, 120);
+            }
+          });
+        });
+      }
+
+      // WhatsApp Button
+      const waBtn = document.getElementById('detail-whatsapp-btn');
+      if (waBtn) {
+        waBtn.href = window.buildWhatsAppOrderLink(currentProduct.id);
+      }
+
+      // Variant Buttons active state
+      document.querySelectorAll('.variant-btn').forEach(btn => {
+        const href = btn.getAttribute('href');
+        if (href && href.includes(currentProduct.slug)) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Disclosures
+      const whyList = document.getElementById('detail-why-like-list');
+      if (whyList) {
+        const list = currentProduct.why_you_will_like_it || [];
+        whyList.innerHTML = list.map(item => `<li>${escapeHtml(item)}</li>`).join('');
+      }
+
+      document.getElementById('detail-taste-profile').textContent = currentProduct.taste_profile || 'Light, crisp, and freshly roasted.';
+      document.getElementById('detail-ingredients').textContent = currentProduct.ingredients || '100% Lotus Seeds (Makhana).';
+      document.getElementById('detail-oil-info').textContent = currentProduct.oil_information || '0% added oil.';
+      document.getElementById('detail-preservatives').textContent = currentProduct.preservative_information || 'Zero artificial preservatives.';
+      document.getElementById('detail-allergens').textContent = currentProduct.allergens || 'Naturally Gluten-Free.';
+      document.getElementById('detail-shelf-life').textContent = currentProduct.shelf_life || '6 Months from packaging date.';
+      document.getElementById('detail-storage').textContent = currentProduct.storage_instructions || 'Store in an airtight container.';
+      document.getElementById('detail-fssai').textContent = currentProduct.fssai_information || 'FSSAI Lic. No. 20826010000397';
+
+      // Nutrition Table
+      const nTbody = document.getElementById('detail-nutrition-tbody');
+      if (nTbody && currentProduct.nutrition) {
+        const n100 = currentProduct.nutrition.per_100g || {};
+        const nServ = currentProduct.nutrition.per_serving || {};
+
+        const rows = [
+          { label: 'Energy / Calories', k: 'energy' },
+          { label: 'Protein', k: 'protein' },
+          { label: 'Carbohydrates', k: 'carbohydrates' },
+          { label: 'Dietary Fiber', k: 'dietary_fiber' },
+          { label: 'Total Sugars', k: 'total_sugar' },
+          { label: 'Added Sugars', k: 'added_sugar' },
+          { label: 'Total Fat', k: 'total_fat' },
+          { label: 'Saturated Fat', k: 'saturated_fat' },
+          { label: 'Trans Fat', k: 'trans_fat' },
+          { label: 'Cholesterol', k: 'cholesterol' },
+          { label: 'Sodium', k: 'sodium' },
+          { label: 'Calcium', k: 'calcium' }
+        ];
+
+        nTbody.innerHTML = rows.map(r => {
+          const v100 = n100[r.k] || '—';
+          const vServ = nServ[r.k] || '—';
+          return `
+            <tr>
+              <td><strong>${r.label}</strong></td>
+              <td>${v100}</td>
+              <td>${vServ}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Related Products
+      const relContainer = document.getElementById('related-products-grid');
+      if (relContainer) {
+        const others = catalog.filter(p => p.id !== currentProduct.id).slice(0, 3);
+        relContainer.innerHTML = others.map(p => `
+          <div class="product-card">
+            <div class="product-card-media">
+              <a href="product.html?slug=${p.slug || p.id}">
+                <img src="${p.images[0]}" alt="${escapeHtml(p.name)}" class="product-card-img base-img" loading="lazy">
+              </a>
+              <span class="badge-weight">${p.weight}</span>
+            </div>
+            <div class="product-card-body">
+              <h3 class="product-card-title"><a href="product.html?slug=${p.slug || p.id}">${escapeHtml(p.name)}</a></h3>
+              <div class="product-card-price-row">
+                <span class="product-price-current">₹${p.price}</span>
+              </div>
+              <a href="product.html?slug=${p.slug || p.id}" class="btn btn-sm btn-outline">View Details</a>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProductPageData);
+  </script>
 </body>
 </html>

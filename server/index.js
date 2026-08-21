@@ -19,6 +19,7 @@ const logisticsRoutes = require('./routes/logistics');
 const complianceRoutes = require('./routes/compliance');
 const blogRoutes = require('./routes/blog');
 const paymentRoutes = require('./routes/payments');
+const productRoutes = require('./routes/products');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,7 +30,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.clerk.com", "https://*.clerk.accounts.dev", "https://checkout.razorpay.com", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'", "https://clerk.com", "https://*.clerk.com", "https://*.clerk.accounts.dev", "https://api.razorpay.com", "http://localhost:3001"],
+      connectSrc: ["'self'", "https://clerk.com", "https://*.clerk.com", "https://*.clerk.accounts.dev", "https://api.razorpay.com", "https://api.postalpincode.in", "http://localhost:3001"],
       imgSrc: ["'self'", "data:", "https://img.clerk.com", "https://clerk.com", "https://www.veyano.in"],
       frameSrc: ["'self'", "https://checkout.razorpay.com", "https://*.clerk.accounts.dev"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
@@ -82,29 +83,31 @@ app.use('/api/logistics', logisticsRoutes);
 app.use('/api/compliance', complianceRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/products', productRoutes);
 
 // Serve frontend static files (from the root directory)
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/login.html'));
-});
-
-app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/signup.html'));
-});
-
-app.get('/privacy-policy', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/privacy-policy.html'));
-});
-
-app.get('/cart', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
+// Clean URL Page Routes
+app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, '../public/shop.html')));
+app.get('/try-veyano', (req, res) => res.sendFile(path.join(__dirname, '../public/try-veyano.html')));
+app.get('/our-story', (req, res) => res.sendFile(path.join(__dirname, '../public/our-story.html')));
+app.get('/transparency', (req, res) => res.sendFile(path.join(__dirname, '../public/transparency.html')));
+app.get('/why-veyano', (req, res) => res.sendFile(path.join(__dirname, '../public/why-veyano.html')));
+app.get('/bulk-orders', (req, res) => res.sendFile(path.join(__dirname, '../public/bulk-orders.html')));
+app.get('/b2b', (req, res) => res.sendFile(path.join(__dirname, '../public/bulk-orders.html')));
+app.get('/contact', (req, res) => res.sendFile(path.join(__dirname, '../public/contact.html')));
+app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, '../public/terms.html')));
+app.get('/shipping-policy', (req, res) => res.sendFile(path.join(__dirname, '../public/shipping-policy.html')));
+app.get('/refund-policy', (req, res) => res.sendFile(path.join(__dirname, '../public/refund-policy.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, '../public/admin.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../public/login.html')));
+app.get('/signup', (req, res) => res.sendFile(path.join(__dirname, '../public/signup.html')));
+app.get('/privacy-policy', (req, res) => res.sendFile(path.join(__dirname, '../public/privacy-policy.html')));
+app.get('/cart', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
+app.get('/product/:slug', (req, res) => res.sendFile(path.join(__dirname, '../public/product.html')));
+app.get('/blog/:slug', (req, res) => res.sendFile(path.join(__dirname, '../public/blog-post.html')));
+app.get('/blog', (req, res) => res.sendFile(path.join(__dirname, '../public/blog.html')));
 
 // Serve generated invoices (authenticated access only via /api/compliance/invoice/:id)
 app.use('/invoices', express.static(path.join(__dirname, 'invoices')));

@@ -6,12 +6,64 @@
       "destination": "/api/index.js"
     },
     {
+      "source": "/product/:slug",
+      "destination": "/product.html?slug=:slug"
+    },
+    {
       "source": "/blog/:slug",
       "destination": "/blog-post.html?slug=:slug"
     },
     {
+      "source": "/shop",
+      "destination": "/shop.html"
+    },
+    {
+      "source": "/try-veyano",
+      "destination": "/try-veyano.html"
+    },
+    {
+      "source": "/our-story",
+      "destination": "/our-story.html"
+    },
+    {
+      "source": "/transparency",
+      "destination": "/transparency.html"
+    },
+    {
+      "source": "/why-veyano",
+      "destination": "/why-veyano.html"
+    },
+    {
+      "source": "/bulk-orders",
+      "destination": "/bulk-orders.html"
+    },
+    {
+      "source": "/b2b",
+      "destination": "/bulk-orders.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/shipping-policy",
+      "destination": "/shipping-policy.html"
+    },
+    {
+      "source": "/refund-policy",
+      "destination": "/refund-policy.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
       "source": "/cart",
-      "destination": "/index.html"
+      "destination": "/index.html?cart=open"
     },
     {
       "source": "/privacy-policy",
@@ -27,4 +79,3 @@
     }
   ]
 }
-

@@ -4,82 +4,117 @@
   <meta charset="UTF-8">
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Veyano Blog | Loading Story...</title>
-  <!-- Favicon & Search Engine Icons -->
+  <meta name="description" content="Read our in-depth snacking guide on the VEYANO Journal. Learn about makhana science, ingredient transparency, and mindful food choices.">
+  <meta name="robots" content="index, follow">
+  <title>Story | VEYANO Journal</title>
+  
   <link rel="shortcut icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <link rel="manifest" href="site.webmanifest">
   <meta name="theme-color" content="#fdfbf7">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
+  <!-- Announcement Bar -->
+  <div class="announcement-bar">
+    <span>🚚 <strong>FREE Pan-India Delivery</strong> on orders above ₹499</span>
+    <span class="announcement-sep" style="opacity: 0.4;">|</span>
+    <span>🌿 FSSAI Lic. No. <strong>20826010000397</strong></span>
+  </div>
+
   <!-- Navbar -->
   <header class="navbar">
-    <div class="container flex justify-between items-center">
-      <a href="index.html" class="brand-logo">
-        <img src="assets/logo.webp" alt="VEYANO" style="height: 48px; width: auto; display: block;">
+    <div class="container nav-container">
+      <a href="index.html" class="nav-brand">
+        <img src="assets/logo.png" alt="VEYANO Logo" width="140" height="42">
       </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="shop.html" class="nav-link">Shop</a></li>
+          <li><a href="try-veyano.html" class="nav-link">Try VEYANO</a></li>
+          <li><a href="our-story.html" class="nav-link">Our Story</a></li>
+          <li><a href="transparency.html" class="nav-link">Transparency</a></li>
+          <li><a href="blog.html" class="nav-link active">Journal</a></li>
+          <li><a href="bulk-orders.html" class="nav-link">Bulk Orders</a></li>
+        </ul>
+      </nav>
       <div class="nav-actions">
-        <nav style="display: flex; align-items: center; gap: 1.5rem;">
-          <a href="index.html" style="font-size: 0.9rem; font-weight: 500;">Home</a>
-          <a href="blog.html" style="font-size: 0.9rem; font-weight: 600; color: #FF9900;">Blog</a>
-          <a href="index.html#products" class="btn btn-outline nav-shop-btn" style="padding: 0.5rem 1.5rem; text-transform: none;">Shop Now</a>
-        </nav>
-        <div id="nav-auth-container" style="margin-left: 1.5rem;"></div>
+        <a href="shop.html" class="btn btn-sm btn-outline">Shop Now</a>
       </div>
     </div>
   </header>
 
-  <main id="blog-content">
-    <div style="text-align: center; padding: 10rem 0;">
-      <p>Loading your story...</p>
+  <!-- Main Article Body -->
+  <main class="section">
+    <div class="container" id="blog-content">
+      <div style="text-align: center; padding: 6rem 0;">
+        <p>Loading journal story...</p>
+      </div>
     </div>
   </main>
 
   <!-- Footer -->
-  <footer class="footer" style="padding: 4rem 0; background: #1a1a1a; color: #fff; margin-top: 4rem;">
-    <div class="container">
-      <div class="footer-grid" style="display: flex; justify-content: space-between; gap: 4rem;">
-        <div>
-          <h2 class="brand-logo" style="margin-bottom: 1rem;">Veyano</h2>
-          <p style="color: #888; max-width: 300px;">Thoughtfully made makhana for the modern snacker. Pure, natural, and never fried.</p>
-        </div>
-        <div style="display: flex; gap: 4rem;">
-          <div>
-            <h4 style="margin-bottom: 1rem; color: #FF9900;">Shop</h4>
-            <ul style="list-style: none; color: #888; display: flex; flex-direction: column; gap: 0.5rem;">
-              <li><a href="index.html#products">All Products</a></li>
-              <li><a href="product.html?variant=combo">Combo Pack</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 style="margin-bottom: 1rem; color: #FF9900;">Support</h4>
-            <ul style="list-style: none; color: #888; display: flex; flex-direction: column; gap: 0.5rem;">
-              <li><a href="blog.html">Blog</a></li>
-              <li><a href="https://wa.me/919350598909">Order via WhatsApp</a></li>
-              <li><a href="mailto:veyanofoods@gmail.com?subject=Corporate%20and%20Bulk%20Order%20Inquiry" style="color: #FF9900; font-weight: 600;">💼 B2B & Corporate Orders</a></li>
-              <li><a href="privacy-policy.html">Privacy Policy</a></li>
-            </ul>
-          </div>
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="index.html" class="nav-brand" style="margin-bottom: 0.75rem;">
+          <img src="assets/logo.png" alt="VEYANO Logo" width="130" height="39" style="mix-blend-mode: screen; filter: invert(1);">
+        </a>
+        <p class="footer-tagline">"Thoughtfully Made for You"<br>Clean roasted snacks crafted with quality and honest ingredients.</p>
+        <div class="footer-fssai-box">
+          <span style="background: #3f3f46; padding: 2px 6px; border-radius: 3px; font-weight: 700; font-size: 0.7rem; color: #fff;">FSSAI</span>
+          <span>Lic. No. 20826010000397</span>
         </div>
       </div>
-      <div style="border-top: 1px solid #333; margin-top: 4rem; padding-top: 2rem; text-align: center; color: #666; font-size: 0.85rem;">
-        &copy; 2024 Veyano Foods. FSSAI No. 20826010000397. 
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All Products</a></li>
+          <li><a href="shop.html?category=combos">Discovery Combos</a></li>
+          <li><a href="try-veyano.html">Trial Packs</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <ul>
+          <li><a href="our-story.html">Our Story</a></li>
+          <li><a href="why-veyano.html">Why VEYANO</a></li>
+          <li><a href="transparency.html">Ingredient Transparency</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><a href="bulk-orders.html">Bulk Orders</a></li>
+          <li><a href="https://wa.me/919350598909">WhatsApp Support</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="https://www.instagram.com/veyanofoods" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="mailto:veyanofoods@gmail.com">veyanofoods@gmail.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <div>&copy; 2026 VEYANO Foods. All rights reserved.</div>
+      <div style="display: flex; gap: 1.5rem;">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms & Conditions</a>
       </div>
     </div>
   </footer>
 
   <script src="blog-logic.js"></script>
-
-  <!-- Floating WhatsApp Button -->
-  <a href="https://wa.me/919350598909" class="floating-whatsapp" target="_blank" aria-label="Chat on WhatsApp">
-    <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
-  </a>
 </body>
 </html>

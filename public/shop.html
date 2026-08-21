@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Shop all VEYANO roasted snacks and makhana. Clean crunch, zero palm oil, pure ingredients. Fast pan-India delivery with free shipping above ₹499.">
+  <meta name="keywords" content="Buy makhana online, VEYANO shop, roasted snacks india, fox nuts online, healthy snacks catalog">
+  <meta name="robots" content="index, follow">
+  
+  <title>Shop All Clean Roasted Snacks | VEYANO Foods</title>
+  
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#fdfbf7">
+  <link rel="canonical" href="https://veyano.in/shop.html">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+</head>
+<body>
+
+  <!-- Announcement Bar -->
+  <div class="announcement-bar">
+    <span>🚚 <strong>FREE Pan-India Delivery</strong> on orders above ₹499</span>
+    <span class="announcement-sep" style="opacity: 0.4;">|</span>
+    <span>🌿 FSSAI Lic. No. <strong>20826010000397</strong></span>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="nav-brand">
+        <img src="assets/logo.png" alt="VEYANO Logo" width="140" height="42">
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="shop.html" class="nav-link active">Shop</a></li>
+          <li><a href="try-veyano.html" class="nav-link">Try VEYANO</a></li>
+          <li><a href="our-story.html" class="nav-link">Our Story</a></li>
+          <li><a href="transparency.html" class="nav-link">Transparency</a></li>
+          <li><a href="blog.html" class="nav-link">Journal</a></li>
+          <li><a href="bulk-orders.html" class="nav-link">Bulk Orders</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <div id="nav-auth-container"><a href="login.html" class="nav-link">Sign In</a></div>
+        <button class="cart-icon-btn cart-trigger-btn" aria-label="Open Cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span class="cart-badge" id="cart-count">0</span>
+        </button>
+        <button class="mobile-menu-toggle" id="mobile-nav-toggle" aria-label="Open Menu">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
+  <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+    <div class="mobile-drawer-header">
+      <img src="assets/logo.png" alt="VEYANO" style="height: 36px; width: auto;">
+      <button id="mobile-drawer-close" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+    </div>
+    <ul class="mobile-nav-list">
+      <li class="mobile-nav-item"><a href="index.html">Home</a></li>
+      <li class="mobile-nav-item"><a href="shop.html">Shop All Snacks</a></li>
+      <li class="mobile-nav-item"><a href="try-veyano.html">Try VEYANO (Trial Packs)</a></li>
+      <li class="mobile-nav-item"><a href="our-story.html">Our Story</a></li>
+      <li class="mobile-nav-item"><a href="why-veyano.html">Why VEYANO</a></li>
+      <li class="mobile-nav-item"><a href="transparency.html">Ingredient Transparency</a></li>
+      <li class="mobile-nav-item"><a href="blog.html">Snacking Journal</a></li>
+      <li class="mobile-nav-item"><a href="bulk-orders.html">Corporate & Bulk Orders</a></li>
+      <li class="mobile-nav-item"><a href="contact.html">Contact Us</a></li>
+    </ul>
+  </div>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">All Snacks</span>
+        <h1 class="section-title">The VEYANO Collection</h1>
+        <p class="section-subtitle">Pure, dry-roasted snacks crafted without deep frying or artificial additives.</p>
+      </div>
+
+      <!-- Search & Filters -->
+      <div style="max-width: 600px; margin: 0 auto 2rem;">
+        <input type="text" id="shop-search-input" class="form-control" placeholder="🔍 Search snacks by flavor, ingredient, or pack size..." style="border-radius: var(--radius-full); padding: 0.85rem 1.5rem;">
+      </div>
+
+      <div class="category-filter-bar">
+        <button class="filter-pill active" data-category="all">All Products</button>
+        <button class="filter-pill" data-category="makhana">Roasted Makhana</button>
+        <button class="filter-pill" data-category="combos">Combos & Bundles</button>
+        <button class="filter-pill" data-category="trial-packs">Trial Packs</button>
+      </div>
+
+      <div class="products-grid" id="products-grid-container">
+        <!-- Rendered by script.js -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="index.html" class="nav-brand" style="margin-bottom: 0.75rem;">
+          <img src="assets/logo.png" alt="VEYANO Logo" width="130" height="39" style="mix-blend-mode: screen; filter: invert(1);">
+        </a>
+        <p class="footer-tagline">"Thoughtfully Made for You"<br>Clean roasted snacks crafted with quality and honest ingredients.</p>
+        <div class="footer-fssai-box">
+          <span style="background: #3f3f46; padding: 2px 6px; border-radius: 3px; font-weight: 700; font-size: 0.7rem; color: #fff;">FSSAI</span>
+          <span>Lic. No. 20826010000397</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All Products</a></li>
+          <li><a href="shop.html?category=makhana">Roasted Makhana</a></li>
+          <li><a href="shop.html?category=combos">Discovery Combos</a></li>
+          <li><a href="try-veyano.html">Trial Packs</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <ul>
+          <li><a href="our-story.html">Our Story</a></li>
+          <li><a href="why-veyano.html">Why VEYANO</a></li>
+          <li><a href="transparency.html">Ingredient Transparency</a></li>
+          <li><a href="blog.html">Snacking Journal</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help & Legal</h4>
+        <ul>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><a href="bulk-orders.html">Bulk Orders</a></li>
+          <li><a href="shipping-policy.html">Shipping Policy</a></li>
+          <li><a href="refund-policy.html">Refund Policy</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="https://www.instagram.com/veyanofoods" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="mailto:veyanofoods@gmail.com">veyanofoods@gmail.com</a></li>
+          <li style="font-size: 0.85rem; color: #71717a; margin-top: 0.5rem;">Karnal, Haryana — 132001</li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <div>&copy; 2026 VEYANO Foods. All rights reserved.</div>
+      <div style="display: flex; gap: 1.5rem;">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms & Conditions</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart Drawer -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <div class="cart-drawer" id="cart-drawer">
+    <div class="cart-header">
+      <h3>Your Cart</h3>
+      <button class="close-cart" id="close-cart-btn">&times;</button>
+    </div>
+    <div class="cart-progress-section" id="cart-progress-section">
+      <div class="cart-progress-text" id="shipping-msg">Add ₹499 more for FREE Pan-India Delivery</div>
+      <div class="cart-progress-container"><div class="cart-progress-bar" id="shipping-bar"></div></div>
+    </div>
+    <div class="cart-body">
+      <div id="cart-step-items"><div id="cart-items-container"></div></div>
+      <div id="cart-step-shipping" style="display: none;">
+        <h4 style="margin-bottom: 1rem; color: var(--accent-color);">Delivery Details</h4>
+        <form id="checkout-form">
+          <div class="form-group"><input type="text" id="ship-name" class="form-control" placeholder="Full Name" required minlength="3"></div>
+          <div class="form-group"><input type="tel" id="ship-phone" class="form-control" placeholder="10-digit mobile number" required pattern="[6-9][0-9]{9}"></div>
+          <div class="form-group"><input type="email" id="ship-email" class="form-control" placeholder="Email Address" required></div>
+          <div class="form-group"><textarea id="ship-address" class="form-control" placeholder="Delivery Street Address" rows="2" required></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><input type="text" id="ship-pincode" class="form-control" placeholder="6-digit PIN" required pattern="[0-9]{6}"></div>
+            <div class="form-group"><input type="text" id="ship-city" class="form-control" placeholder="City" required></div>
+          </div>
+          <div class="form-group">
+            <select id="ship-state" class="form-control" required>
+              <option value="" disabled selected>Select State</option>
+              <option value="Haryana">Haryana</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Punjab">Punjab</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Other">Other States</option>
+            </select>
+          </div>
+          <div class="payment-methods">
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="prepaid" checked>
+              <span><strong>Pay Online (UPI / Card)</strong> — <span style="color:var(--brand-green); font-weight:700;">Save ₹79</span></span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="cod">
+              <span>Cash on Delivery (₹79 Fee)</span>
+            </label>
+          </div>
+        </form>
+      </div>
+      <div id="cart-step-success" style="display: none; text-align: center; padding: 2rem 0;">
+        <h3 style="color: var(--brand-green);">Order Placed!</h3>
+        <p id="order-number-display" style="font-weight: 700; color: var(--accent-color); margin: 1rem 0;"></p>
+        <button class="btn btn-sm btn-outline" onclick="location.reload()">Continue Shopping</button>
+      </div>
+    </div>
+    <div class="cart-footer">
+      <div id="summary-section">
+        <div class="cart-summary-row"><span>Subtotal</span><span id="display-subtotal">₹0</span></div>
+        <div class="cart-summary-row"><span>Delivery</span><span id="display-shipping">₹0</span></div>
+        <div class="cart-summary-row" id="cod-row" style="display:none;"><span>COD Fee</span><span id="display-cod">₹79</span></div>
+        <div class="cart-summary-total"><span>Total</span><span id="display-total">₹0</span></div>
+      </div>
+      <button class="btn btn-accent" id="next-step-btn" style="width: 100%;">Proceed to Checkout</button>
+      <div id="checkout-actions" style="display: none; gap: 10px;">
+        <button class="btn btn-outline" id="back-to-cart-btn" style="flex: 1;">Back</button>
+        <button class="btn btn-accent" id="place-order-btn" style="flex: 2;">Place Order</button>
+      </div>
+    </div>
+  </div>
+
+  <a href="https://wa.me/919350598909" class="floating-whatsapp" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+    <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
+  </a>
+
+  <script src="products-data.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // Live Search Filter for Shop Page
+    document.getElementById('shop-search-input')?.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const catalog = window.VeyanoProducts ? window.VeyanoProducts.getAll() : (window.DEFAULT_PRODUCTS || []);
+      const matched = catalog.filter(p => 
+        p.name.toLowerCase().includes(q) || 
+        p.short_description.toLowerCase().includes(q) || 
+        p.ingredients.toLowerCase().includes(q)
+      );
+      
+      const container = document.getElementById('products-grid-container');
+      if (container) {
+        if (matched.length === 0) {
+          container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-muted);">No snacks matching "${escapeHtml(q)}" found.</div>`;
+        } else {
+          // Re-render matched items
+          container.innerHTML = matched.map(product => `
+            <div class="product-card">
+              <div class="product-card-media">
+                <a href="product.html?slug=${product.slug || product.id}">
+                  <img src="${product.images[0]}" alt="${escapeHtml(product.name)}" class="product-card-img base-img" loading="lazy">
+                  <img src="${product.hoverImage || product.images[0]}" alt="${escapeHtml(product.name)}" class="product-card-img hover-img" loading="lazy">
+                </a>
+                <span class="badge-weight">${product.weight}</span>
+              </div>
+              <div class="product-card-body">
+                <h3 class="product-card-title"><a href="product.html?slug=${product.slug || product.id}">${escapeHtml(product.name)}</a></h3>
+                <p class="product-card-desc">${escapeHtml(product.short_description)}</p>
+                <div class="product-card-price-row">
+                  <span class="product-price-current">₹${product.price}</span>
+                </div>
+                <div class="product-card-actions">
+                  <button class="btn btn-sm btn-accent" onclick="window.addToCart('${product.id}')">Add to Cart</button>
+                  <a href="product.html?slug=${product.slug || product.id}" class="btn btn-sm btn-outline">Details</a>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

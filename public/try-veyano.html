@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Never tried VEYANO? Start small with our trial packs and sampler formats. Taste the clean, dry-roasted crunch and decide for yourself.">
+  <meta name="keywords" content="VEYANO trial packs, makhana sample pack, discovery box snacks, try veyano">
+  <meta name="robots" content="index, follow">
+  
+  <title>Try VEYANO | Start Small & Discover Your Favourite Snack</title>
+  
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#fdfbf7">
+  <link rel="canonical" href="https://veyano.in/try-veyano.html">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="announcement-bar">
+    <span>🚚 <strong>FREE Pan-India Delivery</strong> on orders above ₹499</span>
+    <span class="announcement-sep" style="opacity: 0.4;">|</span>
+    <span>🌿 FSSAI Lic. No. <strong>20826010000397</strong></span>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="nav-brand">
+        <img src="assets/logo.png" alt="VEYANO Logo" width="140" height="42">
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="shop.html" class="nav-link">Shop</a></li>
+          <li><a href="try-veyano.html" class="nav-link active">Try VEYANO</a></li>
+          <li><a href="our-story.html" class="nav-link">Our Story</a></li>
+          <li><a href="transparency.html" class="nav-link">Transparency</a></li>
+          <li><a href="blog.html" class="nav-link">Journal</a></li>
+          <li><a href="bulk-orders.html" class="nav-link">Bulk Orders</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <div id="nav-auth-container"><a href="login.html" class="nav-link">Sign In</a></div>
+        <button class="cart-icon-btn cart-trigger-btn" aria-label="Open Cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span class="cart-badge" id="cart-count">0</span>
+        </button>
+        <button class="mobile-menu-toggle" id="mobile-nav-toggle" aria-label="Open Menu">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
+  <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+    <div class="mobile-drawer-header">
+      <img src="assets/logo.png" alt="VEYANO" style="height: 36px; width: auto;">
+      <button id="mobile-drawer-close" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+    </div>
+    <ul class="mobile-nav-list">
+      <li class="mobile-nav-item"><a href="index.html">Home</a></li>
+      <li class="mobile-nav-item"><a href="shop.html">Shop All Snacks</a></li>
+      <li class="mobile-nav-item"><a href="try-veyano.html">Try VEYANO</a></li>
+      <li class="mobile-nav-item"><a href="our-story.html">Our Story</a></li>
+      <li class="mobile-nav-item"><a href="why-veyano.html">Why VEYANO</a></li>
+      <li class="mobile-nav-item"><a href="transparency.html">Ingredient Transparency</a></li>
+      <li class="mobile-nav-item"><a href="blog.html">Snacking Journal</a></li>
+      <li class="mobile-nav-item"><a href="bulk-orders.html">Corporate & Bulk Orders</a></li>
+      <li class="mobile-nav-item"><a href="contact.html">Contact Us</a></li>
+    </ul>
+  </div>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-header" style="max-width: 760px;">
+        <span class="section-tag">Trial & Discovery</span>
+        <h1 class="section-title">Never Tried VEYANO?<br>Start small. Find your favourite.</h1>
+        <p class="section-subtitle">
+          We want you to discover the difference of hot-air roasted, zero-palm-oil snacking with absolute confidence.
+        </p>
+      </div>
+
+      <!-- Strategy Explanation Banner -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: var(--radius-xl); padding: 2.5rem; margin-bottom: 4rem; box-shadow: var(--shadow-sm);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+          <div>
+            <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem; color: var(--accent-color);">1. Why We Prioritize Trial</h3>
+            <p style="font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6;">
+              A full 200g jar can feel like a significant commitment when you haven't tasted a brand yet. We believe in letting our product speak for itself with smaller, pocket-friendly portions.
+            </p>
+          </div>
+          <div>
+            <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem; color: var(--accent-color);">2. The Multi-Flavour Discovery</h3>
+            <p style="font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6;">
+              Everyone's palate is unique. Whether you prefer pure earthy crunch (Classic Plain), mineral saltiness (Lightly Salted), or zesty heat (Fiery Peri-Peri), you can sample every profile easily.
+            </p>
+          </div>
+          <div>
+            <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem; color: var(--accent-color);">3. Clean Roasting Guarantee</h3>
+            <p style="font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6;">
+              No matter the pack size, every single seed is roasted with hot air, free from deep-frying in palm oil, and packed with full ingredient honesty.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Discovery Options Grid -->
+      <div class="section-header" style="text-align: left; margin-bottom: 2rem;">
+        <h2>Available Discovery Formats</h2>
+      </div>
+
+      <div class="products-grid">
+        <!-- Option 1: Trio Discovery Combo (Available Now) -->
+        <div class="product-card">
+          <div class="product-card-media">
+            <a href="product.html?slug=ultimate-combo">
+              <img src="./assets/combo.webp" alt="Trio Discovery Combo" class="product-card-img base-img">
+              <img src="./assets/combo_hover.webp" alt="Trio Discovery Combo" class="product-card-img hover-img">
+            </a>
+            <div class="product-badge-group">
+              <span class="badge badge-featured">Best Value</span>
+            </div>
+            <span class="badge-weight">3 x 200g</span>
+          </div>
+          <div class="product-card-body">
+            <h3 class="product-card-title"><a href="product.html?slug=ultimate-combo">The Trio Discovery Combo</a></h3>
+            <p class="product-card-desc">The best way to experience all 3 flavors in full 200g jars. Classic Plain, Lightly Salted, and Fiery Peri-Peri. Automatically unlocks FREE delivery.</p>
+            <div class="product-card-price-row">
+              <span class="product-price-current">₹999</span>
+              <span class="product-price-mrp">₹1,197</span>
+            </div>
+            <div class="product-card-actions">
+              <button class="btn btn-sm btn-accent" onclick="window.addToCart('ultimate-combo')">Add to Cart</button>
+              <a href="product.html?slug=ultimate-combo" class="btn btn-sm btn-outline">Details</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Option 2: Classic Plain Single — Lowest Price Entry Point -->
+        <div class="product-card">
+          <div class="product-card-media">
+            <a href="product.html?slug=classic-plain">
+              <img src="./assets/plain.webp" alt="Classic Plain Roasted Makhana" class="product-card-img base-img">
+              <img src="./assets/plain_hover.webp" alt="Classic Plain Roasted Makhana" class="product-card-img hover-img">
+            </a>
+            <span class="badge-weight">200g</span>
+          </div>
+          <div class="product-card-body">
+            <h3 class="product-card-title"><a href="product.html?slug=classic-plain">Classic Plain (0% Oil)</a></h3>
+            <p class="product-card-desc">The purest expression of our roasting. Single-ingredient. No oil, no salt. The best starting point if you haven't tried makhana before.</p>
+            <div class="product-card-price-row">
+              <span class="product-price-current">₹399</span>
+            </div>
+            <div class="product-card-actions">
+              <button class="btn btn-sm btn-accent" onclick="window.addToCart('classic-plain')">Add to Cart</button>
+              <a href="product.html?slug=classic-plain" class="btn btn-sm btn-outline">Details</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Option 3: Trial Packs — Coming Soon (no price, no cart) -->
+        <div class="product-card" style="opacity: 0.88; border: 2px dashed var(--border-card);">
+          <div class="product-card-media" style="background: var(--bg-subtle);">
+            <img src="./assets/makhana_hero_1775492594943.webp" alt="VEYANO Trial Packs Coming Soon" class="product-card-img base-img" style="filter: grayscale(20%);">
+            <div class="product-badge-group">
+              <span class="badge badge-coming-soon">Coming Soon</span>
+              <span class="badge badge-trial">Trial Pack</span>
+            </div>
+          </div>
+          <div class="product-card-body">
+            <h3 class="product-card-title" style="color: var(--text-primary);">Trial Packs</h3>
+            <p class="product-card-desc">
+              We're working on smaller formats so you can try VEYANO before committing to a larger pack. No price announced yet.
+            </p>
+            <div class="product-card-actions">
+              <a href="https://wa.me/919350598909?text=Hi%20VEYANO!%20I'd%20like%20to%20be%20notified%20when%20trial%20packs%20are%20available."
+                 class="btn btn-sm btn-outline" style="grid-column: 1/-1;" target="_blank" rel="noopener">
+                Notify Me When Available
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explicit "Coming Soon" Section -->
+      <div style="margin-top: 4rem; background: var(--bg-subtle); border: 1px dashed var(--border-card); border-radius: var(--radius-xl); padding: 3rem 2rem; text-align: center; max-width: 680px; margin-left: auto; margin-right: auto;">
+        <span class="badge badge-coming-soon" style="margin-bottom: 1rem; display: inline-block;">Trial Packs — Coming Soon</span>
+        <h2 style="font-size: 1.65rem; margin-bottom: 0.75rem;">New to VEYANO?</h2>
+        <p style="color: var(--text-secondary); max-width: 480px; margin: 0 auto 0.75rem; line-height: 1.7;">
+          We're working on smaller packs so you can try VEYANO before committing to a larger pack.
+        </p>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.75rem;">
+          Trial packs are coming soon. No launch date announced yet.
+        </p>
+        <a href="https://wa.me/919350598909?text=Hi%20VEYANO!%20I'd%20like%20to%20be%20notified%20when%20trial%20packs%20are%20available."
+           class="btn btn-outline" target="_blank" rel="noopener">
+          Notify Me on WhatsApp
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="index.html" class="nav-brand" style="margin-bottom: 0.75rem;">
+          <img src="assets/logo.png" alt="VEYANO Logo" width="130" height="39" style="mix-blend-mode: screen; filter: invert(1);">
+        </a>
+        <p class="footer-tagline">"Thoughtfully Made for You"<br>Clean roasted snacks crafted with quality and honest ingredients.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All Products</a></li>
+          <li><a href="shop.html?category=combos">Discovery Combos</a></li>
+          <li><a href="try-veyano.html">Trial Packs</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <ul>
+          <li><a href="our-story.html">Our Story</a></li>
+          <li><a href="transparency.html">Ingredient Transparency</a></li>
+          <li><a href="why-veyano.html">Why VEYANO</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><a href="bulk-orders.html">Bulk Orders</a></li>
+          <li><a href="https://wa.me/919350598909">WhatsApp Support</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="https://www.instagram.com/veyanofoods" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="mailto:veyanofoods@gmail.com">veyanofoods@gmail.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <div>&copy; 2026 VEYANO Foods. All rights reserved.</div>
+      <div style="display: flex; gap: 1.5rem;">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms & Conditions</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart Drawer -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <div class="cart-drawer" id="cart-drawer">
+    <div class="cart-header">
+      <h3>Your Cart</h3>
+      <button class="close-cart" id="close-cart-btn">&times;</button>
+    </div>
+    <div class="cart-progress-section" id="cart-progress-section">
+      <div class="cart-progress-text" id="shipping-msg">Add ₹499 more for FREE Pan-India Delivery</div>
+      <div class="cart-progress-container"><div class="cart-progress-bar" id="shipping-bar"></div></div>
+    </div>
+    <div class="cart-body">
+      <div id="cart-step-items"><div id="cart-items-container"></div></div>
+      <div id="cart-step-shipping" style="display: none;">
+        <h4 style="margin-bottom: 1rem; color: var(--accent-color);">Delivery Details</h4>
+        <form id="checkout-form">
+          <div class="form-group"><input type="text" id="ship-name" class="form-control" placeholder="Full Name" required minlength="3"></div>
+          <div class="form-group"><input type="tel" id="ship-phone" class="form-control" placeholder="10-digit mobile number" required pattern="[6-9][0-9]{9}"></div>
+          <div class="form-group"><input type="email" id="ship-email" class="form-control" placeholder="Email Address" required></div>
+          <div class="form-group"><textarea id="ship-address" class="form-control" placeholder="Delivery Street Address" rows="2" required></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><input type="text" id="ship-pincode" class="form-control" placeholder="6-digit PIN" required pattern="[0-9]{6}"></div>
+            <div class="form-group"><input type="text" id="ship-city" class="form-control" placeholder="City" required></div>
+          </div>
+          <div class="form-group"><select id="ship-state" class="form-control" required><option value="" disabled selected>Select State</option><option value="Haryana">Haryana</option><option value="Delhi">Delhi</option><option value="Other">Other</option></select></div>
+          <div class="payment-methods">
+            <label class="payment-option"><input type="radio" name="paymentMethod" value="prepaid" checked><span><strong>Pay Online</strong> — Save ₹79</span></label>
+            <label class="payment-option"><input type="radio" name="paymentMethod" value="cod"><span>Cash on Delivery</span></label>
+          </div>
+        </form>
+      </div>
+      <div id="cart-step-success" style="display: none; text-align: center; padding: 2rem 0;">
+        <h3 style="color: var(--brand-green);">Order Placed!</h3>
+        <p id="order-number-display" style="font-weight:700; color:var(--accent-color); margin:1rem 0;"></p>
+        <button class="btn btn-sm btn-outline" onclick="location.reload()">Continue Shopping</button>
+      </div>
+    </div>
+    <div class="cart-footer">
+      <div id="summary-section">
+        <div class="cart-summary-row"><span>Subtotal</span><span id="display-subtotal">₹0</span></div>
+        <div class="cart-summary-row"><span>Delivery</span><span id="display-shipping">₹0</span></div>
+        <div class="cart-summary-row" id="cod-row" style="display:none;"><span>COD Fee</span><span id="display-cod">₹79</span></div>
+        <div class="cart-summary-total"><span>Total</span><span id="display-total">₹0</span></div>
+      </div>
+      <button class="btn btn-accent" id="next-step-btn" style="width: 100%;">Proceed to Checkout</button>
+      <div id="checkout-actions" style="display: none; gap: 10px;">
+        <button class="btn btn-outline" id="back-to-cart-btn" style="flex: 1;">Back</button>
+        <button class="btn btn-accent" id="place-order-btn" style="flex: 2;">Place Order</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="products-data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

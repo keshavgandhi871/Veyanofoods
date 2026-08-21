@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="The story behind VEYANO Foods — founded in Karnal, Haryana. Building a modern Indian food brand focused on product quality, small-batch roasting, and radical transparency.">
+  <meta name="keywords" content="VEYANO story, about veyano foods, clean snacking brand india, karnal food startup">
+  <meta name="robots" content="index, follow">
+  
+  <title>Our Story | VEYANO Foods</title>
+  
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#fdfbf7">
+  <link rel="canonical" href="https://veyano.in/our-story.html">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="announcement-bar">
+    <span>🚚 <strong>FREE Pan-India Delivery</strong> on orders above ₹499</span>
+    <span class="announcement-sep" style="opacity: 0.4;">|</span>
+    <span>🌿 FSSAI Lic. No. <strong>20826010000397</strong></span>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="nav-brand">
+        <img src="assets/logo.png" alt="VEYANO Logo" width="140" height="42">
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="shop.html" class="nav-link">Shop</a></li>
+          <li><a href="try-veyano.html" class="nav-link">Try VEYANO</a></li>
+          <li><a href="our-story.html" class="nav-link active">Our Story</a></li>
+          <li><a href="transparency.html" class="nav-link">Transparency</a></li>
+          <li><a href="blog.html" class="nav-link">Journal</a></li>
+          <li><a href="bulk-orders.html" class="nav-link">Bulk Orders</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <div id="nav-auth-container"><a href="login.html" class="nav-link">Sign In</a></div>
+        <button class="cart-icon-btn cart-trigger-btn" aria-label="Open Cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span class="cart-badge" id="cart-count">0</span>
+        </button>
+        <button class="mobile-menu-toggle" id="mobile-nav-toggle" aria-label="Open Menu">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
+  <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+    <div class="mobile-drawer-header">
+      <img src="assets/logo.png" alt="VEYANO" style="height: 36px; width: auto;">
+      <button id="mobile-drawer-close" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+    </div>
+    <ul class="mobile-nav-list">
+      <li class="mobile-nav-item"><a href="index.html">Home</a></li>
+      <li class="mobile-nav-item"><a href="shop.html">Shop All Snacks</a></li>
+      <li class="mobile-nav-item"><a href="try-veyano.html">Try VEYANO</a></li>
+      <li class="mobile-nav-item"><a href="our-story.html">Our Story</a></li>
+      <li class="mobile-nav-item"><a href="why-veyano.html">Why VEYANO</a></li>
+      <li class="mobile-nav-item"><a href="transparency.html">Ingredient Transparency</a></li>
+      <li class="mobile-nav-item"><a href="blog.html">Snacking Journal</a></li>
+      <li class="mobile-nav-item"><a href="bulk-orders.html">Corporate & Bulk Orders</a></li>
+      <li class="mobile-nav-item"><a href="contact.html">Contact Us</a></li>
+    </ul>
+  </div>
+
+  <main class="section">
+    <div class="container-narrow">
+      <div class="section-header" style="text-align: left; margin-bottom: 2.5rem;">
+        <span class="section-tag">Founder-Led Journey</span>
+        <h1 class="section-title">Built on Quality, Transparency & Honest Craft.</h1>
+        <p class="section-subtitle">How VEYANO started from small-scale kitchen experimentation in Karnal to a focused, emerging Indian snacking brand.</p>
+      </div>
+
+      <div style="border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 3rem; box-shadow: var(--shadow-lg); border: 4px solid #fff;">
+        <img src="./assets/our_story.webp" alt="VEYANO Story Aesthetics" style="width: 100%; height: auto; max-height: 480px; object-fit: cover;">
+      </div>
+
+      <div style="font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary); display: flex; flex-direction: column; gap: 1.75rem;">
+        
+        <div>
+          <h2 style="color: var(--text-primary); margin-bottom: 0.75rem;">The Problem We Observed</h2>
+          <p>
+            Like millions of Indians, our 4 PM tea-time and late-evening work sessions were often accompanied by whatever snacks were within reach. But turning over the packs on our pantry shelves revealed a disappointing reality: almost every commercial namkeen, chip, and extruded puff was fried in refined palm oil, packed with maltodextrin and synthetic flavor enhancers, and masked behind deceptive front-of-pack claims like 'Diet', 'Healthy', or '100% Guilt-Free'.
+          </p>
+        </div>
+
+        <div>
+          <h2 style="color: var(--text-primary); margin-bottom: 0.75rem;">Starting Small with Roasted Makhana</h2>
+          <p>
+            We realized that Indian food tradition already had the answer: <strong>popped lotus seeds (makhana)</strong>. Packed with natural plant protein, rich in dietary fiber, naturally gluten-free, and delightfully crunchy. However, much of the commercial flavoured makhana on the market was either deep-fried or coated in heavy palm-oil sprays to make synthetic seasonings stick.
+          </p>
+          <p style="margin-top: 1rem;">
+            In Karnal, Haryana, we started experimenting with hot-air dry-roasting techniques. We tested hundreds of roasting cycles to find the exact temperature and airflow curve that pops and dries each seed from the inside out — creating a shatter-crisp crunch without needing heavy oil baths.
+          </p>
+        </div>
+
+        <div>
+          <h2 style="color: var(--text-primary); margin-bottom: 0.75rem;">Learning Directly from Our First Customers</h2>
+          <p>
+            We didn't launch with massive marketing campaigns. We produced small batches, handed them to friends, fitness enthusiasts, working professionals, and early online buyers, and listened obsessively to feedback.
+          </p>
+          <p style="margin-top: 1rem;">
+            Customers told us they wanted cleaner seasoning, pink salt instead of regular refined sodium, and complete honesty about any oil used. We listened and refined our recipes: 0% added oil for Classic Plain, and under 1.5% cold-pressed rice bran oil mist strictly for spice adhesion in our salted and peri-peri variants.
+          </p>
+        </div>
+
+        <div>
+          <h2 style="color: var(--text-primary); margin-bottom: 0.75rem;">Our Long-Term Vision</h2>
+          <p>
+            VEYANO is not just a makhana company. We are building a modern Indian snacking brand rooted in genuine food science and transparent labeling. As we grow, we will expand into additional roasted snack categories, innovative trial pack formats, and discovery boxes designed for mindful, everyday Indian households.
+          </p>
+          <p style="margin-top: 1rem;">
+            We don't claim to be a massive corporation. We are a dedicated, quality-obsessed team committed to making food you can trust.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-subtle); border-left: 4px solid var(--accent-color); padding: 1.5rem 2rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin: 1rem 0;">
+          <p style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 600; color: var(--text-primary); font-style: italic;">
+            "We want our customers to understand what they are eating instead of asking them to blindly trust marketing claims."
+          </p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">— Keshav Gandhi, Founder, VEYANO Foods</p>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+          <a href="shop.html" class="btn btn-accent">Explore Our Products</a>
+          <a href="transparency.html" class="btn btn-outline">Read Our Transparency Report</a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="index.html" class="nav-brand" style="margin-bottom: 0.75rem;">
+          <img src="assets/logo.png" alt="VEYANO Logo" width="130" height="39" style="mix-blend-mode: screen; filter: invert(1);">
+        </a>
+        <p class="footer-tagline">"Thoughtfully Made for You"<br>Clean roasted snacks crafted with quality and honest ingredients.</p>
+        <div class="footer-fssai-box">
+          <span style="background: #3f3f46; padding: 2px 6px; border-radius: 3px; font-weight: 700; font-size: 0.7rem; color: #fff;">FSSAI</span>
+          <span>Lic. No. 20826010000397</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All Products</a></li>
+          <li><a href="shop.html?category=combos">Discovery Combos</a></li>
+          <li><a href="try-veyano.html">Trial Packs</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <ul>
+          <li><a href="our-story.html">Our Story</a></li>
+          <li><a href="why-veyano.html">Why VEYANO</a></li>
+          <li><a href="transparency.html">Ingredient Transparency</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><a href="bulk-orders.html">Bulk Orders</a></li>
+          <li><a href="https://wa.me/919350598909">WhatsApp Support</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="https://www.instagram.com/veyanofoods" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="mailto:veyanofoods@gmail.com">veyanofoods@gmail.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <div>&copy; 2026 VEYANO Foods. All rights reserved.</div>
+      <div style="display: flex; gap: 1.5rem;">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms & Conditions</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="products-data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

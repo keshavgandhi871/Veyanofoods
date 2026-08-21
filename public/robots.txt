@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api/private
 
-# Sitemap link
-Sitemap: https://www.veyano.in/sitemap.xml
+# Sitemap Link
+Sitemap: https://veyano.in/sitemap.xml

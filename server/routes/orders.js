@@ -83,17 +83,19 @@ router.post('/', async (req, res, next) => {
       gst_amount: orderData.gstAmount,
       total_amount: orderData.totalAmount,
       is_cod: orderData.isCOD,
-      razorpay_order_id: orderData.razorpayOrderId,
-      user_id: userId
+      razorpay_order_id: orderData.razorpayOrderId
     };
 
-    const { data: order, error: orderError } = await supabase
+    let { data: order, error: orderError } = await supabase
       .from('orders')
       .insert([supabaseOrder])
       .select()
       .single();
 
-    if (orderError) throw orderError;
+    if (orderError) {
+      console.warn('[Orders] Insert error:', orderError.message);
+      throw orderError;
+    }
 
     const createdItems = [];
     for (const item of items) {
