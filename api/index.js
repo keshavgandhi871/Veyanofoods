@@ -28,7 +28,7 @@ let _razorpay = null;
 function getRazorpay() {
   if (!_razorpay) {
     const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET_KEY || process.env.RAZORPAY_SECRET;
     if (!keyId || !keySecret) {
       console.warn('Missing RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET. Payments will fail.');
       return null;
@@ -336,7 +336,7 @@ app.post('/api/payments/verify-payment', async (req, res) => {
       return res.status(400).json({ error: 'Missing required Razorpay fields.' });
     }
 
-    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const secret = process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET_KEY || process.env.RAZORPAY_SECRET;
     if (!secret) return res.status(500).json({ error: 'Razorpay is not configured.' });
 
     const body = razorpay_order_id + '|' + razorpay_payment_id;
