@@ -1,11 +1,11 @@
 /**
- * api/private/compliance.js — Private Compliance & Batch Tracking
+ * api/_private/compliance.js — Private Compliance & Batch Tracking
  * Protected endpoint for FSSAI compliance audits and order reports.
  */
 
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../clients');
+const { getDB } = require('../_clients');
 
 /** GET /api/private/compliance/orders — Internal order report */
 router.get('/orders', async (req, res) => {

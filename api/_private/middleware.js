@@ -1,8 +1,8 @@
 /**
- * api/private/middleware.js — Private / Admin API Authentication Middleware
+ * api/_private/middleware.js — Private / Admin API Authentication Middleware
  */
 
-const { getClerk } = require('../clients');
+const { getClerk } = require('../_clients');
 
 async function privateAuthMiddleware(req, res, next) {
   const adminKey = req.headers['x-admin-key'] || req.headers['x-api-key'] || req.query.admin_key;

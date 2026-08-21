@@ -1,10 +1,10 @@
 /**
- * api/public/auth.js — Public Authentication & User Sync Routes
+ * api/_public/auth.js — Public Authentication & User Sync Routes
  */
 
 const express = require('express');
 const router = express.Router();
-const { getDB, getClerk } = require('../clients');
+const { getDB, getClerk } = require('../_clients');
 
 // Customer auth token verification
 async function customerAuthMiddleware(req, res, next) {

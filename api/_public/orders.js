@@ -1,10 +1,10 @@
 /**
- * api/public/orders.js — Public Customer Order Placement Route
+ * api/_public/orders.js — Public Customer Order Placement Route
  */
 
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../clients');
+const { getDB } = require('../_clients');
 
 /**
  * POST /api/orders — Create a new order (COD / Prepaid)

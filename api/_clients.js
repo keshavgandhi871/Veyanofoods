@@ -1,5 +1,5 @@
 /**
- * api/clients.js — Shared lazy-initialized clients for Vercel Serverless
+ * api/_clients.js — Shared lazy-initialized clients for Vercel Serverless
  */
 
 const { createClient } = require('@supabase/supabase-js');

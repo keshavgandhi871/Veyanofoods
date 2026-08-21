@@ -1,11 +1,11 @@
 /**
- * api/private/inventory.js — Private Inventory Management Routes
+ * api/_private/inventory.js — Private Inventory Management Routes
  * Protected endpoint for stock counts, product queries, and updates.
  */
 
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../clients');
+const { getDB } = require('../_clients');
 
 /** GET /api/private/inventory — List full product catalog & stock details */
 router.get('/', async (req, res) => {

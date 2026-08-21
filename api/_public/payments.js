@@ -1,11 +1,11 @@
 /**
- * api/public/payments.js — Public Razorpay Order Creation & Verification Routes
+ * api/_public/payments.js — Public Razorpay Order Creation & Verification Routes
  */
 
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { getRazorpay } = require('../clients');
+const { getRazorpay } = require('../_clients');
 
 /** GET /api/payments/config — Expose Razorpay key_id to checkout frontend */
 router.get('/config', (req, res) => {

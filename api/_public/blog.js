@@ -1,10 +1,10 @@
 /**
- * api/public/blog.js — Public Blog Content Delivery Routes
+ * api/_public/blog.js — Public Blog Content Delivery Routes
  */
 
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../clients');
+const { getDB } = require('../_clients');
 
 /** GET /api/blog — List all published blog articles */
 router.get('/', async (req, res) => {

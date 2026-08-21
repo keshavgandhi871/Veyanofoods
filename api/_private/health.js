@@ -1,11 +1,11 @@
 /**
- * api/private/health.js — Private Diagnostics & Internal Service Status
+ * api/_private/health.js — Private Diagnostics & Internal Service Status
  * Protected endpoint returning sensitive backend & infrastructure details.
  */
 
 const express = require('express');
 const router = express.Router();
-const { getDB, getClerk, getRazorpay } = require('../clients');
+const { getDB, getClerk, getRazorpay } = require('../_clients');
 
 router.get('/', async (req, res) => {
   let dbStatus = 'unknown';

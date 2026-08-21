@@ -18,16 +18,16 @@ const cors    = require('cors');
 const helmet  = require('helmet');
 
 // ── Private Route Handlers & Auth ─────────────────────────────────────────────
-const privateAuthMiddleware = require('./private/middleware');
-const privateHealthRouter   = require('./private/health');
-const privateInventoryRouter= require('./private/inventory');
-const privateComplianceRouter = require('./private/compliance');
+const privateAuthMiddleware   = require('./_private/middleware');
+const privateHealthRouter     = require('./_private/health');
+const privateInventoryRouter  = require('./_private/inventory');
+const privateComplianceRouter = require('./_private/compliance');
 
 // ── Public Route Handlers ─────────────────────────────────────────────────────
-const publicAuthRouter     = require('./public/auth');
-const publicBlogRouter     = require('./public/blog');
-const publicOrdersRouter   = require('./public/orders');
-const publicPaymentsRouter = require('./public/payments');
+const publicAuthRouter     = require('./_public/auth');
+const publicBlogRouter     = require('./_public/blog');
+const publicOrdersRouter   = require('./_public/orders');
+const publicPaymentsRouter = require('./_public/payments');
 
 const app = express();
 
