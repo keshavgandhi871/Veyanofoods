@@ -629,9 +629,7 @@ async function initiateRazorpayCheckout() {
       item_count: cart.reduce((s, i) => s + i.quantity, 0).toString()
     },
     theme: {
-      color: "#c08b5c",
-      backdrop_color: "rgba(15, 23, 42, 0.75)",
-      hide_topbar: false
+      color: "#3399cc"
     },
     modal: {
       ondismiss: function () {
@@ -644,39 +642,12 @@ async function initiateRazorpayCheckout() {
       },
       confirm_close: true,
       animation: true,
-      backdropclose: false,
       escape: true,
       handleback: true
     },
     retry: {
       enabled: true,
       max_count: 3
-    },
-    config: {
-      display: {
-        blocks: {
-          upi: {
-            name: "Instant UPI & QR (GPay, PhonePe, Paytm)",
-            instruments: [{ method: "upi" }]
-          },
-          cards: {
-            name: "Cards (Credit / Debit / ATM)",
-            instruments: [{ method: "card" }]
-          },
-          netbanking: {
-            name: "Net Banking",
-            instruments: [{ method: "netbanking" }]
-          },
-          wallets: {
-            name: "Wallets",
-            instruments: [{ method: "wallet" }]
-          }
-        },
-        sequence: ["block.upi", "block.cards", "block.netbanking", "block.wallets"],
-        preferences: {
-          show_default_blocks: true
-        }
-      }
     }
   };
 
