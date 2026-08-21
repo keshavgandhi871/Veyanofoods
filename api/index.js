@@ -262,6 +262,7 @@ app.post('/api/orders', async (req, res) => {
         gst_amount:     Math.round(subtotalAmount * 0.05),
         total_amount:   totalAmount,
         is_cod:         isCOD,
+        razorpay_order_id: req.body.razorpayOrderId || null,
       }])
       .select()
       .single();
