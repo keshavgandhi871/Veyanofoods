@@ -550,7 +550,27 @@ async function placeOrder() {
   } catch (err) { alert(err.message); } finally { placeBtn.disabled = false; placeBtn.textContent = 'Place Order'; }
 }
 
+// Ensure Razorpay SDK is loaded
+function loadRazorpayScript() {
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) return resolve(true);
+    const existingScript = document.querySelector('script[src*="checkout.razorpay.com"]');
+    if (existingScript) {
+      existingScript.onload = () => resolve(true);
+      existingScript.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
+    document.body.appendChild(script);
+  });
+}
+
 async function initiateRazorpayCheckout() {
+  await loadRazorpayScript();
+
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shippingCharge = subtotal >= 499 ? 0 : 50;
   const totalAmountPaise = (subtotal + shippingCharge) * 100;
@@ -558,6 +578,7 @@ async function initiateRazorpayCheckout() {
   // 1. Get KEY_ID
   const configRes = await fetch(`${API_BASE_URL}/api/payments/config`);
   const { keyId } = await configRes.json();
+  if (!keyId) throw new Error('Razorpay Key ID is not configured.');
 
   // 2. Create Razorpay Order
   const orderRes = await fetch(`${API_BASE_URL}/api/payments/create-order`, {
@@ -568,13 +589,19 @@ async function initiateRazorpayCheckout() {
   const rzpOrder = await orderRes.json();
   if (!orderRes.ok) throw new Error(rzpOrder.error || 'Failed to initialize payment');
 
-  // 3. Open Razorpay Modal
+  const landmarkVal = document.getElementById('ship-landmark') ? document.getElementById('ship-landmark').value.trim() : '';
+  const baseAddressVal = document.getElementById('ship-address') ? document.getElementById('ship-address').value.trim() : '';
+  const shippingAddress = landmarkVal ? `${baseAddressVal} (Landmark: ${landmarkVal})` : baseAddressVal;
+
+  // 3. Open Modern Razorpay Checkout Modal
+  const logoUrl = window.location.origin + '/assets/logo.png';
   const options = {
     key: keyId,
     amount: rzpOrder.amount,
-    currency: rzpOrder.currency,
+    currency: rzpOrder.currency || "INR",
     name: "VEYANO Foods",
-    description: "Premium Roasted Makhana",
+    description: "Premium Roasted Makhana Order",
+    image: logoUrl,
     order_id: rzpOrder.id,
     handler: async function (response) {
       // 4. Verify Signature
@@ -593,16 +620,69 @@ async function initiateRazorpayCheckout() {
       }
     },
     prefill: {
-      name: document.getElementById('ship-name').value,
-      email: document.getElementById('ship-email').value,
-      contact: document.getElementById('ship-phone').value
+      name: document.getElementById('ship-name') ? document.getElementById('ship-name').value : '',
+      email: document.getElementById('ship-email') ? document.getElementById('ship-email').value : '',
+      contact: document.getElementById('ship-phone') ? document.getElementById('ship-phone').value : ''
     },
-    theme: { color: "#c08b5c" }
+    notes: {
+      shipping_address: shippingAddress,
+      item_count: cart.reduce((s, i) => s + i.quantity, 0).toString()
+    },
+    theme: {
+      color: "#c08b5c",
+      backdrop_color: "rgba(15, 23, 42, 0.75)",
+      hide_topbar: false
+    },
+    modal: {
+      ondismiss: function () {
+        const placeBtn = document.getElementById('place-order-btn');
+        if (placeBtn) {
+          placeBtn.disabled = false;
+          placeBtn.textContent = 'Place Order';
+        }
+        showToast('Payment window closed.', 'info');
+      },
+      confirm_close: true,
+      animation: true,
+      backdropclose: false,
+      escape: true,
+      handleback: true
+    },
+    retry: {
+      enabled: true,
+      max_count: 3
+    },
+    config: {
+      display: {
+        blocks: {
+          upi: {
+            name: "Instant UPI & QR (GPay, PhonePe, Paytm)",
+            instruments: [{ method: "upi" }]
+          },
+          cards: {
+            name: "Cards (Credit / Debit / ATM)",
+            instruments: [{ method: "card" }]
+          },
+          netbanking: {
+            name: "Net Banking",
+            instruments: [{ method: "netbanking" }]
+          },
+          wallets: {
+            name: "Wallets",
+            instruments: [{ method: "wallet" }]
+          }
+        },
+        sequence: ["block.upi", "block.cards", "block.netbanking", "block.wallets"],
+        preferences: {
+          show_default_blocks: true
+        }
+      }
+    }
   };
 
   const rzp = new Razorpay(options);
   rzp.on('payment.failed', function (response) {
-    showToast(`Payment failed: ${response.error.description}`, 'error');
+    showToast(`Payment failed: ${response.error?.description || 'Payment error'}`, 'error');
   });
   rzp.open();
 }
