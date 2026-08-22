@@ -199,17 +199,31 @@ router.post('/', async (req, res, next) => {
 router.use(authMiddleware);
 
 /**
- * GET /api/orders
+ * GET /api/orders — Fetch customer's own orders or all orders if admin
  */
 router.get('/', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*, items:order_items(*)')
-      .order('created_at', { ascending: false });
+    const userId = req.user?.id;
+    const userEmail = req.user?.emailAddresses?.[0]?.emailAddress?.toLowerCase();
 
+    let query = supabase.from('orders').select('*, items:order_items(*)').order('created_at', { ascending: false });
+
+    // If not global admin, only fetch current user's orders
+    if (!req.user?.isAdmin) {
+      if (userId && userEmail) {
+        query = query.or(`user_id.eq.${userId},customer_email.eq.${userEmail}`);
+      } else if (userId) {
+        query = query.eq('user_id', userId);
+      } else if (userEmail) {
+        query = query.eq('customer_email', userEmail);
+      } else {
+        return res.json({ data: [] });
+      }
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
-    res.json({ data });
+    res.json({ data: data || [] });
   } catch (err) { next(err); }
 });
 

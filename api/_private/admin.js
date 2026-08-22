@@ -1,24 +1,129 @@
 /**
- * api/_private/admin.js — Vercel Serverless Admin Management Router
+ * api/_private/admin.js — Secure Serverless Admin Router
  */
 
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { getDB, getClerk } = require('../_clients');
 
+const ADMIN_SECRET = process.env.ADMIN_SECRET_KEY || process.env.JWT_SECRET || 'veyano_vault_secret_admin_key_2026';
 const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || 'veyano2026';
 
-// ── Admin Security Middleware ────────────────────────────────────────────────
-function adminAuthGuard(req, res, next) {
-  const passcode = req.headers['x-admin-passcode'] || req.headers['x-admin-key'] || req.query.passcode;
-  const authHeader = req.headers.authorization;
+// ── Rate Limiter for Login Attempts ──────────────────────────────────────────
+const loginAttempts = new Map();
+function loginRateLimiter(req, res, next) {
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown_ip';
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
 
-  if (passcode && passcode === ADMIN_PASSCODE) {
+  if (entry && now < entry.lockUntil) {
+    const remainingMinutes = Math.ceil((entry.lockUntil - now) / 60000);
+    return res.status(429).json({
+      error: `Too many failed attempts. Account locked for ${remainingMinutes} minute(s).`
+    });
+  }
+  next();
+}
+
+function recordFailedLogin(ip) {
+  const now = Date.now();
+  const entry = loginAttempts.get(ip) || { count: 0, lockUntil: 0 };
+  entry.count++;
+  if (entry.count >= 5) {
+    entry.lockUntil = now + 15 * 60 * 1000;
+    entry.count = 0;
+  }
+  loginAttempts.set(ip, entry);
+}
+
+function clearFailedLogin(ip) {
+  loginAttempts.delete(ip);
+}
+
+// ── Token Generator & Verifier ────────────────────────────────────────────────
+function generateAdminToken() {
+  const payload = {
+    role: 'admin',
+    iat: Date.now(),
+    exp: Date.now() + 12 * 60 * 60 * 1000
+  };
+  const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', ADMIN_SECRET).update(base64Payload).digest('base64url');
+  return `${base64Payload}.${signature}`;
+}
+
+function verifyAdminToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [base64Payload, signature] = parts;
+
+  const expectedSig = crypto.createHmac('sha256', ADMIN_SECRET).update(base64Payload).digest('base64url');
+  if (signature.length !== expectedSig.length) return null;
+  
+  const isValid = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig));
+  if (!isValid) return null;
+
+  try {
+    const payload = JSON.parse(Buffer.from(base64Payload, 'base64url').toString('utf8'));
+    if (payload.exp < Date.now()) return null;
+    return payload;
+  } catch (e) {
+    return null;
+  }
+}
+
+// ── 1. POST /api/admin/auth/login — Secure Passcode Authentication ────────────
+router.post('/auth/login', loginRateLimiter, (req, res) => {
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown_ip';
+  const { passcode } = req.body || {};
+
+  if (!passcode || typeof passcode !== 'string') {
+    recordFailedLogin(ip);
+    return res.status(400).json({ error: 'Passcode is required.' });
+  }
+
+  const inputBuffer = Buffer.from(passcode);
+  const targetBuffer = Buffer.from(ADMIN_PASSCODE);
+
+  let isMatch = false;
+  if (inputBuffer.length === targetBuffer.length) {
+    isMatch = crypto.timingSafeEqual(inputBuffer, targetBuffer);
+  }
+
+  if (!isMatch) {
+    recordFailedLogin(ip);
+    return res.status(401).json({ error: 'Incorrect admin passcode. Access denied.' });
+  }
+
+  clearFailedLogin(ip);
+  const token = generateAdminToken();
+  res.json({
+    message: 'Admin session authenticated successfully.',
+    token,
+    expiresIn: '12h'
+  });
+});
+
+// ── 2. Admin Security Guard Middleware for Protected Endpoints ───────────────
+function requireAdminAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  let token = null;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.headers['x-admin-token']) {
+    token = req.headers['x-admin-token'];
+  }
+
+  const adminSession = verifyAdminToken(token);
+  if (adminSession) {
+    req.admin = adminSession;
     return next();
   }
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
+  if (token) {
     const clerk = getClerk();
     if (clerk) {
       return clerk.verifyToken(token)
@@ -27,19 +132,26 @@ function adminAuthGuard(req, res, next) {
             req.adminUser = decoded;
             return next();
           }
-          return res.status(403).json({ error: 'Unauthorized admin access.' });
+          return res.status(403).json({ error: 'Access Denied: Invalid or expired admin token.' });
         })
-        .catch(() => res.status(403).json({ error: 'Invalid admin token.' }));
+        .catch(() => res.status(403).json({ error: 'Access Denied: Unauthorized admin access.' }));
     }
   }
 
-  return res.status(401).json({ error: 'Admin authentication required.' });
+  return res.status(401).json({ error: 'Access Denied: Authentication required for this admin endpoint.' });
 }
 
-router.use(adminAuthGuard);
+router.use(requireAdminAuth);
 
 /**
- * GET /api/private/analytics & /api/admin/analytics
+ * GET /api/admin/auth/verify
+ */
+router.get('/auth/verify', (req, res) => {
+  res.json({ valid: true, role: 'admin' });
+});
+
+/**
+ * GET /api/admin/analytics
  */
 router.get('/analytics', async (req, res) => {
   try {
@@ -87,7 +199,7 @@ router.get('/analytics', async (req, res) => {
 });
 
 /**
- * GET /api/admin/orders & /api/private/orders
+ * GET /api/admin/orders
  */
 router.get('/orders', async (req, res) => {
   try {

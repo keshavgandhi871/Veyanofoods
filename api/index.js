@@ -33,10 +33,27 @@ const publicProductsRouter = require('./_public/products');
 
 const app = express();
 
+// ── Hide Server Fingerprints ──────────────────────────────────────────────────
+app.disable('x-powered-by');
+
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] }));
-app.use(express.json({ limit: '10mb' }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('veyano.in') || origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-passcode', 'x-admin-token'],
+}));
+
+app.use(express.json({ limit: '2mb' }));
 
 // ── Public Health Check (Safe minimal status, no private key/database leakage) ──
 app.get('/api/health', (req, res) => {

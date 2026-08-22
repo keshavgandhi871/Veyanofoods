@@ -1,52 +1,103 @@
 /**
- * VEYANO Foods — Executive Admin Controller
- * High-performance Order Fulfillment, Tracking, Customer Directory & Catalog Management
+ * VEYANO Foods — Executive Admin Controller (Hardened Security)
+ * Zero hardcoded passcodes, HMAC session tokens, and encrypted backend API authorization.
  */
-
-const DEFAULT_ADMIN_PASSCODE = 'veyano2026';
 
 // Global cache
 window.ADMIN_ORDERS = [];
 window.ADMIN_CUSTOMERS = [];
 window.CURRENT_ORDER_STATUS_FILTER = 'all';
 
-function getAdminPasscode() {
-  return sessionStorage.getItem('veyano_admin_passcode') || DEFAULT_ADMIN_PASSCODE;
+function getAdminToken() {
+  return sessionStorage.getItem('veyano_admin_token') || '';
 }
 
 function getAdminHeaders() {
+  const token = getAdminToken();
   return {
     'Content-Type': 'application/json',
-    'x-admin-passcode': getAdminPasscode()
+    'Authorization': `Bearer ${token}`
   };
 }
 
-function checkAdminAuth() {
-  const isAuth = sessionStorage.getItem('veyano_admin_auth');
+async function checkAdminAuth() {
+  const token = getAdminToken();
   const gate = document.getElementById('admin-auth-gate');
-  if (isAuth === 'true') {
-    if (gate) gate.style.display = 'none';
-  } else {
+  
+  if (!token) {
     if (gate) gate.style.display = 'flex';
+    return false;
+  }
+
+  try {
+    const res = await fetch('/api/admin/auth/verify', { headers: getAdminHeaders() });
+    if (res.ok) {
+      if (gate) gate.style.display = 'none';
+      return true;
+    } else {
+      sessionStorage.removeItem('veyano_admin_token');
+      if (gate) gate.style.display = 'flex';
+      return false;
+    }
+  } catch (e) {
+    // If offline, preserve screen
+    return false;
   }
 }
 
-function handleAdminLogin(e) {
+async function handleAdminLogin(e) {
   e.preventDefault();
   const input = document.getElementById('admin-passcode').value.trim();
-  if (input === DEFAULT_ADMIN_PASSCODE) {
-    sessionStorage.setItem('veyano_admin_auth', 'true');
-    sessionStorage.setItem('veyano_admin_passcode', input);
-    checkAdminAuth();
+  const btn = e.target.querySelector('button[type="submit"]');
+  const originalText = btn ? btn.textContent : 'Unlock';
+
+  if (!input) {
+    alert('Please enter the admin passcode.');
+    return;
+  }
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Verifying Security Token...';
+    }
+
+    const res = await fetch('/api/admin/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passcode: input })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || 'Authentication failed. Access denied.');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+      return;
+    }
+
+    // Save secure session token
+    sessionStorage.setItem('veyano_admin_token', data.token);
+    
+    const gate = document.getElementById('admin-auth-gate');
+    if (gate) gate.style.display = 'none';
+
     initAdminDashboard();
-  } else {
-    alert('Incorrect admin passcode. Please check and try again.');
+  } catch (err) {
+    alert('Login error: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
   }
 }
 
 function handleAdminLogout() {
-  sessionStorage.removeItem('veyano_admin_auth');
-  sessionStorage.removeItem('veyano_admin_passcode');
+  sessionStorage.removeItem('veyano_admin_token');
   location.reload();
 }
 
@@ -98,6 +149,10 @@ function escapeHtml(str) {
 async function loadAdminAnalytics() {
   try {
     const res = await fetch('/api/admin/analytics', { headers: getAdminHeaders() });
+    if (res.status === 401 || res.status === 403) {
+      handleAdminLogout();
+      return;
+    }
     if (!res.ok) throw new Error('Analytics request failed');
     const data = await res.json();
 
@@ -127,6 +182,10 @@ async function loadAdminOrders() {
 
   try {
     const res = await fetch('/api/admin/orders', { headers: getAdminHeaders() });
+    if (res.status === 401 || res.status === 403) {
+      handleAdminLogout();
+      return;
+    }
     if (!res.ok) throw new Error(`Orders fetch failed (${res.status})`);
     const data = await res.json();
     window.ADMIN_ORDERS = data.data || [];
@@ -189,11 +248,9 @@ function filterOrdersTable() {
   const filter = window.CURRENT_ORDER_STATUS_FILTER || 'all';
 
   let filtered = (window.ADMIN_ORDERS || []).filter(order => {
-    // 1. Status Filter
     const orderStatus = (order.status || 'pending').toLowerCase();
     if (filter !== 'all' && orderStatus !== filter) return false;
 
-    // 2. Query Search
     if (!query) return true;
     const matchFields = [
       order.order_number,
@@ -235,13 +292,11 @@ function renderAdminOrdersTable(orders) {
     const isCOD = order.is_cod || (order.payment_method || '').toLowerCase() === 'cod';
     const status = (order.status || 'pending').toLowerCase();
 
-    // Items preview
     const items = order.items || [];
     const itemsPreview = items.length > 0
       ? items.map(i => `<div style="font-size:0.8rem; margin-bottom:0.2rem;"><strong>${i.quantity}x</strong> ${escapeHtml(i.product_name || i.sku)}</div>`).join('')
       : `<span style="color:#94a3b8; font-size:0.8rem;">Standard Package</span>`;
 
-    // Tracking info
     const hasTracking = !!order.awb_code;
     const trackingHtml = hasTracking
       ? `
@@ -348,7 +403,6 @@ async function quickUpdateOrderStatus(orderId, newStatus) {
 
     if (!res.ok) throw new Error('Status update failed');
     
-    // Update local cache
     const target = (window.ADMIN_ORDERS || []).find(o => o.id === orderId);
     if (target) target.status = newStatus;
 
@@ -402,7 +456,6 @@ async function handleTrackingFormSubmit(e) {
     if (!res.ok) throw new Error('Failed to update tracking');
     const result = await res.json();
 
-    // Update local cache
     const idx = (window.ADMIN_ORDERS || []).findIndex(o => o.id === orderId);
     if (idx !== -1 && result.order) {
       window.ADMIN_ORDERS[idx] = result.order;
@@ -510,6 +563,10 @@ async function loadAdminCustomers() {
 
   try {
     const res = await fetch('/api/admin/customers', { headers: getAdminHeaders() });
+    if (res.status === 401 || res.status === 403) {
+      handleAdminLogout();
+      return;
+    }
     if (!res.ok) throw new Error(`Customers fetch failed (${res.status})`);
     const data = await res.json();
     window.ADMIN_CUSTOMERS = data.data || [];
@@ -928,9 +985,9 @@ function renderAdminLeads() {
 }
 
 // ── AUTO-INIT ────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  checkAdminAuth();
-  if (sessionStorage.getItem('veyano_admin_auth') === 'true') {
+document.addEventListener('DOMContentLoaded', async () => {
+  const isAuth = await checkAdminAuth();
+  if (isAuth) {
     initAdminDashboard();
   }
 });

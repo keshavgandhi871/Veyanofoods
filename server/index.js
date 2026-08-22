@@ -25,30 +25,41 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// ── Hide Server Fingerprints ──────────────────────────────────────────────────
+app.disable('x-powered-by');
+
 // ── Security Middleware ───────────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.clerk.com", "https://*.clerk.accounts.dev", "https://checkout.razorpay.com", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'", "https://clerk.com", "https://*.clerk.com", "https://*.clerk.accounts.dev", "https://api.razorpay.com", "https://api.postalpincode.in", "http://localhost:3001"],
-      imgSrc: ["'self'", "data:", "https://img.clerk.com", "https://clerk.com", "https://www.veyano.in"],
+      connectSrc: ["'self'", "https://clerk.com", "https://*.clerk.com", "https://*.clerk.accounts.dev", "https://api.razorpay.com", "https://api.postalpincode.in", "http://localhost:3001", "https://veyano.in"],
+      imgSrc: ["'self'", "data:", "https://img.clerk.com", "https://clerk.com", "https://www.veyano.in", "https://images.unsplash.com"],
       frameSrc: ["'self'", "https://checkout.razorpay.com", "https://*.clerk.accounts.dev"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
     },
   },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: (origin, callback) => {
+    // Allow local development, veyano.in domains, and direct API calls (e.g. mobile/postman)
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('veyano.in') || origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-passcode', 'x-admin-token'],
 }));
 
 // ── Body Parser ──────────────────────────────────────────────────────────────
-
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // ── Health Check (With Supabase Diagnostic) ──────────────────────────────────
 app.get('/health', async (req, res) => {
