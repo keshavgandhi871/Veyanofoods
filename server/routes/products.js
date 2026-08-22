@@ -1,20 +1,12 @@
-// server/routes/products.js — Public Products Catalog
+// server/routes/products.js — Dynamic Public Products Catalog
 const express = require('express');
 const router = express.Router();
-const path = require('path');
+const { getAllProducts, getProductByIdOrSlug } = require('../services/productMasterService');
 
-let defaultProducts = [];
-try {
-  const { DEFAULT_PRODUCTS } = require('../../public/products-data');
-  defaultProducts = DEFAULT_PRODUCTS;
-} catch (e) {
-  defaultProducts = [];
-}
-
-/** GET /api/products — List all products */
+/** GET /api/products — List all public products */
 router.get('/', (req, res) => {
   const { category, featured, trial, combo } = req.query;
-  let results = [...defaultProducts];
+  let results = getAllProducts({ includeInactive: false });
 
   if (category && category !== 'all') {
     results = results.filter(p => p.category === category);
@@ -32,13 +24,10 @@ router.get('/', (req, res) => {
   res.json({ count: results.length, data: results });
 });
 
-/** GET /api/products/:slugOrId — Get product details */
+/** GET /api/products/:slugOrId — Get single product details */
 router.get('/:slugOrId', (req, res) => {
   const { slugOrId } = req.params;
-  const clean = String(slugOrId).toLowerCase().trim();
-  const product = defaultProducts.find(
-    p => p.id.toLowerCase() === clean || p.slug.toLowerCase() === clean || (p.sku && p.sku.toLowerCase() === clean)
-  );
+  const product = getProductByIdOrSlug(slugOrId);
 
   if (!product) {
     return res.status(404).json({ error: 'Product not found' });

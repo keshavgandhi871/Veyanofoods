@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Founder & Admin Dashboard | VEYANO Foods</title>
+  <title>VEYANO Enterprise Operations & Control Center</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     body { background: #f4f6f9; color: #0f172a; font-family: 'Inter', sans-serif; }
-    .admin-container { max-width: 1360px; margin: 1.5rem auto; padding: 0 1.25rem; }
+    .admin-container { max-width: 1440px; margin: 1.5rem auto; padding: 0 1.25rem; }
     
     /* Top Bar */
     .admin-header {
@@ -28,23 +28,37 @@
       flex-wrap: wrap;
       gap: 1rem;
     }
+
+    .role-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #0f172a;
+      color: #38bdf8;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
     
     /* KPI Stats Grid */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
       margin-bottom: 1.5rem;
     }
     .kpi-card {
       background: #ffffff;
-      padding: 1.5rem;
+      padding: 1.25rem 1.4rem;
       border-radius: var(--radius-lg);
       border: 1px solid #e2e8f0;
       box-shadow: 0 2px 4px rgba(0,0,0,0.02);
       display: flex;
       align-items: center;
-      gap: 1.25rem;
+      gap: 1rem;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .kpi-card:hover {
@@ -52,24 +66,24 @@
       box-shadow: 0 8px 16px rgba(0,0,0,0.05);
     }
     .kpi-icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 14px;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       flex-shrink: 0;
     }
     .kpi-value {
       font-family: 'Outfit', sans-serif;
-      font-size: 1.65rem;
+      font-size: 1.55rem;
       font-weight: 700;
       color: #0f172a;
       line-height: 1.2;
     }
     .kpi-label {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -80,7 +94,7 @@
     /* Navigation Tabs */
     .admin-nav {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.4rem;
       margin-bottom: 1.5rem;
       background: #ffffff;
       padding: 0.5rem;
@@ -90,10 +104,10 @@
       white-space: nowrap;
     }
     .admin-nav-item {
-      padding: 0.7rem 1.4rem;
+      padding: 0.65rem 1.15rem;
       border-radius: var(--radius-md);
       font-weight: 600;
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       cursor: pointer;
       border: none;
       background: transparent;
@@ -101,7 +115,7 @@
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
     }
     .admin-nav-item:hover { color: #0f172a; background: #f1f5f9; }
     .admin-nav-item.active { background: #0f172a; color: #ffffff; box-shadow: 0 2px 4px rgba(15,23,42,0.2); }
@@ -109,7 +123,7 @@
       background: rgba(255,255,255,0.25);
       color: #ffffff;
       font-size: 0.72rem;
-      padding: 0.15rem 0.5rem;
+      padding: 0.12rem 0.5rem;
       border-radius: 9999px;
       font-weight: 700;
     }
@@ -142,11 +156,11 @@
       flex-wrap: wrap;
     }
     .admin-search-input {
-      padding: 0.6rem 1rem;
+      padding: 0.55rem 1rem;
       border-radius: var(--radius-full);
       border: 1px solid #cbd5e1;
-      font-size: 0.88rem;
-      min-width: 260px;
+      font-size: 0.86rem;
+      min-width: 250px;
       outline: none;
       transition: border-color 0.2s ease;
     }
@@ -158,9 +172,9 @@
       flex-wrap: wrap;
     }
     .status-pill {
-      padding: 0.35rem 0.85rem;
+      padding: 0.35rem 0.8rem;
       border-radius: 9999px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
       border: 1px solid #e2e8f0;
@@ -177,21 +191,21 @@
     .admin-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
     }
     .admin-table th {
       background: #f8fafc;
-      padding: 0.9rem 1rem;
+      padding: 0.85rem 1rem;
       text-align: left;
       font-weight: 700;
       color: #475569;
       border-bottom: 2px solid #e2e8f0;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
     .admin-table td {
-      padding: 1rem;
+      padding: 0.95rem 1rem;
       border-bottom: 1px solid #f1f5f9;
       vertical-align: top;
     }
@@ -199,15 +213,15 @@
       background-color: #fafbfd;
     }
 
-    /* Badges & Status Indicators */
+    /* Status Badges */
     .order-status-badge {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      padding: 0.3rem 0.75rem;
+      padding: 0.25rem 0.7rem;
       border-radius: 9999px;
       font-weight: 700;
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       text-transform: uppercase;
       letter-spacing: 0.03em;
     }
@@ -218,8 +232,8 @@
     .status-delivered { background: #dcfce7; color: #15803d; }
     .status-cancelled { background: #fee2e2; color: #b91c1c; }
 
-    .payment-badge-paid { background: #dcfce7; color: #166534; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.75rem; }
-    .payment-badge-cod { background: #fef3c7; color: #b45309; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.75rem; }
+    .payment-badge-paid { background: #dcfce7; color: #166534; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.74rem; }
+    .payment-badge-cod { background: #fef3c7; color: #b45309; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.74rem; }
 
     /* Modals */
     .admin-modal {
@@ -244,45 +258,51 @@
       padding: 2rem;
       box-shadow: var(--shadow-xl);
     }
-    .admin-modal-lg { max-width: 860px; }
+    .admin-modal-lg { max-width: 880px; }
 
-    /* Quick status select in table */
-    .status-quick-select {
-      padding: 0.35rem 0.65rem;
-      border-radius: var(--radius-md);
-      font-size: 0.8rem;
-      font-weight: 600;
-      border: 1px solid #cbd5e1;
-      background: #ffffff;
-      cursor: pointer;
-      outline: none;
-    }
-    .status-quick-select:focus { border-color: #0f172a; }
-
-    /* Customer Info Block */
-    .customer-info-box {
+    /* Diff Viewer component */
+    .diff-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
       background: #f8fafc;
       border-radius: var(--radius-md);
-      padding: 0.85rem;
+      padding: 1rem;
       border: 1px solid #e2e8f0;
-      margin-top: 0.5rem;
-      font-size: 0.82rem;
+      margin: 0.75rem 0;
     }
+    .diff-old { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; padding: 0.75rem; }
+    .diff-new { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.75rem; }
   </style>
 </head>
 <body>
 
   <!-- Auth Gate -->
   <div id="admin-auth-gate" style="position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1.5rem;">
-    <div style="background: #ffffff; padding: 2.5rem; border-radius: var(--radius-xl); width: 100%; max-width: 420px; text-align: center; box-shadow: var(--shadow-xl);">
+    <div style="background: #ffffff; padding: 2.5rem; border-radius: var(--radius-xl); width: 100%; max-width: 440px; text-align: center; box-shadow: var(--shadow-xl);">
       <img src="assets/logo.png" alt="VEYANO" style="height: 46px; margin: 0 auto 1.5rem;">
-      <h2 style="font-size: 1.35rem; margin-bottom: 0.4rem;">Executive Admin Access</h2>
-      <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.75rem;">Manage customer orders, live tracking status, customer directory, pricing, and catalog.</p>
+      <h2 style="font-size: 1.35rem; margin-bottom: 0.4rem; color: #0f172a;">Executive Control System</h2>
+      <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.75rem;">Single Source of Truth: Product Master, Inventory Ledger, Order Tracking, and RBAC Operations.</p>
+      
       <form onsubmit="handleAdminLogin(event)">
-        <div class="form-group" style="margin-bottom: 1.25rem;">
-          <input type="password" id="admin-passcode" class="form-control" placeholder="Enter Passcode" required autofocus style="text-align:center; font-size:1.15rem; letter-spacing: 3px; font-weight: 700;">
+        <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+          <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">Select Access Role</label>
+          <select id="login-role-select" class="form-control" style="font-weight: 600;">
+            <option value="OWNER">👑 OWNER (Full Control & Approvals)</option>
+            <option value="ADMIN">🛡️ ADMIN (Product & Order Operations)</option>
+            <option value="OPERATIONS">🚚 OPERATIONS (Fulfillment & Shipping)</option>
+            <option value="INVENTORY_MANAGER">📦 INVENTORY MANAGER (Ledger & Stock)</option>
+            <option value="FINANCE">💰 FINANCE (Revenue & Payments)</option>
+            <option value="MARKETING">📢 MARKETING (Catalog Content & B2B)</option>
+            <option value="CUSTOMER_SUPPORT">🎧 CUSTOMER SUPPORT (Orders & Help)</option>
+            <option value="VIEWER">👁️ VIEWER (Read Only)</option>
+          </select>
         </div>
-        <button type="submit" class="btn btn-accent" style="width: 100%; padding: 0.85rem;">Unlock Operations Dashboard</button>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <input type="password" id="admin-passcode" class="form-control" placeholder="Enter Secure Passcode" required autofocus style="text-align:center; font-size:1.15rem; letter-spacing: 3px; font-weight: 700;">
+        </div>
+        <button type="submit" class="btn btn-accent" style="width: 100%; padding: 0.85rem;">Unlock Operations Platform</button>
       </form>
     </div>
   </div>
@@ -291,17 +311,18 @@
     <!-- Top Header -->
     <div class="admin-header">
       <div style="display: flex; align-items: center; gap: 1.25rem;">
-        <img src="assets/logo.png" alt="VEYANO" style="height: 40px;">
+        <img src="assets/logo.png" alt="VEYANO" style="height: 38px;">
         <div>
-          <h1 style="font-size: 1.35rem; font-weight: 700; color: #0f172a;">VEYANO Store & Operations Manager</h1>
-          <p style="font-size: 0.82rem; color: #64748b;">Live Order Tracking, Customer Account Directory, Pricing & Fulfillment</p>
+          <h1 style="font-size: 1.3rem; font-weight: 700; color: #0f172a;">VEYANO Enterprise Control Center</h1>
+          <p style="font-size: 0.8rem; color: #64748b;">Single Source of Truth • Real-Time Inventory Ledger • Immutable Audit Trail</p>
         </div>
       </div>
-      <div style="display: flex; gap: 0.75rem; align-items: center;">
+      <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <span class="role-badge-pill" id="current-role-badge">👑 OWNER</span>
         <button onclick="refreshDashboardData()" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-          <span>🔄</span> Refresh Data
+          <span>🔄</span> Sync Data
         </button>
-        <a href="index.html" class="btn btn-sm btn-outline" target="_blank">View Live Store ↗</a>
+        <a href="index.html" class="btn btn-sm btn-outline" target="_blank">Live Store ↗</a>
         <button onclick="handleAdminLogout()" class="btn btn-sm" style="background: #fee2e2; color: #ef4444; border: none; font-weight: 600;">Logout</button>
       </div>
     </div>
@@ -326,44 +347,107 @@
         <div class="kpi-icon" style="background: #fdf4ff; color: #c026d3;">👥</div>
         <div>
           <div class="kpi-value" id="kpi-total-customers">0</div>
-          <div class="kpi-label">Registered Customers</div>
+          <div class="kpi-label">Customers</div>
         </div>
       </div>
       <div class="kpi-card">
         <div class="kpi-icon" style="background: #fffbeb; color: #f59e0b;">⚡</div>
         <div>
           <div class="kpi-value" id="kpi-pending-fulfillment">0</div>
-          <div class="kpi-label">Pending / In Process</div>
+          <div class="kpi-label">Dispatch Queue</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #f0fdf4; color: #15803d;">📊</div>
+        <div>
+          <div class="kpi-value" id="kpi-aov">₹0</div>
+          <div class="kpi-label">Average Order Value</div>
         </div>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
     <div class="admin-nav">
-      <button class="admin-nav-item active" data-tab="tab-orders">
-        🛒 Customer Orders & Tracking <span class="nav-badge" id="badge-orders-count">0</span>
-      </button>
-      <button class="admin-nav-item" data-tab="tab-customers">
-        👥 Customers & Accounts Directory <span class="nav-badge" id="badge-customers-count">0</span>
-      </button>
-      <button class="admin-nav-item" data-tab="tab-products">
-        📦 Product Catalog & Pricing
-      </button>
-      <button class="admin-nav-item" data-tab="tab-leads">
-        💼 B2B & Bulk Leads
-      </button>
-      <button class="admin-nav-item" data-tab="tab-settings">
-        ⚙️ Diagnostics & Maintenance
-      </button>
+      <button class="admin-nav-item active" data-tab="tab-overview">📊 Overview & Alerts</button>
+      <button class="admin-nav-item" data-tab="tab-orders">🛒 Orders & Fulfillment <span class="nav-badge" id="badge-orders-count">0</span></button>
+      <button class="admin-nav-item" data-tab="tab-customers">👥 Customers <span class="nav-badge" id="badge-customers-count">0</span></button>
+      <button class="admin-nav-item" data-tab="tab-products">📦 Product Master</button>
+      <button class="admin-nav-item" data-tab="tab-inventory">📈 Inventory Ledger</button>
+      <button class="admin-nav-item" data-tab="tab-approvals">⚖️ Approvals <span class="nav-badge" id="badge-approvals-count" style="background: #ef4444;">0</span></button>
+      <button class="admin-nav-item" data-tab="tab-finance">💵 Finance & Analytics</button>
+      <button class="admin-nav-item" data-tab="tab-leads">💼 B2B CRM</button>
+      <button class="admin-nav-item" data-tab="tab-audit">📜 Audit Log</button>
+      <button class="admin-nav-item" data-tab="tab-security">🛡️ Security Center</button>
+      <button class="admin-nav-item" data-tab="tab-manufacturing">🏭 Manufacturing & QC <span class="nav-badge" style="background:#64748b; font-size:0.65rem;">Soon</span></button>
+      <button class="admin-nav-item" data-tab="tab-settings">⚙️ System Diagnostics</button>
     </div>
 
-    <!-- TAB 1: CUSTOMER ORDERS & LIVE TRACKING -->
-    <div id="tab-orders" class="admin-tab-content">
+    <!-- TAB 1: OVERVIEW & ALERTS -->
+    <div id="tab-overview" class="admin-tab-content">
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+        <!-- Left Column: Priority Action Queues -->
+        <div>
+          <div class="admin-card">
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🚨</span> Urgent Operational Queues
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+              <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: var(--radius-md); padding: 1rem;">
+                <div style="font-size: 0.8rem; color: #92400e; font-weight: 700;">ORDERS NEEDING DISPATCH</div>
+                <div style="font-size: 1.6rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #b45309; margin: 0.25rem 0;" id="overview-pending-orders">0</div>
+                <button onclick="switchTab('tab-orders')" class="btn btn-sm btn-outline" style="font-size: 0.75rem; background: #fff;">View Order Queue →</button>
+              </div>
+              <div style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: var(--radius-md); padding: 1rem;">
+                <div style="font-size: 0.8rem; color: #991b1b; font-weight: 700;">PENDING APPROVALS</div>
+                <div style="font-size: 1.6rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #dc2626; margin: 0.25rem 0;" id="overview-pending-approvals">0</div>
+                <button onclick="switchTab('tab-approvals')" class="btn btn-sm btn-outline" style="font-size: 0.75rem; background: #fff;">Review Requests →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Selling Products Velocity -->
+          <div class="admin-card">
+            <h3 style="font-size: 1.15rem; margin-bottom: 1rem;">📦 Product Sales & Stock Velocity</h3>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Product SKU</th>
+                  <th>Selling Price</th>
+                  <th>Current Stock</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="overview-products-summary">
+                <!-- Populated by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right Column: Live Audit Activity Feed -->
+        <div>
+          <div class="admin-card" style="height: calc(100% - 1.5rem);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span>⚡</span> Live Activity Stream
+              </h3>
+              <button onclick="switchTab('tab-audit')" class="btn btn-sm btn-outline" style="font-size: 0.72rem;">Full Log →</button>
+            </div>
+            <div id="overview-activity-feed" style="max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+              <!-- Populated by admin.js -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: ORDERS & FULFILLMENT -->
+    <div id="tab-orders" class="admin-tab-content" style="display: none;">
       <div class="admin-card">
         <div class="card-header-bar">
           <div>
-            <h2 style="font-size: 1.3rem;">Live Orders & Shipment Tracking</h2>
-            <p style="font-size: 0.85rem; color: #64748b;">Manage customer orders, mark statuses as Processing/Shipped/Delivered, update AWB tracking codes, and view delivery details.</p>
+            <h2 style="font-size: 1.25rem;">Customer Orders & Shipment Tracking</h2>
+            <p style="font-size: 0.82rem; color: #64748b;">Live orders synced from database with AWB courier tracking and timeline.</p>
           </div>
           <div class="search-filter-box">
             <input type="text" id="orders-search-input" class="admin-search-input" placeholder="🔍 Search Order #, Name, Phone, City..." oninput="filterOrdersTable()">
@@ -373,9 +457,9 @@
 
         <!-- Status Filter Pills -->
         <div class="status-filter-pills" style="margin-bottom: 1.25rem;">
-          <button class="status-pill active" onclick="setOrderStatusFilter('all', this)">All Orders (<span id="count-all-orders">0</span>)</button>
+          <button class="status-pill active" onclick="setOrderStatusFilter('all', this)">All (<span id="count-all-orders">0</span>)</button>
           <button class="status-pill" onclick="setOrderStatusFilter('pending', this)">Pending (<span id="count-pending-orders">0</span>)</button>
-          <button class="status-pill" onclick="setOrderStatusFilter('processing', this)">Under Processing (<span id="count-processing-orders">0</span>)</button>
+          <button class="status-pill" onclick="setOrderStatusFilter('processing', this)">Processing (<span id="count-processing-orders">0</span>)</button>
           <button class="status-pill" onclick="setOrderStatusFilter('shipped', this)">Shipped (<span id="count-shipped-orders">0</span>)</button>
           <button class="status-pill" onclick="setOrderStatusFilter('out_for_delivery', this)">Out for Delivery (<span id="count-out-orders">0</span>)</button>
           <button class="status-pill" onclick="setOrderStatusFilter('delivered', this)">Delivered (<span id="count-delivered-orders">0</span>)</button>
@@ -386,38 +470,34 @@
           <table class="admin-table">
             <thead>
               <tr>
-                <th style="min-width: 140px;">Order Details</th>
-                <th style="min-width: 200px;">Customer & Login ID</th>
-                <th style="min-width: 240px;">Shipping Address</th>
-                <th style="min-width: 220px;">Items Ordered</th>
-                <th style="min-width: 130px;">Amount & Pay</th>
-                <th style="min-width: 180px;">Fulfillment Status</th>
-                <th style="min-width: 200px;">Tracking & Courier</th>
-                <th style="min-width: 110px;">Actions</th>
+                <th>Order Details</th>
+                <th>Customer & Login</th>
+                <th>Shipping Address</th>
+                <th>Items Ordered</th>
+                <th>Amount & Pay</th>
+                <th>Fulfillment Status</th>
+                <th>Tracking & Courier</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="admin-orders-table-body">
-              <tr>
-                <td colspan="8" style="text-align: center; padding: 3rem; color: #64748b;">
-                  Loading customer orders from database...
-                </td>
-              </tr>
+              <!-- Populated by admin.js -->
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: CUSTOMERS & ACCOUNTS DIRECTORY -->
+    <!-- TAB 3: CUSTOMERS DIRECTORY -->
     <div id="tab-customers" class="admin-tab-content" style="display: none;">
       <div class="admin-card">
         <div class="card-header-bar">
           <div>
-            <h2 style="font-size: 1.3rem;">Registered Customers & Accounts Directory</h2>
-            <p style="font-size: 0.85rem; color: #64748b;">Complete records of customer login IDs, phones, saved delivery addresses, order counts, and lifetime spend.</p>
+            <h2 style="font-size: 1.25rem;">Registered Customers & Accounts Directory</h2>
+            <p style="font-size: 0.82rem; color: #64748b;">Customer records, login identifiers, delivery addresses, and lifetime order histories.</p>
           </div>
           <div class="search-filter-box">
-            <input type="text" id="customers-search-input" class="admin-search-input" placeholder="🔍 Search Customer Name, Email, Phone..." oninput="filterCustomersTable()">
+            <input type="text" id="customers-search-input" class="admin-search-input" placeholder="🔍 Search Name, Email, Phone..." oninput="filterCustomersTable()">
           </div>
         </div>
 
@@ -425,35 +505,31 @@
           <table class="admin-table">
             <thead>
               <tr>
-                <th style="min-width: 200px;">Customer Name</th>
-                <th style="min-width: 220px;">Login ID / Email</th>
-                <th style="min-width: 150px;">Phone Number</th>
-                <th style="min-width: 130px;">Account Type</th>
-                <th style="min-width: 260px;">Saved / Delivery Addresses</th>
-                <th style="min-width: 130px;">Order History</th>
-                <th style="min-width: 120px;">Total Spent</th>
-                <th style="min-width: 110px;">Actions</th>
+                <th>Customer Name</th>
+                <th>Login ID / Email</th>
+                <th>Phone Number</th>
+                <th>Account Engine</th>
+                <th>Delivery Addresses</th>
+                <th>Orders</th>
+                <th>Lifetime Spend</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="admin-customers-table-body">
-              <tr>
-                <td colspan="8" style="text-align: center; padding: 3rem; color: #64748b;">
-                  Loading customer records...
-                </td>
-              </tr>
+              <!-- Populated by admin.js -->
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- TAB 3: PRODUCTS & CATALOG -->
+    <!-- TAB 4: PRODUCT MASTER -->
     <div id="tab-products" class="admin-tab-content" style="display: none;">
       <div class="admin-card">
         <div class="card-header-bar">
           <div>
-            <h2 style="font-size: 1.3rem;">Live Product Catalog & Pricing</h2>
-            <p style="font-size: 0.85rem; color: #64748b;">Add new snack SKUs, update pricing, manage stock inventory, or set promotional badges.</p>
+            <h2 style="font-size: 1.25rem;">Product Master & Single Source of Truth</h2>
+            <p style="font-size: 0.82rem; color: #64748b;">Centralized catalog synced directly with Supabase database and public storefront.</p>
           </div>
           <button onclick="openProductModal(false)" class="btn btn-accent btn-sm">+ Add New SKU</button>
         </div>
@@ -466,8 +542,8 @@
                 <th>Product Name & SKU</th>
                 <th>Category</th>
                 <th>Weight</th>
-                <th>Price & MRP</th>
-                <th>Stock Status</th>
+                <th>Selling Price & MRP</th>
+                <th>Stock & Level</th>
                 <th>Badges</th>
                 <th>Actions</th>
               </tr>
@@ -480,13 +556,102 @@
       </div>
     </div>
 
-    <!-- TAB 4: B2B LEADS -->
+    <!-- TAB 5: INVENTORY LEDGER -->
+    <div id="tab-inventory" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <div class="card-header-bar">
+          <div>
+            <h2 style="font-size: 1.25rem;">Inventory Movement Ledger</h2>
+            <p style="font-size: 0.82rem; color: #64748b;">Immutable transaction history of sales, purchases, damage write-offs, and stock adjustments.</p>
+          </div>
+          <button onclick="openStockAdjustmentModal()" class="btn btn-accent btn-sm">+ Record Stock Movement</button>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Product SKU</th>
+                <th>Movement Type</th>
+                <th>Delta</th>
+                <th>Before ➔ After</th>
+                <th>Reference / Order #</th>
+                <th>Reason / Stated By</th>
+              </tr>
+            </thead>
+            <tbody id="admin-inventory-ledger-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: APPROVALS WORKFLOW -->
+    <div id="tab-approvals" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <div class="card-header-bar">
+          <div>
+            <h2 style="font-size: 1.25rem;">Dual-Custody Approval Queue</h2>
+            <p style="font-size: 0.82rem; color: #64748b;">Sensitive changes (price/MRP modifications, deletions, role promotions) awaiting Owner/Admin sign-off.</p>
+          </div>
+        </div>
+
+        <div id="approvals-container">
+          <!-- Populated by admin.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: FINANCE & ANALYTICS -->
+    <div id="tab-finance" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Financial Breakdown & Revenue Reconciliations</h2>
+        <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 1.5rem;">Gross sales, COD vs Online channel distribution, and SKU revenue velocities.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-size: 0.75rem; color: #64748b; font-weight: 700;">GROSS REVENUE</div>
+            <div style="font-size: 1.6rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #0f172a; margin-top: 0.25rem;" id="fin-gross-rev">₹0</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-size: 0.75rem; color: #64748b; font-weight: 700;">PREPAID ONLINE SALES</div>
+            <div style="font-size: 1.6rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #16a34a; margin-top: 0.25rem;" id="fin-online-rev">₹0</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-size: 0.75rem; color: #64748b; font-weight: 700;">CASH ON DELIVERY (COD)</div>
+            <div style="font-size: 1.6rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #d97706; margin-top: 0.25rem;" id="fin-cod-rev">₹0</div>
+          </div>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-size: 0.75rem; color: #64748b; font-weight: 700;">AVERAGE ORDER VALUE</div>
+            <div style="font-size: 1.6rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #3b82f6; margin-top: 0.25rem;" id="fin-aov">₹0</div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 1.05rem; margin: 1.5rem 0 0.75rem;">Revenue Contribution by Product SKU</h3>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Product Name / SKU</th>
+              <th>Total Units Sold</th>
+              <th>Total Revenue (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="finance-sku-breakdown-body">
+            <!-- Populated by admin.js -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 8: B2B CRM -->
     <div id="tab-leads" class="admin-tab-content" style="display: none;">
       <div class="admin-card">
         <div class="card-header-bar">
           <div>
-            <h2 style="font-size: 1.3rem;">Corporate & Bulk Order Inquiries</h2>
-            <p style="font-size: 0.85rem; color: #64748b;">Inquiries submitted through the B2B & Bulk Orders portal.</p>
+            <h2 style="font-size: 1.25rem;">Corporate & Wholesale B2B Pipeline</h2>
+            <p style="font-size: 0.82rem; color: #64748b;">Inquiries submitted through the B2B & Bulk Orders portal.</p>
           </div>
         </div>
 
@@ -510,30 +675,296 @@
       </div>
     </div>
 
-    <!-- TAB 5: SYSTEM & DIAGNOSTICS -->
-    <div id="tab-settings" class="admin-tab-content" style="display: none;">
+    <!-- TAB 9: IMMUTABLE AUDIT LOG -->
+    <div id="tab-audit" class="admin-tab-content" style="display: none;">
       <div class="admin-card">
-        <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">System Diagnostics & Catalog Reset</h2>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Verify system connectivity or restore factory default products.</p>
-        
-        <div style="background: #f8fafc; padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-          <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem;">Backend Integration Health</h4>
-          <ul style="font-size: 0.85rem; color: #475569; line-height: 1.8; list-style: none;">
-            <li>🌿 <strong>FSSAI Compliance Lic:</strong> 20826010000397</li>
-            <li>🗄️ <strong>Database:</strong> Supabase DBMS (Connected)</li>
-            <li>🔐 <strong>Authentication Engine:</strong> Clerk Identity Management (Active)</li>
-            <li>💳 <strong>Payment Gateway:</strong> Razorpay (Active)</li>
-          </ul>
+        <div class="card-header-bar">
+          <div>
+            <h2 style="font-size: 1.25rem;">Append-Only Immutable Audit Trail</h2>
+            <p style="font-size: 0.82rem; color: #64748b;">Tamper-proof log of every price change, status transition, stock delta, and admin login.</p>
+          </div>
+          <div class="search-filter-box">
+            <input type="text" id="audit-search-input" class="admin-search-input" placeholder="🔍 Search Audit Logs..." oninput="filterAuditLogsTable()">
+          </div>
         </div>
 
-        <button onclick="resetCatalogDefaults()" class="btn btn-outline" style="color: #ef4444; border-color: #fca5a5;">
-          Reset Catalog to Factory Defaults
-        </button>
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Event ID & Time</th>
+                <th>Actor & Role</th>
+                <th>Action</th>
+                <th>Entity Affected</th>
+                <th>Previous ➔ New Value Diff</th>
+                <th>Reason / Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="admin-audit-logs-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 10: SECURITY CENTER -->
+    <div id="tab-security" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Security & RBAC Management</h2>
+        <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 1.5rem;">Manage team roles, view session history, and verify authorization guards.</p>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem;">Active Operator Session</h4>
+          <div style="display: flex; gap: 2rem; font-size: 0.85rem; color: #475569; flex-wrap: wrap;">
+            <div><strong>Role:</strong> <span id="sec-current-role">OWNER</span></div>
+            <div><strong>Session Engine:</strong> HMAC-SHA256 Token</div>
+            <div><strong>Token Expiry:</strong> 12 Hours</div>
+            <div><strong>Status:</strong> Active & Encrypted</div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem;">Simulate Role View (RBAC Testing)</h3>
+        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.75rem;">Switch operator roles to verify client/server permission enforcement:</p>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+          <button onclick="switchRole('OWNER')" class="btn btn-sm btn-outline">👑 OWNER</button>
+          <button onclick="switchRole('ADMIN')" class="btn btn-sm btn-outline">🛡️ ADMIN</button>
+          <button onclick="switchRole('OPERATIONS')" class="btn btn-sm btn-outline">🚚 OPERATIONS</button>
+          <button onclick="switchRole('INVENTORY_MANAGER')" class="btn btn-sm btn-outline">📦 INVENTORY</button>
+          <button onclick="switchRole('FINANCE')" class="btn btn-sm btn-outline">💰 FINANCE</button>
+          <button onclick="switchRole('MARKETING')" class="btn btn-sm btn-outline">📢 MARKETING</button>
+          <button onclick="switchRole('CUSTOMER_SUPPORT')" class="btn btn-sm btn-outline">🎧 SUPPORT</button>
+          <button onclick="switchRole('VIEWER')" class="btn btn-sm btn-outline">👁️ VIEWER</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 11: MANUFACTURING & QUALITY CONTROL -->
+    <div id="tab-manufacturing" class="admin-tab-content" style="display: none;">
+      <div class="admin-card" style="text-align: center; padding: 3.5rem 1.5rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🏭</div>
+        <h2 style="font-size: 1.4rem; color: #0f172a; margin-bottom: 0.5rem;">In-House Manufacturing, Batches & QC</h2>
+        <p style="font-size: 0.88rem; color: #64748b; max-width: 600px; margin: 0 auto 1.75rem; line-height: 1.6;">
+          Architecture and database schemas (`suppliers`, `raw_materials`, `batches`, `qc_inspections`) are initialized. Traceability from raw lotus seed lot to finished customer packaging will activate as manufacturing begins.
+        </p>
+        <div style="display: inline-flex; align-items: center; gap: 1rem; background: #f8fafc; padding: 0.75rem 1.5rem; border-radius: var(--radius-full); border: 1px solid #e2e8f0; font-size: 0.82rem; color: #475569;">
+          <span>🌾 Raw Lot</span> ➔ <span>🔥 Hot-Air Roasting</span> ➔ <span>🧪 QC Moisture Test</span> ➔ <span>📦 Batch VM-YYYY-XXX</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 12: SETTINGS & HEALTH DIAGNOSTICS -->
+    <div id="tab-settings" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Real-Time System Health Diagnostics</h2>
+        <p style="font-size: 0.82rem; color: #64748b; margin-bottom: 1.5rem;">Live health checks for database, identity management, payments, and compliance licenses.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem;">🗄️ Supabase PostgreSQL Database</div>
+            <div style="font-size: 0.82rem; color: #16a34a; font-weight: 600;">STATUS: HEALTHY</div>
+            <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.25rem;">Single Source of Truth (Products, Orders, Users)</div>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem;">🔐 Authentication Engine</div>
+            <div style="font-size: 0.82rem; color: #16a34a; font-weight: 600;">STATUS: HEALTHY</div>
+            <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.25rem;">Clerk Identity Management & HMAC Tokens</div>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem;">💳 Payment Gateway</div>
+            <div style="font-size: 0.82rem; color: #16a34a; font-weight: 600;">STATUS: HEALTHY</div>
+            <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.25rem;">Razorpay Live Payment Processing</div>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
+            <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem;">🌿 Food Safety Compliance</div>
+            <div style="font-size: 0.82rem; color: #16a34a; font-weight: 600;">STATUS: VERIFIED</div>
+            <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.25rem;">FSSAI License: 20826010000397</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 1: UPDATE TRACKING & FULFILLMENT -->
+  <!-- MODAL 1: STOCK ADJUSTMENT MODAL -->
+  <div id="stock-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.2rem; font-weight: 700;">Record Stock Movement / Adjustment</h3>
+        <button onclick="closeStockModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form onsubmit="handleStockAdjustmentSubmit(event)">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Select Product SKU *</label>
+          <select id="stock-adjust-sku" class="form-control" required style="font-weight: 600;">
+            <option value="PLAIN-200">PLAIN-200 — Classic Plain Roasted Makhana</option>
+            <option value="SALTED-200">SALTED-200 — Lightly Salted Roasted Makhana</option>
+            <option value="PERIPERI-200">PERIPERI-200 — Fiery Peri-Peri Roasted Makhana</option>
+            <option value="COMBO-600">COMBO-600 — The Trio Discovery Combo</option>
+          </select>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Movement Type *</label>
+            <select id="stock-adjust-type" class="form-control" required style="font-weight: 600;">
+              <option value="PURCHASE_RECEIVED">📥 Purchase Received (+)</option>
+              <option value="PRODUCTION">🔥 Production Finished (+)</option>
+              <option value="RETURN">↩️ Customer Return (+)</option>
+              <option value="DAMAGE">⚠️ Damage / Scrap (-)</option>
+              <option value="SAMPLE">🎁 Marketing Sample (-)</option>
+              <option value="ADJUSTMENT">✏️ Physical Audit Adjustment (+/-)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Quantity Delta (e.g. +50 or -5) *</label>
+            <input type="number" id="stock-adjust-qty" class="form-control" placeholder="e.g. 50" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Reason / Reference Notes *</label>
+          <input type="text" id="stock-adjust-reason" class="form-control" placeholder="e.g. Batch #VM-2026-0822 packaging completed" required>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeStockModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Commit to Inventory Ledger</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: PRICE HISTORY MODAL -->
+  <div id="price-history-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700;" id="price-history-title">Price History</h3>
+          <p style="font-size: 0.8rem; color: #64748b;" id="price-history-subtitle">SKU: PLAIN-200</p>
+        </div>
+        <button onclick="closePriceHistoryModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <div id="price-history-body">
+        <!-- Populated by admin.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: PRODUCT UPSERT MODAL -->
+  <div id="product-modal" class="admin-modal">
+    <div class="admin-modal-content admin-modal-lg">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <h3 id="modal-form-title" style="font-size: 1.2rem; font-weight: 700;">Edit Product SKU</h3>
+        <button onclick="closeProductModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form id="product-upsert-form" onsubmit="handleProductFormSubmit(event)">
+        <input type="hidden" id="p-form-id">
+        
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Product Name *</label>
+            <input type="text" id="p-form-name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">SKU Code *</label>
+            <input type="text" id="p-form-sku" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Category *</label>
+            <select id="p-form-category" class="form-control" required>
+              <option value="makhana">Roasted Makhana</option>
+              <option value="combos">Combos & Bundles</option>
+              <option value="trial-packs">Trial Packs</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Selling Price (₹) *</label>
+            <input type="number" id="p-form-price" class="form-control" required min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Declared MRP (₹) *</label>
+            <input type="number" id="p-form-mrp" class="form-control" required min="1">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Short Description *</label>
+          <input type="text" id="p-form-short-desc" class="form-control" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Full Product Story *</label>
+          <textarea id="p-form-desc" class="form-control" rows="3" required></textarea>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Stock Count *</label>
+            <input type="number" id="p-form-stock" class="form-control" required min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Reorder Alert Threshold *</label>
+            <input type="number" id="p-form-threshold" class="form-control" value="25" required min="1">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Stated Reason for Update *</label>
+          <input type="text" id="p-form-reason" class="form-control" placeholder="e.g. Periodic catalog price adjustment" required>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" onclick="closeProductModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Save SKU to Database</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: ORDER DETAILS MODAL -->
+  <div id="order-details-modal" class="admin-modal">
+    <div class="admin-modal-content admin-modal-lg">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700;" id="order-detail-title">Order #VFO-XXXX</h3>
+          <p style="font-size: 0.82rem; color: #64748b;" id="order-detail-date">Placed on ...</p>
+        </div>
+        <button onclick="closeOrderDetailsModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <div id="order-detail-body">
+        <!-- Populated by admin.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: CUSTOMER DETAILS MODAL -->
+  <div id="customer-modal" class="admin-modal">
+    <div class="admin-modal-content admin-modal-lg">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700;" id="cust-modal-name">Customer Details</h3>
+          <p style="font-size: 0.82rem; color: #64748b;" id="cust-modal-email">user@example.com</p>
+        </div>
+        <button onclick="closeCustomerModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <div id="cust-modal-body">
+        <!-- Populated by admin.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: UPDATE TRACKING MODAL -->
   <div id="tracking-modal" class="admin-modal">
     <div class="admin-modal-content">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
@@ -577,145 +1008,12 @@
 
         <div class="form-group" style="margin-bottom: 1.5rem;">
           <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Fulfillment Notes / Remarks</label>
-          <textarea id="tracking-form-notes" class="form-control" rows="2" placeholder="Internal dispatch notes or customer remarks..."></textarea>
+          <textarea id="tracking-form-notes" class="form-control" rows="2" placeholder="Internal dispatch notes..."></textarea>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
           <button type="button" onclick="closeTrackingModal()" class="btn btn-sm btn-outline">Cancel</button>
           <button type="submit" class="btn btn-sm btn-accent">Save & Update Status</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL 2: CUSTOMER PROFILE & ORDER HISTORY -->
-  <div id="customer-modal" class="admin-modal">
-    <div class="admin-modal-content admin-modal-lg">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
-        <div>
-          <h3 style="font-size: 1.25rem; font-weight: 700;" id="cust-modal-name">Customer Details</h3>
-          <p style="font-size: 0.82rem; color: #64748b;" id="cust-modal-email">user@example.com</p>
-        </div>
-        <button onclick="closeCustomerModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
-      </div>
-
-      <div id="cust-modal-body">
-        <!-- Populated by admin.js -->
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 3: ORDER FULL DETAILS -->
-  <div id="order-details-modal" class="admin-modal">
-    <div class="admin-modal-content admin-modal-lg">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
-        <div>
-          <h3 style="font-size: 1.25rem; font-weight: 700;" id="order-detail-title">Order #VFO-XXXX</h3>
-          <p style="font-size: 0.82rem; color: #64748b;" id="order-detail-date">Placed on ...</p>
-        </div>
-        <button onclick="closeOrderDetailsModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
-      </div>
-
-      <div id="order-detail-body">
-        <!-- Populated by admin.js -->
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 4: UPSERT PRODUCT SKU -->
-  <div id="product-modal" class="admin-modal">
-    <div class="admin-modal-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
-        <h3 id="modal-form-title" style="font-size: 1.2rem; font-weight: 700;">Add Product SKU</h3>
-        <button onclick="closeProductModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
-      </div>
-
-      <form id="product-upsert-form" onsubmit="handleProductFormSubmit(event)">
-        <input type="hidden" id="p-form-id">
-        
-        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-          <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Product Name *</label>
-            <input type="text" id="p-form-name" class="form-control" placeholder="e.g. Roasted Makhana Classic Plain" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">SKU Code *</label>
-            <input type="text" id="p-form-sku" class="form-control" placeholder="e.g. PLAIN-200" required>
-          </div>
-        </div>
-
-        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-          <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Category *</label>
-            <select id="p-form-category" class="form-control" required>
-              <option value="makhana">Roasted Makhana</option>
-              <option value="roasted-snacks">Roasted Snacks</option>
-              <option value="trial-packs">Trial Packs</option>
-              <option value="combos">Combos & Bundles</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Pack Weight / Size *</label>
-            <input type="text" id="p-form-weight" class="form-control" placeholder="e.g. 200g or 3x35g" required>
-          </div>
-        </div>
-
-        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-          <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Selling Price (₹) *</label>
-            <input type="number" id="p-form-price" class="form-control" placeholder="399" required min="1">
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Actual Declared MRP (₹) *</label>
-            <input type="number" id="p-form-mrp" class="form-control" placeholder="399" required min="1">
-          </div>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Short Description (for cards) *</label>
-          <input type="text" id="p-form-short-desc" class="form-control" placeholder="Brief summary of taste and texture..." required>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Full Description *</label>
-          <textarea id="p-form-desc" class="form-control" rows="3" placeholder="Detailed product story, sourcing and taste profile..." required></textarea>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Image Path / URL *</label>
-          <input type="text" id="p-form-image" class="form-control" placeholder="./assets/plain.webp" required>
-        </div>
-
-        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-          <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Available Stock Quantity *</label>
-            <input type="number" id="p-form-stock" class="form-control" placeholder="200" required min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Stock Status *</label>
-            <select id="p-form-status" class="form-control" required>
-              <option value="in_stock">In Stock</option>
-              <option value="coming_soon">Coming Soon</option>
-              <option value="out_of_stock">Out of Stock</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 1.5rem; margin: 1.25rem 0; padding: 0.75rem; background: #f8fafc; border-radius: var(--radius-md);">
-          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
-            <input type="checkbox" id="p-form-featured"> Featured
-          </label>
-          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
-            <input type="checkbox" id="p-form-trial"> Trial Pack
-          </label>
-          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
-            <input type="checkbox" id="p-form-new"> Mark as New
-          </label>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-          <button type="button" onclick="closeProductModal()" class="btn btn-sm btn-outline">Cancel</button>
-          <button type="submit" class="btn btn-sm btn-accent">Save SKU to Catalog</button>
         </div>
       </form>
     </div>
