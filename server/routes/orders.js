@@ -13,13 +13,68 @@ const { sendOrderAlertToAdmin, sendOrderConfirmationToCustomer } = require('../s
 // Order number generator: VFO-YYYY-XXXXX
 async function generateOrderNumber() {
   const year = new Date().getFullYear();
-  const { count, error } = await supabase
+  const { count } = await supabase
     .from('orders')
     .select('*', { count: 'exact', head: true });
   
   const orderCount = count || 0;
   return `VFO-${year}-${String(orderCount + 1).padStart(5, '0')}`;
 }
+
+const pincodeCache = new Map();
+const https = require('https');
+
+/**
+ * GET /api/orders/pincode/:pin — Secure server-side pincode lookup
+ */
+router.get('/pincode/:pin', async (req, res) => {
+  const pin = req.params.pin;
+  if (!/^[1-9][0-9]{5}$/.test(pin)) {
+    return res.status(400).json({ error: 'Invalid 6-digit Indian pincode.' });
+  }
+
+  if (pincodeCache.has(pin)) {
+    return res.json(pincodeCache.get(pin));
+  }
+
+  try {
+    const fetchPostal = () => new Promise((resolve, reject) => {
+      const request = https.get(`https://api.postalpincode.in/pincode/${pin}`, { timeout: 4000 }, (response) => {
+        let rawData = '';
+        response.on('data', (chunk) => rawData += chunk);
+        response.on('end', () => {
+          try {
+            resolve(JSON.parse(rawData));
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
+      request.on('error', reject);
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Postal lookup timeout'));
+      });
+    });
+
+    const data = await fetchPostal();
+    if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice?.length > 0) {
+      const po = data[0].PostOffice[0];
+      const result = {
+        success: true,
+        district: po.District || po.Block || '',
+        state: po.State || '',
+        pincode: pin
+      };
+      pincodeCache.set(pin, result);
+      return res.json(result);
+    }
+    return res.status(404).json({ error: 'Pincode not found.' });
+  } catch (err) {
+    console.warn('[Orders] Pincode lookup error:', err.message);
+    res.status(500).json({ error: 'Postal service unavailable.' });
+  }
+});
 
 /**
  * POST /api/orders

@@ -289,21 +289,20 @@ function initPincodeAutofill() {
     if (/^[1-9][0-9]{5}$/.test(pin)) {
       pincodeInput.style.borderColor = 'var(--accent-color)';
       try {
-        const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+        const res = await fetch(`${API_BASE_URL}/api/orders/pincode/${pin}`);
         if (!res.ok) throw new Error('Network response not ok');
         const data = await res.json();
-        if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice?.length > 0) {
-          const po = data[0].PostOffice[0];
-          if (cityInput && !cityInput.value) cityInput.value = po.District || po.Block || '';
-          if (stateSelect) {
+        if (data && data.success) {
+          if (cityInput && !cityInput.value) cityInput.value = data.district || '';
+          if (stateSelect && data.state) {
             const matched = Array.from(stateSelect.options).find(opt =>
-              opt.value.toLowerCase() === (po.State || '').toLowerCase()
+              opt.value.toLowerCase() === data.state.toLowerCase()
             );
             if (matched) stateSelect.value = matched.value;
           }
         }
       } catch (err) {
-        console.warn('Pincode lookup error:', err);
+        console.warn('Pincode lookup note:', err);
       } finally {
         pincodeInput.style.borderColor = '';
       }

@@ -34,7 +34,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.clerk.com", "https://*.clerk.accounts.dev", "https://checkout.razorpay.com", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'", "https://clerk.com", "https://*.clerk.com", "https://*.clerk.accounts.dev", "https://api.razorpay.com", "https://api.postalpincode.in", "http://localhost:3001", "https://veyano.in"],
+      connectSrc: ["'self'", "https://clerk.com", "https://*.clerk.com", "https://*.clerk.accounts.dev", "https://api.razorpay.com", "http://localhost:3001", "https://veyano.in"],
       imgSrc: ["'self'", "data:", "https://img.clerk.com", "https://clerk.com", "https://www.veyano.in", "https://images.unsplash.com"],
       frameSrc: ["'self'", "https://checkout.razorpay.com", "https://*.clerk.accounts.dev"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
