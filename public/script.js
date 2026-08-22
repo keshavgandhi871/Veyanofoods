@@ -640,25 +640,49 @@ window.renderProductsGrid = (containerId, filterCategory = 'all') => {
 
 
 // --- CLERK AUTHENTICATION INTEGRATION ---
-const CLERK_PUBLISHABLE_KEY = 'pk_test_cG9ldGljLWJ1enphcmQtMjcuY2xlcmsuYWNjb3VudHMuZGV2JA';
+const CLERK_PUBLISHABLE_KEY = (typeof CONFIG !== 'undefined' && CONFIG.CLERK_PUBLISHABLE_KEY) 
+  ? CONFIG.CLERK_PUBLISHABLE_KEY 
+  : 'pk_test_cG9ldGljLWJ1enphcmQtMjcuY2xlcmsuYWNjb3VudHMuZGV2JA';
+
+function getClerkFrontendApi(key) {
+  try {
+    const parts = (key || '').split('_');
+    if (parts.length >= 3 && parts[2]) {
+      return atob(parts[2]).replace(/\$$/, '');
+    }
+  } catch (e) {
+    console.warn('Error parsing Clerk publishable key:', e);
+  }
+  return 'poetic-buzzard-27.clerk.accounts.dev';
+}
 
 async function initClerkAuth() {
   try {
     if (!window.Clerk) {
-      // Dynamically load Clerk browser script
+      const frontendApi = getClerkFrontendApi(CLERK_PUBLISHABLE_KEY);
+      const scriptUrl = `https://${frontendApi}/npm/@clerk/clerk-js@5/dist/clerk.browser.js`;
+
       const clerkScript = document.createElement('script');
       clerkScript.setAttribute('data-clerk-publishable-key', CLERK_PUBLISHABLE_KEY);
       clerkScript.async = true;
-      clerkScript.src = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js';
+      clerkScript.crossOrigin = 'anonymous';
+      clerkScript.src = scriptUrl;
       
       await new Promise((resolve, reject) => {
         clerkScript.addEventListener('load', resolve);
-        clerkScript.addEventListener('error', reject);
-        document.body.appendChild(clerkScript);
+        clerkScript.addEventListener('error', (err) => {
+          console.error('Failed to load Clerk script from', scriptUrl, err);
+          reject(err);
+        });
+        document.head.appendChild(clerkScript);
       });
     }
 
-    if (!window.Clerk) return;
+    if (!window.Clerk) {
+      console.error('Clerk object not found after script load');
+      return;
+    }
+
     clerk = window.Clerk;
 
     await clerk.load({
@@ -666,38 +690,32 @@ async function initClerkAuth() {
       signUpUrl: '/signup.html'
     });
 
-    // Mount Auth UI in Navbar
-    const navAuthContainers = document.querySelectorAll('#nav-auth-container, .nav-auth-mount');
-    if (clerk.user) {
-      navAuthContainers.forEach(container => {
-        if (container) {
-          container.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <button onclick="window.openAddressesModal()" class="btn btn-sm btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Saved Addresses</button>
-              <div class="user-button-mount"></div>
-            </div>
-          `;
-          const mountEl = container.querySelector('.user-button-mount');
-          if (mountEl) clerk.mountUserButton(mountEl);
-        }
-      });
-    } else {
-      navAuthContainers.forEach(container => {
-        if (container) {
-          container.innerHTML = `<a href="login.html" class="nav-link" style="font-size: 0.9rem; font-weight:600;">Sign In</a>`;
-        }
+    // Render navbar auth UI
+    renderAuthUI();
+    syncCheckoutAddressSelector();
+    syncUserWithBackend();
+
+    // Listen to real-time auth changes (Sign In / Sign Out / Token refresh)
+    if (typeof clerk.addListener === 'function') {
+      clerk.addListener(() => {
+        renderAuthUI();
+        syncCheckoutAddressSelector();
+        syncUserWithBackend();
       });
     }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectUrl = urlParams.get('redirect_url') || '/index.html';
 
     // Mount SignIn on login.html
     const signInContainer = document.getElementById('clerk-signin-container');
     if (signInContainer) {
       signInContainer.innerHTML = '';
       clerk.mountSignIn(signInContainer, {
-        routing: 'path',
-        path: '/login.html',
+        routing: 'hash',
         signUpUrl: '/signup.html',
-        afterSignInUrl: '/index.html'
+        fallbackRedirectUrl: redirectUrl,
+        afterSignInUrl: redirectUrl
       });
     }
 
@@ -706,16 +724,56 @@ async function initClerkAuth() {
     if (signUpContainer) {
       signUpContainer.innerHTML = '';
       clerk.mountSignUp(signUpContainer, {
-        routing: 'path',
-        path: '/signup.html',
+        routing: 'hash',
         signInUrl: '/login.html',
-        afterSignUpUrl: '/index.html'
+        fallbackRedirectUrl: redirectUrl,
+        afterSignUpUrl: redirectUrl
       });
     }
-
-    syncCheckoutAddressSelector();
   } catch (err) {
     console.warn('Clerk SDK initialization note:', err);
+  }
+}
+
+function renderAuthUI() {
+  const navAuthContainers = document.querySelectorAll('#nav-auth-container, .nav-auth-mount');
+  if (clerk && clerk.user) {
+    navAuthContainers.forEach(container => {
+      if (container) {
+        container.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <button onclick="window.openAddressesModal()" class="btn btn-sm btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Saved Addresses</button>
+            <div class="user-button-mount"></div>
+          </div>
+        `;
+        const mountEl = container.querySelector('.user-button-mount');
+        if (mountEl) clerk.mountUserButton(mountEl);
+      }
+    });
+  } else {
+    navAuthContainers.forEach(container => {
+      if (container) {
+        container.innerHTML = `<a href="login.html" class="nav-link" style="font-size: 0.9rem; font-weight:600;">Sign In</a>`;
+      }
+    });
+  }
+}
+
+async function syncUserWithBackend() {
+  if (!clerk || !clerk.user || !clerk.session) return;
+  try {
+    const token = await clerk.session.getToken();
+    if (token) {
+      await fetch(`${CONFIG.API_BASE}/auth/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Background user sync notice:', err.message);
   }
 }
 

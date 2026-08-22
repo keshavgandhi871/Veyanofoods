@@ -1803,3 +1803,69 @@ img {
     flex-shrink: 0;
   }
 }
+
+/* Auth Pages (Sign In & Sign Up Centering & Layout) */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-color);
+}
+
+.auth-page .navbar {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 1rem 0;
+  width: 100%;
+  z-index: 50;
+}
+
+.auth-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem 3.5rem;
+  width: 100%;
+}
+
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#clerk-signin-container,
+#clerk-signup-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Ensure Clerk internal widgets center properly */
+#clerk-signin-container > div,
+#clerk-signup-container > div,
+.cl-rootBox,
+.cl-card,
+.cl-signIn-root,
+.cl-signUp-root {
+  margin: 0 auto !important;
+  width: 100% !important;
+  max-width: 440px !important;
+}
