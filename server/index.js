@@ -20,6 +20,7 @@ const complianceRoutes = require('./routes/compliance');
 const blogRoutes = require('./routes/blog');
 const paymentRoutes = require('./routes/payments');
 const productRoutes = require('./routes/products');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -84,6 +85,7 @@ app.use('/api/compliance', complianceRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Serve frontend static files (from the root directory)
 app.use(express.static(path.join(__dirname, '../public')));

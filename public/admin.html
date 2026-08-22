@@ -4,76 +4,456 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Admin Portal | VEYANO Foods</title>
+  <title>Founder & Admin Dashboard | VEYANO Foods</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
-    body { background: #f8fafc; color: #1e293b; }
-    .admin-container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
-    .admin-header { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 1.25rem 2rem; border-radius: var(--radius-lg); border: 1px solid #e2e8f0; box-shadow: var(--shadow-sm); margin-bottom: 2rem; }
-    .admin-nav { display: flex; gap: 0.5rem; margin-bottom: 2rem; background: #ffffff; padding: 0.5rem; border-radius: var(--radius-lg); border: 1px solid #e2e8f0; }
-    .admin-nav-item { padding: 0.65rem 1.25rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; background: transparent; color: #64748b; transition: all 0.2s ease; }
-    .admin-nav-item.active { background: #0f172a; color: #ffffff; }
-    .admin-card { background: #ffffff; border-radius: var(--radius-lg); border: 1px solid #e2e8f0; padding: 2rem; box-shadow: var(--shadow-sm); margin-bottom: 2rem; }
-    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    .admin-table th { background: #f1f5f9; padding: 0.85rem 1rem; text-align: left; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; }
-    .admin-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-    .admin-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 5000; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
+    body { background: #f4f6f9; color: #0f172a; font-family: 'Inter', sans-serif; }
+    .admin-container { max-width: 1360px; margin: 1.5rem auto; padding: 0 1.25rem; }
+    
+    /* Top Bar */
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 1.15rem 1.75rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    /* KPI Stats Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+    }
+    .kpi-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+    .kpi-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .kpi-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-top: 0.2rem;
+    }
+
+    /* Navigation Tabs */
+    .admin-nav {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      background: #ffffff;
+      padding: 0.5rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid #e2e8f0;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .admin-nav-item {
+      padding: 0.7rem 1.4rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .admin-nav-item:hover { color: #0f172a; background: #f1f5f9; }
+    .admin-nav-item.active { background: #0f172a; color: #ffffff; box-shadow: 0 2px 4px rgba(15,23,42,0.2); }
+    .nav-badge {
+      background: rgba(255,255,255,0.25);
+      color: #ffffff;
+      font-size: 0.72rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      font-weight: 700;
+    }
+    .admin-nav-item:not(.active) .nav-badge {
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    /* Cards & Tables */
+    .admin-card {
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      border: 1px solid #e2e8f0;
+      padding: 1.75rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      margin-bottom: 1.5rem;
+    }
+    .card-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .search-filter-box {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .admin-search-input {
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-full);
+      border: 1px solid #cbd5e1;
+      font-size: 0.88rem;
+      min-width: 260px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .admin-search-input:focus { border-color: #0f172a; }
+    
+    .status-filter-pills {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .status-pill {
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #64748b;
+      transition: all 0.2s ease;
+    }
+    .status-pill.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .admin-table th {
+      background: #f8fafc;
+      padding: 0.9rem 1rem;
+      text-align: left;
+      font-weight: 700;
+      color: #475569;
+      border-bottom: 2px solid #e2e8f0;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .admin-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+    .admin-table tr:hover td {
+      background-color: #fafbfd;
+    }
+
+    /* Badges & Status Indicators */
+    .order-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-processing { background: #e0e7ff; color: #3730a3; }
+    .status-shipped { background: #dbeafe; color: #1e40af; }
+    .status-out_for_delivery { background: #fae8ff; color: #86198f; }
+    .status-delivered { background: #dcfce7; color: #15803d; }
+    .status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    .payment-badge-paid { background: #dcfce7; color: #166534; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.75rem; }
+    .payment-badge-cod { background: #fef3c7; color: #b45309; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.75rem; }
+
+    /* Modals */
+    .admin-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(5px);
+      z-index: 9990;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
     .admin-modal.open { display: flex; }
-    .admin-modal-content { background: #ffffff; border-radius: var(--radius-xl); width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; padding: 2rem; box-shadow: var(--shadow-xl); }
+    .admin-modal-content {
+      background: #ffffff;
+      border-radius: var(--radius-xl);
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+      box-shadow: var(--shadow-xl);
+    }
+    .admin-modal-lg { max-width: 860px; }
+
+    /* Quick status select in table */
+    .status-quick-select {
+      padding: 0.35rem 0.65rem;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      cursor: pointer;
+      outline: none;
+    }
+    .status-quick-select:focus { border-color: #0f172a; }
+
+    /* Customer Info Block */
+    .customer-info-box {
+      background: #f8fafc;
+      border-radius: var(--radius-md);
+      padding: 0.85rem;
+      border: 1px solid #e2e8f0;
+      margin-top: 0.5rem;
+      font-size: 0.82rem;
+    }
   </style>
 </head>
 <body>
 
   <!-- Auth Gate -->
   <div id="admin-auth-gate" style="position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1.5rem;">
-    <div style="background: #ffffff; padding: 2.5rem; border-radius: var(--radius-xl); width: 100%; max-width: 400px; text-align: center; box-shadow: var(--shadow-xl);">
-      <img src="assets/logo.png" alt="VEYANO" style="height: 44px; margin: 0 auto 1.5rem;">
-      <h2 style="font-size: 1.35rem; margin-bottom: 0.5rem;">Founder & Team Access</h2>
-      <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Enter the admin passcode to manage products, pricing, stock, and customer orders.</p>
+    <div style="background: #ffffff; padding: 2.5rem; border-radius: var(--radius-xl); width: 100%; max-width: 420px; text-align: center; box-shadow: var(--shadow-xl);">
+      <img src="assets/logo.png" alt="VEYANO" style="height: 46px; margin: 0 auto 1.5rem;">
+      <h2 style="font-size: 1.35rem; margin-bottom: 0.4rem;">Executive Admin Access</h2>
+      <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.75rem;">Manage customer orders, live tracking status, customer directory, pricing, and catalog.</p>
       <form onsubmit="handleAdminLogin(event)">
         <div class="form-group" style="margin-bottom: 1.25rem;">
-          <input type="password" id="admin-passcode" class="form-control" placeholder="Enter Passcode" required autofocus style="text-align:center; font-size:1.1rem; letter-spacing: 2px;">
+          <input type="password" id="admin-passcode" class="form-control" placeholder="Enter Passcode" required autofocus style="text-align:center; font-size:1.15rem; letter-spacing: 3px; font-weight: 700;">
         </div>
-        <button type="submit" class="btn btn-accent" style="width: 100%;">Unlock Admin Dashboard</button>
+        <button type="submit" class="btn btn-accent" style="width: 100%; padding: 0.85rem;">Unlock Operations Dashboard</button>
       </form>
     </div>
   </div>
 
   <div class="admin-container">
-    <!-- Header -->
+    <!-- Top Header -->
     <div class="admin-header">
-      <div style="display: flex; align-items: center; gap: 1rem;">
-        <img src="assets/logo.png" alt="VEYANO" style="height: 38px;">
+      <div style="display: flex; align-items: center; gap: 1.25rem;">
+        <img src="assets/logo.png" alt="VEYANO" style="height: 40px;">
         <div>
-          <h1 style="font-size: 1.25rem;">Store & Catalog Manager</h1>
-          <p style="font-size: 0.8rem; color: #64748b;">No-code product management & live customer insights</p>
+          <h1 style="font-size: 1.35rem; font-weight: 700; color: #0f172a;">VEYANO Store & Operations Manager</h1>
+          <p style="font-size: 0.82rem; color: #64748b;">Live Order Tracking, Customer Account Directory, Pricing & Fulfillment</p>
         </div>
       </div>
-      <div style="display: flex; gap: 0.75rem;">
+      <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <button onclick="refreshDashboardData()" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+          <span>🔄</span> Refresh Data
+        </button>
         <a href="index.html" class="btn btn-sm btn-outline" target="_blank">View Live Store ↗</a>
-        <button onclick="handleAdminLogout()" class="btn btn-sm" style="background: #fee2e2; color: #ef4444; border: none;">Logout</button>
+        <button onclick="handleAdminLogout()" class="btn btn-sm" style="background: #fee2e2; color: #ef4444; border: none; font-weight: 600;">Logout</button>
+      </div>
+    </div>
+
+    <!-- Executive KPI Grid -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #ecfdf5; color: #10b981;">💰</div>
+        <div>
+          <div class="kpi-value" id="kpi-revenue">₹0</div>
+          <div class="kpi-label">Gross Revenue</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #eff6ff; color: #3b82f6;">🛒</div>
+        <div>
+          <div class="kpi-value" id="kpi-total-orders">0</div>
+          <div class="kpi-label">Total Orders</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #fdf4ff; color: #c026d3;">👥</div>
+        <div>
+          <div class="kpi-value" id="kpi-total-customers">0</div>
+          <div class="kpi-label">Registered Customers</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background: #fffbeb; color: #f59e0b;">⚡</div>
+        <div>
+          <div class="kpi-value" id="kpi-pending-fulfillment">0</div>
+          <div class="kpi-label">Pending / In Process</div>
+        </div>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
     <div class="admin-nav">
-      <button class="admin-nav-item active" data-tab="tab-products">📦 Product Catalog & Pricing</button>
-      <button class="admin-nav-item" data-tab="tab-orders">🛒 Customer Orders</button>
-      <button class="admin-nav-item" data-tab="tab-leads">💼 B2B & Bulk Leads</button>
-      <button class="admin-nav-item" data-tab="tab-settings">⚙️ System Defaults</button>
+      <button class="admin-nav-item active" data-tab="tab-orders">
+        🛒 Customer Orders & Tracking <span class="nav-badge" id="badge-orders-count">0</span>
+      </button>
+      <button class="admin-nav-item" data-tab="tab-customers">
+        👥 Customers & Accounts Directory <span class="nav-badge" id="badge-customers-count">0</span>
+      </button>
+      <button class="admin-nav-item" data-tab="tab-products">
+        📦 Product Catalog & Pricing
+      </button>
+      <button class="admin-nav-item" data-tab="tab-leads">
+        💼 B2B & Bulk Leads
+      </button>
+      <button class="admin-nav-item" data-tab="tab-settings">
+        ⚙️ Diagnostics & Maintenance
+      </button>
     </div>
 
-    <!-- Tab 1: Products Management -->
-    <div id="tab-products" class="admin-tab-content">
+    <!-- TAB 1: CUSTOMER ORDERS & LIVE TRACKING -->
+    <div id="tab-orders" class="admin-tab-content">
       <div class="admin-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div class="card-header-bar">
           <div>
-            <h2 style="font-size: 1.25rem;">Live Product Catalog</h2>
-            <p style="font-size: 0.85rem; color: #64748b;">Add new snack categories, trial packs, change prices, or update stock without editing code.</p>
+            <h2 style="font-size: 1.3rem;">Live Orders & Shipment Tracking</h2>
+            <p style="font-size: 0.85rem; color: #64748b;">Manage customer orders, mark statuses as Processing/Shipped/Delivered, update AWB tracking codes, and view delivery details.</p>
+          </div>
+          <div class="search-filter-box">
+            <input type="text" id="orders-search-input" class="admin-search-input" placeholder="🔍 Search Order #, Name, Phone, City..." oninput="filterOrdersTable()">
+            <button onclick="exportOrdersToCSV()" class="btn btn-sm btn-outline" style="font-size: 0.8rem;">📥 Export CSV</button>
+          </div>
+        </div>
+
+        <!-- Status Filter Pills -->
+        <div class="status-filter-pills" style="margin-bottom: 1.25rem;">
+          <button class="status-pill active" onclick="setOrderStatusFilter('all', this)">All Orders (<span id="count-all-orders">0</span>)</button>
+          <button class="status-pill" onclick="setOrderStatusFilter('pending', this)">Pending (<span id="count-pending-orders">0</span>)</button>
+          <button class="status-pill" onclick="setOrderStatusFilter('processing', this)">Under Processing (<span id="count-processing-orders">0</span>)</button>
+          <button class="status-pill" onclick="setOrderStatusFilter('shipped', this)">Shipped (<span id="count-shipped-orders">0</span>)</button>
+          <button class="status-pill" onclick="setOrderStatusFilter('out_for_delivery', this)">Out for Delivery (<span id="count-out-orders">0</span>)</button>
+          <button class="status-pill" onclick="setOrderStatusFilter('delivered', this)">Delivered (<span id="count-delivered-orders">0</span>)</button>
+          <button class="status-pill" onclick="setOrderStatusFilter('cancelled', this)">Cancelled (<span id="count-cancelled-orders">0</span>)</button>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="min-width: 140px;">Order Details</th>
+                <th style="min-width: 200px;">Customer & Login ID</th>
+                <th style="min-width: 240px;">Shipping Address</th>
+                <th style="min-width: 220px;">Items Ordered</th>
+                <th style="min-width: 130px;">Amount & Pay</th>
+                <th style="min-width: 180px;">Fulfillment Status</th>
+                <th style="min-width: 200px;">Tracking & Courier</th>
+                <th style="min-width: 110px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-table-body">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 3rem; color: #64748b;">
+                  Loading customer orders from database...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: CUSTOMERS & ACCOUNTS DIRECTORY -->
+    <div id="tab-customers" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <div class="card-header-bar">
+          <div>
+            <h2 style="font-size: 1.3rem;">Registered Customers & Accounts Directory</h2>
+            <p style="font-size: 0.85rem; color: #64748b;">Complete records of customer login IDs, phones, saved delivery addresses, order counts, and lifetime spend.</p>
+          </div>
+          <div class="search-filter-box">
+            <input type="text" id="customers-search-input" class="admin-search-input" placeholder="🔍 Search Customer Name, Email, Phone..." oninput="filterCustomersTable()">
+          </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="min-width: 200px;">Customer Name</th>
+                <th style="min-width: 220px;">Login ID / Email</th>
+                <th style="min-width: 150px;">Phone Number</th>
+                <th style="min-width: 130px;">Account Type</th>
+                <th style="min-width: 260px;">Saved / Delivery Addresses</th>
+                <th style="min-width: 130px;">Order History</th>
+                <th style="min-width: 120px;">Total Spent</th>
+                <th style="min-width: 110px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-customers-table-body">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 3rem; color: #64748b;">
+                  Loading customer records...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: PRODUCTS & CATALOG -->
+    <div id="tab-products" class="admin-tab-content" style="display: none;">
+      <div class="admin-card">
+        <div class="card-header-bar">
+          <div>
+            <h2 style="font-size: 1.3rem;">Live Product Catalog & Pricing</h2>
+            <p style="font-size: 0.85rem; color: #64748b;">Add new snack SKUs, update pricing, manage stock inventory, or set promotional badges.</p>
           </div>
           <button onclick="openProductModal(false)" class="btn btn-accent btn-sm">+ Add New SKU</button>
         </div>
@@ -86,8 +466,8 @@
                 <th>Product Name & SKU</th>
                 <th>Category</th>
                 <th>Weight</th>
-                <th>Price</th>
-                <th>Stock & Status</th>
+                <th>Price & MRP</th>
+                <th>Stock Status</th>
                 <th>Badges</th>
                 <th>Actions</th>
               </tr>
@@ -100,36 +480,16 @@
       </div>
     </div>
 
-    <!-- Tab 2: Orders Viewer -->
-    <div id="tab-orders" class="admin-tab-content" style="display: none;">
-      <div class="admin-card">
-        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Customer Orders</h2>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Live orders synced from the database.</p>
-        <div style="overflow-x: auto;">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Order #</th>
-                <th>Customer</th>
-                <th>Contact & City</th>
-                <th>Payment</th>
-                <th>Amount</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody id="admin-orders-table-body">
-              <!-- Populated by admin.js -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab 3: B2B Leads -->
+    <!-- TAB 4: B2B LEADS -->
     <div id="tab-leads" class="admin-tab-content" style="display: none;">
       <div class="admin-card">
-        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Corporate & Bulk Inquiries</h2>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Leads submitted through the /bulk-orders inquiry form.</p>
+        <div class="card-header-bar">
+          <div>
+            <h2 style="font-size: 1.3rem;">Corporate & Bulk Order Inquiries</h2>
+            <p style="font-size: 0.85rem; color: #64748b;">Inquiries submitted through the B2B & Bulk Orders portal.</p>
+          </div>
+        </div>
+
         <div style="overflow-x: auto;">
           <table class="admin-table">
             <thead>
@@ -138,7 +498,7 @@
                 <th>Contact Person</th>
                 <th>Email & Phone</th>
                 <th>City</th>
-                <th>Quantity</th>
+                <th>Requested Volume</th>
                 <th>Notes</th>
               </tr>
             </thead>
@@ -150,11 +510,22 @@
       </div>
     </div>
 
-    <!-- Tab 4: System Settings -->
+    <!-- TAB 5: SYSTEM & DIAGNOSTICS -->
     <div id="tab-settings" class="admin-tab-content" style="display: none;">
       <div class="admin-card">
-        <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Catalog Maintenance</h2>
-        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Reset custom modifications and restore factory catalog definitions if needed.</p>
+        <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">System Diagnostics & Catalog Reset</h2>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem;">Verify system connectivity or restore factory default products.</p>
+        
+        <div style="background: #f8fafc; padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem;">Backend Integration Health</h4>
+          <ul style="font-size: 0.85rem; color: #475569; line-height: 1.8; list-style: none;">
+            <li>🌿 <strong>FSSAI Compliance Lic:</strong> 20826010000397</li>
+            <li>🗄️ <strong>Database:</strong> Supabase DBMS (Connected)</li>
+            <li>🔐 <strong>Authentication Engine:</strong> Clerk Identity Management (Active)</li>
+            <li>💳 <strong>Payment Gateway:</strong> Razorpay (Active)</li>
+          </ul>
+        </div>
+
         <button onclick="resetCatalogDefaults()" class="btn btn-outline" style="color: #ef4444; border-color: #fca5a5;">
           Reset Catalog to Factory Defaults
         </button>
@@ -162,82 +533,166 @@
     </div>
   </div>
 
-  <!-- Upsert Product Modal -->
+  <!-- MODAL 1: UPDATE TRACKING & FULFILLMENT -->
+  <div id="tracking-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700;">Update Fulfillment & Tracking</h3>
+          <p style="font-size: 0.82rem; color: #64748b;" id="tracking-modal-subtitle">Order #VFO-XXXX</p>
+        </div>
+        <button onclick="closeTrackingModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form id="tracking-update-form" onsubmit="handleTrackingFormSubmit(event)">
+        <input type="hidden" id="tracking-order-id">
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Order Status *</label>
+          <select id="tracking-form-status" class="form-control" required style="font-weight: 600;">
+            <option value="pending">⏳ Pending Verification</option>
+            <option value="processing">📦 Under Processing (Packing)</option>
+            <option value="shipped">🚚 Shipped (In Transit)</option>
+            <option value="out_for_delivery">🛵 Out for Delivery</option>
+            <option value="delivered">✅ Delivered to Customer</option>
+            <option value="cancelled">❌ Cancelled</option>
+          </select>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Courier Partner</label>
+            <input type="text" id="tracking-form-courier" class="form-control" placeholder="e.g. Shiprocket, Delhivery, Blue Dart">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">AWB / Tracking Number</label>
+            <input type="text" id="tracking-form-awb" class="form-control" placeholder="e.g. SR9382103829">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Direct Tracking URL</label>
+          <input type="url" id="tracking-form-url" class="form-control" placeholder="https://shiprocket.co/tracking/...">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Fulfillment Notes / Remarks</label>
+          <textarea id="tracking-form-notes" class="form-control" rows="2" placeholder="Internal dispatch notes or customer remarks..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeTrackingModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Save & Update Status</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: CUSTOMER PROFILE & ORDER HISTORY -->
+  <div id="customer-modal" class="admin-modal">
+    <div class="admin-modal-content admin-modal-lg">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700;" id="cust-modal-name">Customer Details</h3>
+          <p style="font-size: 0.82rem; color: #64748b;" id="cust-modal-email">user@example.com</p>
+        </div>
+        <button onclick="closeCustomerModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <div id="cust-modal-body">
+        <!-- Populated by admin.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: ORDER FULL DETAILS -->
+  <div id="order-details-modal" class="admin-modal">
+    <div class="admin-modal-content admin-modal-lg">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700;" id="order-detail-title">Order #VFO-XXXX</h3>
+          <p style="font-size: 0.82rem; color: #64748b;" id="order-detail-date">Placed on ...</p>
+        </div>
+        <button onclick="closeOrderDetailsModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <div id="order-detail-body">
+        <!-- Populated by admin.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: UPSERT PRODUCT SKU -->
   <div id="product-modal" class="admin-modal">
     <div class="admin-modal-content">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
-        <h3 id="modal-form-title" style="font-size: 1.2rem;">Add Product SKU</h3>
-        <button onclick="closeProductModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        <h3 id="modal-form-title" style="font-size: 1.2rem; font-weight: 700;">Add Product SKU</h3>
+        <button onclick="closeProductModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
       </div>
 
       <form id="product-upsert-form" onsubmit="handleProductFormSubmit(event)">
         <input type="hidden" id="p-form-id">
         
-        <div class="form-row">
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
           <div class="form-group">
-            <label class="form-label">Product Name *</label>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Product Name *</label>
             <input type="text" id="p-form-name" class="form-control" placeholder="e.g. Roasted Makhana Classic Plain" required>
           </div>
           <div class="form-group">
-            <label class="form-label">SKU Code *</label>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">SKU Code *</label>
             <input type="text" id="p-form-sku" class="form-control" placeholder="e.g. PLAIN-200" required>
           </div>
         </div>
 
-        <div class="form-row">
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
           <div class="form-group">
-            <label class="form-label">Category *</label>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Category *</label>
             <select id="p-form-category" class="form-control" required>
               <option value="makhana">Roasted Makhana</option>
-              <option value="roasted-snacks">Roasted Snacks (Future Expansion)</option>
+              <option value="roasted-snacks">Roasted Snacks</option>
               <option value="trial-packs">Trial Packs</option>
               <option value="combos">Combos & Bundles</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Pack Weight / Size *</label>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Pack Weight / Size *</label>
             <input type="text" id="p-form-weight" class="form-control" placeholder="e.g. 200g or 3x35g" required>
           </div>
         </div>
 
-        <div class="form-row">
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
           <div class="form-group">
-            <label class="form-label">Selling Price (₹) *</label>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Selling Price (₹) *</label>
             <input type="number" id="p-form-price" class="form-control" placeholder="399" required min="1">
           </div>
           <div class="form-group">
-            <label class="form-label">Actual Declared MRP (₹) *</label>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Actual Declared MRP (₹) *</label>
             <input type="number" id="p-form-mrp" class="form-control" placeholder="399" required min="1">
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Short Description (for cards) *</label>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Short Description (for cards) *</label>
           <input type="text" id="p-form-short-desc" class="form-control" placeholder="Brief summary of taste and texture..." required>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Full Description (for product page) *</label>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Full Description *</label>
           <textarea id="p-form-desc" class="form-control" rows="3" placeholder="Detailed product story, sourcing and taste profile..." required></textarea>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Image Path / URL *</label>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Image Path / URL *</label>
           <input type="text" id="p-form-image" class="form-control" placeholder="./assets/plain.webp" required>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Full Ingredients List</label>
-          <input type="text" id="p-form-ingredients" class="form-control" placeholder="e.g. 100% Lotus Seeds (Fox Nuts / Makhana)">
-        </div>
-
-        <div class="form-row">
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
           <div class="form-group">
-            <label class="form-label">Available Stock Quantity *</label>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Available Stock Quantity *</label>
             <input type="number" id="p-form-stock" class="form-control" placeholder="200" required min="0">
           </div>
           <div class="form-group">
-            <label class="form-label">Stock Status *</label>
+            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Stock Status *</label>
             <select id="p-form-status" class="form-control" required>
               <option value="in_stock">In Stock</option>
               <option value="coming_soon">Coming Soon</option>

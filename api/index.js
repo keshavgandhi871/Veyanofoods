@@ -22,6 +22,7 @@ const privateAuthMiddleware   = require('./_private/middleware');
 const privateHealthRouter     = require('./_private/health');
 const privateInventoryRouter  = require('./_private/inventory');
 const privateComplianceRouter = require('./_private/compliance');
+const privateAdminRouter      = require('./_private/admin');
 
 // ── Public Route Handlers ─────────────────────────────────────────────────────
 const publicAuthRouter     = require('./_public/auth');
@@ -53,11 +54,15 @@ app.use('/api/orders', publicOrdersRouter);
 app.use('/api/payments', publicPaymentsRouter);
 app.use('/api/products', publicProductsRouter);
 
+// ── Mount Admin Routes ────────────────────────────────────────────────────────
+app.use('/api/admin', privateAdminRouter);
+
 // ── Mount Private Protected Routes (Requires Admin Authorization) ─────────────
 app.use('/api/private', privateAuthMiddleware);
 app.use('/api/private/health', privateHealthRouter);
 app.use('/api/private/inventory', privateInventoryRouter);
 app.use('/api/private/compliance', privateComplianceRouter);
+app.use('/api/private/admin', privateAdminRouter);
 
 // ── Catch-All 404 ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
