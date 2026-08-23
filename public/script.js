@@ -26,6 +26,9 @@ const API_BASE_URL = (window.location.hostname === 'localhost' || window.locatio
   ? (window.location.port === '3001' ? '' : 'http://localhost:3001')
   : '';
 
+CONFIG.API_BASE = API_BASE_URL;
+window.API_BASE_URL = API_BASE_URL;
+
 // Cart State
 let cart = JSON.parse(localStorage.getItem('veyano_cart')) || [];
 let clerk = null;
@@ -355,6 +358,14 @@ async function placeOrder() {
 
   const fullAddress = landmark ? `${baseAddress} (Landmark: ${landmark})` : baseAddress;
 
+  // Auto-save address if checkbox is checked
+  const saveCheckbox = document.getElementById('save-address-checkbox');
+  if (!saveCheckbox || saveCheckbox.checked) {
+    if (typeof window.saveAddressFromCheckout === 'function') {
+      window.saveAddressFromCheckout(false);
+    }
+  }
+
   const orderPayload = {
     customerName: name,
     customerEmail: email,
@@ -415,6 +426,14 @@ async function initiateRazorpayCheckout() {
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shippingFee = subtotal >= CONFIG.SHIPPING_THRESHOLD ? 0 : CONFIG.SHIPPING_FEE;
   const totalPaise = (subtotal + shippingFee) * 100;
+
+  // Auto-save address if checkbox is checked
+  const saveCheckbox = document.getElementById('save-address-checkbox');
+  if (!saveCheckbox || saveCheckbox.checked) {
+    if (typeof window.saveAddressFromCheckout === 'function') {
+      window.saveAddressFromCheckout(false);
+    }
+  }
 
   // 1. Fetch Razorpay config
   const configRes = await fetch(`${API_BASE_URL}/api/payments/config`);
@@ -741,7 +760,7 @@ function renderAuthUI() {
       if (container) {
         container.innerHTML = `
           <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <button onclick="window.openAddressesModal()" class="btn btn-sm btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Saved Addresses</button>
+            <button onclick="window.openAddressesModal()" class="btn btn-sm btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📍 Saved Addresses</button>
             <div class="user-button-mount"></div>
           </div>
         `;
@@ -752,7 +771,12 @@ function renderAuthUI() {
   } else {
     navAuthContainers.forEach(container => {
       if (container) {
-        container.innerHTML = `<a href="login.html" class="nav-link" style="font-size: 0.9rem; font-weight:600;">Sign In</a>`;
+        container.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <button onclick="window.openAddressesModal()" class="btn btn-sm btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📍 Saved Addresses</button>
+            <a href="login.html" class="nav-link" style="font-size: 0.9rem; font-weight:600;">Sign In</a>
+          </div>
+        `;
       }
     });
   }
@@ -763,7 +787,7 @@ async function syncUserWithBackend() {
   try {
     const token = await clerk.session.getToken();
     if (token) {
-      await fetch(`${CONFIG.API_BASE}/auth/sync`, {
+      await fetch(`${API_BASE_URL}/api/auth/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -776,124 +800,339 @@ async function syncUserWithBackend() {
   }
 }
 
+// --- SAVED ADDRESS STORAGE & PERSISTENCE ---
+function getSavedAddresses() {
+  let list = [];
+  try {
+    const local = JSON.parse(localStorage.getItem('veyano_saved_addresses')) || [];
+    if (Array.isArray(local)) list = local;
+  } catch (e) {}
+
+  if (clerk && clerk.user && clerk.user.unsafeMetadata && Array.isArray(clerk.user.unsafeMetadata.addresses)) {
+    const clerkAddresses = clerk.user.unsafeMetadata.addresses;
+    clerkAddresses.forEach(ca => {
+      if (!list.some(la => la.address === ca.address && la.pincode === ca.pincode)) {
+        list.push(ca);
+      }
+    });
+  }
+  return list;
+}
+
+async function persistSavedAddresses(addresses) {
+  try {
+    localStorage.setItem('veyano_saved_addresses', JSON.stringify(addresses));
+  } catch (e) {}
+
+  if (clerk && clerk.user) {
+    try {
+      await clerk.user.update({
+        unsafeMetadata: {
+          ...(clerk.user.unsafeMetadata || {}),
+          addresses: addresses
+        }
+      });
+    } catch (err) {
+      console.warn('Clerk address metadata update notice:', err);
+    }
+  }
+
+  syncCheckoutAddressSelector();
+  renderModalAddressList();
+}
+
+window.saveAddressFromCheckout = async function(showToastFlag = true) {
+  const name = document.getElementById('ship-name')?.value.trim();
+  const phone = document.getElementById('ship-phone')?.value.trim();
+  const email = document.getElementById('ship-email')?.value.trim() || '';
+  const address = document.getElementById('ship-address')?.value.trim();
+  const landmark = document.getElementById('ship-landmark')?.value.trim() || '';
+  const pincode = document.getElementById('ship-pincode')?.value.trim();
+  const city = document.getElementById('ship-city')?.value.trim();
+  const state = document.getElementById('ship-state')?.value || '';
+
+  if (!name || !phone || !address || !pincode) {
+    if (showToastFlag) showToast('Please complete name, phone, address, and pincode first.', 'error');
+    return false;
+  }
+
+  const newAddr = {
+    id: 'addr_' + Date.now(),
+    name,
+    phone,
+    email,
+    address,
+    landmark,
+    pincode,
+    city: city || 'City',
+    state: state || 'State'
+  };
+
+  const current = getSavedAddresses();
+  const existingIdx = current.findIndex(a => 
+    a.address?.toLowerCase() === address.toLowerCase() && 
+    a.pincode === pincode
+  );
+
+  if (existingIdx >= 0) {
+    current[existingIdx] = { ...current[existingIdx], ...newAddr };
+  } else {
+    current.unshift(newAddr);
+  }
+
+  await persistSavedAddresses(current);
+  if (showToastFlag) showToast('Address saved for future orders!');
+  return true;
+};
+
 function syncCheckoutAddressSelector() {
   const container = document.getElementById('checkout-saved-addresses');
   if (!container) return;
 
-  if (!clerk?.user) {
-    container.style.display = 'none';
-    return;
-  }
-
-  const addresses = clerk.user.unsafeMetadata?.addresses || [];
+  const addresses = getSavedAddresses();
   if (addresses.length === 0) {
     container.style.display = 'none';
+    container.innerHTML = '';
     return;
   }
 
   container.style.display = 'block';
   container.innerHTML = `
-    <label class="form-label" style="color: var(--accent-color);">Choose from Saved Addresses:</label>
-    <select id="saved-address-dropdown" class="form-control" style="margin-bottom: 1rem;">
-      <option value="">-- Select Saved Address --</option>
-      ${addresses.map((a, i) => `<option value="${i}">${escapeHtml(a.name)} (${escapeHtml(a.city)}, ${escapeHtml(a.pincode)})</option>`).join('')}
-    </select>
+    <div class="saved-address-selector-box">
+      <div class="saved-address-header">
+        <span class="saved-address-title">📍 Saved Delivery Addresses (${addresses.length})</span>
+        <button type="button" onclick="window.openAddressesModal()" class="saved-address-manage-btn">+ Manage</button>
+      </div>
+      <select id="saved-address-dropdown" class="form-control" style="font-size: 0.88rem; background: #fff; cursor: pointer;">
+        <option value="">-- Choose a saved address --</option>
+        ${addresses.map((a, i) => `<option value="${i}">${escapeHtml(a.name)} — ${escapeHtml(a.address)}, ${escapeHtml(a.city)} (${escapeHtml(a.pincode)})</option>`).join('')}
+        <option value="new">➕ Enter a new address...</option>
+      </select>
+    </div>
   `;
 
   document.getElementById('saved-address-dropdown')?.addEventListener('change', (e) => {
     const idx = e.target.value;
+    if (idx === 'new') {
+      if (document.getElementById('ship-name')) document.getElementById('ship-name').value = '';
+      if (document.getElementById('ship-phone')) document.getElementById('ship-phone').value = '';
+      if (document.getElementById('ship-email')) document.getElementById('ship-email').value = '';
+      if (document.getElementById('ship-address')) document.getElementById('ship-address').value = '';
+      if (document.getElementById('ship-landmark')) document.getElementById('ship-landmark').value = '';
+      if (document.getElementById('ship-city')) document.getElementById('ship-city').value = '';
+      if (document.getElementById('ship-pincode')) document.getElementById('ship-pincode').value = '';
+      if (document.getElementById('ship-state')) document.getElementById('ship-state').value = '';
+      document.getElementById('ship-name')?.focus();
+      return;
+    }
+
     if (idx !== '' && addresses[idx]) {
       const a = addresses[idx];
       if (document.getElementById('ship-name')) document.getElementById('ship-name').value = a.name || '';
-      if (document.getElementById('ship-email')) document.getElementById('ship-email').value = a.email || '';
       if (document.getElementById('ship-phone')) document.getElementById('ship-phone').value = a.phone || '';
+      if (document.getElementById('ship-email')) document.getElementById('ship-email').value = a.email || '';
       if (document.getElementById('ship-address')) document.getElementById('ship-address').value = a.address || '';
       if (document.getElementById('ship-landmark')) document.getElementById('ship-landmark').value = a.landmark || '';
-      if (document.getElementById('ship-city')) document.getElementById('ship-city').value = a.city || '';
       if (document.getElementById('ship-pincode')) document.getElementById('ship-pincode').value = a.pincode || '';
-      if (document.getElementById('ship-state')) document.getElementById('ship-state').value = a.state || '';
+      if (document.getElementById('ship-city')) document.getElementById('ship-city').value = a.city || '';
+      if (document.getElementById('ship-state') && a.state) {
+        const stateSelect = document.getElementById('ship-state');
+        const matched = Array.from(stateSelect.options).find(opt => opt.value.toLowerCase() === a.state.toLowerCase());
+        if (matched) stateSelect.value = matched.value;
+      }
+      showToast(`Loaded address for ${a.name}`);
     }
   });
 }
 
 // --- ADDRESS MODAL MANAGEMENT ---
 window.openAddressesModal = () => {
-  if (!clerk?.user) {
-    showToast('Please sign in to manage saved addresses.', 'error');
-    return;
-  }
-
   let modal = document.getElementById('addresses-modal-overlay');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'addresses-modal-overlay';
-    modal.className = 'cart-overlay open';
-    modal.style.zIndex = '3000';
-    modal.innerHTML = `
-      <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; background: #fff; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-xl); max-height: 85vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
-          <h3 style="font-size: 1.25rem;">My Saved Addresses</h3>
-          <button onclick="document.getElementById('addresses-modal-overlay').remove()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-        </div>
-        <div id="modal-address-list"></div>
-        <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-subtle);">
-        <h4 style="font-size: 1rem; margin-bottom: 1rem; color: var(--accent-color);">+ Add New Address</h4>
-        <form id="modal-address-form" onsubmit="window.saveNewModalAddress(event)">
-          <div class="form-group"><input type="text" id="m-name" class="form-control" placeholder="Full Name" required></div>
-          <div class="form-group"><input type="tel" id="m-phone" class="form-control" placeholder="10-digit Phone" required pattern="[6-9][0-9]{9}"></div>
-          <div class="form-group"><textarea id="m-address" class="form-control" placeholder="Street Address" required></textarea></div>
-          <div class="form-row">
-            <input type="text" id="m-city" class="form-control" placeholder="City" required>
-            <input type="text" id="m-pincode" class="form-control" placeholder="Pincode" required pattern="[0-9]{6}">
-          </div>
-          <button type="submit" class="btn btn-sm btn-accent" style="width: 100%; margin-top: 1rem;">Save Address</button>
-        </form>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  }
+  if (modal) modal.remove();
 
+  modal = document.createElement('div');
+  modal.id = 'addresses-modal-overlay';
+  modal.className = 'cart-overlay open';
+  modal.style.zIndex = '3000';
+  modal.innerHTML = `
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 520px; background: #fff; border-radius: var(--radius-lg, 12px); padding: 1.75rem; box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1)); max-height: 88vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle, #e5e7eb); padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">📍 Saved Addresses</h3>
+        <button onclick="document.getElementById('addresses-modal-overlay').remove()" style="background:none; border:none; font-size:1.6rem; cursor:pointer; line-height: 1; color: var(--text-muted);">&times;</button>
+      </div>
+
+      ${(!clerk || !clerk.user) ? `
+        <div style="background: rgba(192, 139, 92, 0.08); border-left: 3px solid var(--accent-color, #c08b5c); padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          💡 Addresses are securely saved on this device. <a href="login.html" style="color: var(--accent-color); font-weight: 600; text-decoration: underline;">Sign In</a> to sync across devices.
+        </div>
+      ` : ''}
+
+      <div id="modal-address-list"></div>
+
+      <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border-subtle, #e5e7eb);">
+      <h4 style="font-size: 1rem; margin-bottom: 0.85rem; color: var(--accent-color, #c08b5c); font-weight: 600;">+ Add New Address</h4>
+      <form id="modal-address-form" onsubmit="window.saveNewModalAddress(event)">
+        <div class="form-group"><input type="text" id="m-name" class="form-control" placeholder="Full Name *" required minlength="3"></div>
+        <div class="form-row">
+          <div class="form-group"><input type="tel" id="m-phone" class="form-control" placeholder="10-digit Phone *" required pattern="[6-9][0-9]{9}"></div>
+          <div class="form-group"><input type="email" id="m-email" class="form-control" placeholder="Email Address"></div>
+        </div>
+        <div class="form-group"><textarea id="m-address" class="form-control" placeholder="House/Flat No, Building, Street Address *" rows="2" required></textarea></div>
+        <div class="form-group"><input type="text" id="m-landmark" class="form-control" placeholder="Landmark (Optional)"></div>
+        <div class="form-row">
+          <div class="form-group"><input type="text" id="m-pincode" class="form-control" placeholder="6-digit PIN *" required pattern="[0-9]{6}"></div>
+          <div class="form-group"><input type="text" id="m-city" class="form-control" placeholder="City *" required></div>
+        </div>
+        <div class="form-group">
+          <select id="m-state" class="form-control" required>
+            <option value="" disabled selected>Select State *</option>
+            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+            <option value="Assam">Assam</option>
+            <option value="Bihar">Bihar</option>
+            <option value="Chhattisgarh">Chhattisgarh</option>
+            <option value="Goa">Goa</option>
+            <option value="Gujarat">Gujarat</option>
+            <option value="Haryana">Haryana</option>
+            <option value="Himachal Pradesh">Himachal Pradesh</option>
+            <option value="Jharkhand">Jharkhand</option>
+            <option value="Karnataka">Karnataka</option>
+            <option value="Kerala">Kerala</option>
+            <option value="Madhya Pradesh">Madhya Pradesh</option>
+            <option value="Maharashtra">Maharashtra</option>
+            <option value="Manipur">Manipur</option>
+            <option value="Meghalaya">Meghalaya</option>
+            <option value="Mizoram">Mizoram</option>
+            <option value="Nagaland">Nagaland</option>
+            <option value="Odisha">Odisha</option>
+            <option value="Punjab">Punjab</option>
+            <option value="Rajasthan">Rajasthan</option>
+            <option value="Sikkim">Sikkim</option>
+            <option value="Tamil Nadu">Tamil Nadu</option>
+            <option value="Telangana">Telangana</option>
+            <option value="Tripura">Tripura</option>
+            <option value="Uttar Pradesh">Uttar Pradesh</option>
+            <option value="Uttarakhand">Uttarakhand</option>
+            <option value="West Bengal">West Bengal</option>
+            <option value="Delhi">Delhi</option>
+            <option value="Chandigarh">Chandigarh</option>
+            <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+            <option value="Ladakh">Ladakh</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-sm btn-accent" style="width: 100%; margin-top: 0.5rem; padding: 0.75rem;">Save Address</button>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
   renderModalAddressList();
+
+  // Wire up pincode auto-fill in modal
+  const mPin = document.getElementById('m-pincode');
+  const mCity = document.getElementById('m-city');
+  const mState = document.getElementById('m-state');
+  if (mPin) {
+    mPin.addEventListener('input', async () => {
+      const pin = mPin.value.trim();
+      if (/^[1-9][0-9]{5}$/.test(pin)) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/orders/pincode/${pin}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success) {
+              if (mCity && !mCity.value) mCity.value = data.district || '';
+              if (mState && data.state) {
+                const matched = Array.from(mState.options).find(opt => opt.value.toLowerCase() === data.state.toLowerCase());
+                if (matched) mState.value = matched.value;
+              }
+            }
+          }
+        } catch (err) {}
+      }
+    });
+  }
 };
 
 function renderModalAddressList() {
   const container = document.getElementById('modal-address-list');
-  if (!container || !clerk?.user) return;
+  if (!container) return;
 
-  const addresses = clerk.user.unsafeMetadata?.addresses || [];
+  const addresses = getSavedAddresses();
   if (addresses.length === 0) {
-    container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">No saved addresses yet.</p>';
+    container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 1rem 0;">No saved addresses yet. Add one below!</p>';
     return;
   }
 
   container.innerHTML = addresses.map((a, i) => `
-    <div style="background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: start;">
-      <div>
-        <strong>${escapeHtml(a.name)}</strong> (${escapeHtml(a.phone)})<br>
-        <span style="font-size: 0.85rem; color: var(--text-secondary);">${escapeHtml(a.address)}, ${escapeHtml(a.city)} - ${escapeHtml(a.pincode)}</span>
+    <div class="address-card-item">
+      <div class="addr-details">
+        <div class="addr-name">${escapeHtml(a.name)} ${a.phone ? `<span style="font-weight: 400; color: var(--text-secondary); font-size: 0.85rem;">(${escapeHtml(a.phone)})</span>` : ''}</div>
+        <div class="addr-text">
+          ${escapeHtml(a.address)}${a.landmark ? `, <em>${escapeHtml(a.landmark)}</em>` : ''}<br>
+          ${escapeHtml(a.city)}, ${escapeHtml(a.state || '')} - <strong>${escapeHtml(a.pincode)}</strong>
+        </div>
       </div>
-      <button onclick="window.deleteSavedAddress(${i})" style="background:none; border:none; color:#ef4444; font-size:0.8rem; cursor:pointer;">Delete</button>
+      <div class="addr-actions">
+        <button type="button" onclick="window.useAddressInCheckout(${i})" class="btn btn-sm btn-accent" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">Use Address</button>
+        <button type="button" onclick="window.deleteSavedAddress(${i})" style="background:none; border:none; color:#ef4444; font-size:0.78rem; cursor:pointer; text-decoration: underline; margin-top: 0.2rem;">Delete</button>
+      </div>
     </div>
   `).join('');
 }
 
+window.useAddressInCheckout = (index) => {
+  const addresses = getSavedAddresses();
+  if (!addresses[index]) return;
+  const a = addresses[index];
+
+  if (document.getElementById('ship-name')) document.getElementById('ship-name').value = a.name || '';
+  if (document.getElementById('ship-phone')) document.getElementById('ship-phone').value = a.phone || '';
+  if (document.getElementById('ship-email')) document.getElementById('ship-email').value = a.email || '';
+  if (document.getElementById('ship-address')) document.getElementById('ship-address').value = a.address || '';
+  if (document.getElementById('ship-landmark')) document.getElementById('ship-landmark').value = a.landmark || '';
+  if (document.getElementById('ship-pincode')) document.getElementById('ship-pincode').value = a.pincode || '';
+  if (document.getElementById('ship-city')) document.getElementById('ship-city').value = a.city || '';
+  if (document.getElementById('ship-state') && a.state) {
+    const stateSelect = document.getElementById('ship-state');
+    const matched = Array.from(stateSelect.options).find(opt => opt.value.toLowerCase() === a.state.toLowerCase());
+    if (matched) stateSelect.value = matched.value;
+  }
+
+  document.getElementById('addresses-modal-overlay')?.remove();
+
+  // If cart drawer exists, open it and navigate to step 2
+  const drawer = document.getElementById('cart-drawer');
+  const overlay = document.getElementById('cart-overlay');
+  if (drawer && overlay) {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    if (typeof goToStep === 'function') goToStep(2);
+  }
+
+  showToast(`Applied ${a.name}'s address to checkout.`);
+};
+
 window.saveNewModalAddress = async (e) => {
   e.preventDefault();
-  if (!clerk?.user) return;
 
   const newAddr = {
-    name: document.getElementById('m-name').value.trim(),
-    phone: document.getElementById('m-phone').value.trim(),
-    address: document.getElementById('m-address').value.trim(),
-    city: document.getElementById('m-city').value.trim(),
-    pincode: document.getElementById('m-pincode').value.trim()
+    id: 'addr_' + Date.now(),
+    name: document.getElementById('m-name')?.value.trim() || '',
+    phone: document.getElementById('m-phone')?.value.trim() || '',
+    email: document.getElementById('m-email')?.value.trim() || '',
+    address: document.getElementById('m-address')?.value.trim() || '',
+    landmark: document.getElementById('m-landmark')?.value.trim() || '',
+    city: document.getElementById('m-city')?.value.trim() || '',
+    pincode: document.getElementById('m-pincode')?.value.trim() || '',
+    state: document.getElementById('m-state')?.value || ''
   };
 
-  const current = clerk.user.unsafeMetadata?.addresses || [];
-  current.push(newAddr);
+  const current = getSavedAddresses();
+  current.unshift(newAddr);
 
   try {
-    await clerk.user.update({ unsafeMetadata: { addresses: current } });
+    await persistSavedAddresses(current);
     showToast('Address saved successfully!');
     renderModalAddressList();
     document.getElementById('modal-address-form')?.reset();
@@ -903,15 +1142,16 @@ window.saveNewModalAddress = async (e) => {
 };
 
 window.deleteSavedAddress = async (index) => {
-  if (!clerk?.user) return;
-  const current = clerk.user.unsafeMetadata?.addresses || [];
-  current.splice(index, 1);
-  try {
-    await clerk.user.update({ unsafeMetadata: { addresses: current } });
-    showToast('Address removed.');
-    renderModalAddressList();
-  } catch (err) {
-    showToast('Failed to delete address.', 'error');
+  const current = getSavedAddresses();
+  if (index >= 0 && index < current.length) {
+    current.splice(index, 1);
+    try {
+      await persistSavedAddresses(current);
+      showToast('Address removed.');
+      renderModalAddressList();
+    } catch (err) {
+      showToast('Failed to delete address.', 'error');
+    }
   }
 };
 

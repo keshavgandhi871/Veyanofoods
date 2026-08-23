@@ -33,4 +33,9 @@ scratch/
 server/scratch/
 
 
+# Coverage
+coverage/
+server/coverage/
+
 .vercel
+

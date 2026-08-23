@@ -1869,3 +1869,137 @@ img {
   width: 100% !important;
   max-width: 440px !important;
 }
+
+/* --- SAVED ADDRESS & CHECKOUT ENHANCEMENTS --- */
+.saved-address-selector-box {
+  background: var(--bg-subtle, #fdfbf7);
+  border: 1.5px solid var(--border-subtle, #e5e7eb);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.saved-address-selector-box:hover {
+  border-color: var(--accent-color, #c08b5c);
+  background: #ffffff;
+}
+
+.saved-address-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.saved-address-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary, #18181b);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.saved-address-manage-btn {
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-color, #c08b5c);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.saved-address-manage-btn:hover {
+  color: var(--accent-dark, #a06e40);
+}
+
+.save-address-checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1.5px dashed rgba(34, 197, 94, 0.4);
+  border-radius: var(--radius-md, 8px);
+  margin-top: 0.85rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-address-checkbox-wrapper:hover {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.75);
+}
+
+.save-address-checkbox-wrapper input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--brand-green, #22c55e);
+  cursor: pointer;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.save-address-checkbox-label {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-primary, #18181b);
+  line-height: 1.3;
+}
+
+.save-address-checkbox-sub {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--text-muted, #71717a);
+  margin-top: 0.15rem;
+}
+
+.address-card-item {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle, #e5e7eb);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.address-card-item:hover {
+  border-color: var(--accent-color, #c08b5c);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.address-card-item .addr-details {
+  flex-grow: 1;
+}
+
+.address-card-item .addr-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text-primary, #18181b);
+  margin-bottom: 0.2rem;
+}
+
+.address-card-item .addr-text {
+  font-size: 0.84rem;
+  color: var(--text-secondary, #52525b);
+  line-height: 1.4;
+}
+
+.address-card-item .addr-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
