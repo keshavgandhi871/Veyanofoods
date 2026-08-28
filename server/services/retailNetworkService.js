@@ -995,7 +995,10 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
 
   const nextNum = RETAILERS.length + 1;
   const retailer_code = data.retailer_code || data.code || `RET-${String(nextNum).padStart(3, '0')}`;
-  const id = `RET-2026-${String(nextNum).padStart(3, '0')}`;
+  let id = data.id || `RET-2026-${String(nextNum).padStart(3, '0')}`;
+  if (RETAILERS.some(r => r.id === id)) {
+    id = `RET-${Date.now().toString(36).toUpperCase()}-${String(nextNum).padStart(3, '0')}`;
+  }
 
   // Check duplicate code
   const existingWithCode = RETAILERS.find(r => !r.deleted_at && (r.retailer_code === retailer_code || r.code === retailer_code));

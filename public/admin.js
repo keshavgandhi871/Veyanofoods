@@ -1049,16 +1049,20 @@ function escapeHtml(str) {
 // Sub-Tab Navigation inside Retail Module
 function switchRetailSubTab(paneId, btn) {
   document.querySelectorAll('.retail-subtab-pane').forEach(p => p.style.display = 'none');
-  document.querySelectorAll('.sub-nav-bar .sub-nav-btn').forEach(b => b.classList.remove('active'));
+  const retailNav = document.querySelector('#tab-retail .sub-nav-bar');
+  if (retailNav) retailNav.querySelectorAll('.sub-nav-btn').forEach(b => b.classList.remove('active'));
 
   const pane = document.getElementById(paneId);
   if (pane) pane.style.display = 'block';
   if (btn) btn.classList.add('active');
 
-  // Lazy refresh matching subtab data
+  // Refresh matching subtab data
+  if (paneId === 'rsub-directory') fetchRetailers();
+  if (paneId === 'rsub-stock' || paneId === 'rsub-stock-matrix') fetchRetailStock();
   if (paneId === 'rsub-supplies') fetchRetailSupplies();
   if (paneId === 'rsub-ledger') fetchRetailLedger();
   if (paneId === 'rsub-returns') fetchRetailReturns();
+  if (paneId === 'rsub-followups') fetchRetailFollowups();
 }
 
 // Sub-Tab Navigation inside Retailer 360 Profile Drawer
@@ -1204,7 +1208,7 @@ function renderRetailersTable() {
     return `
       <tr>
         <td>
-          <div style="font-weight: 700; color: #0f172a; cursor: pointer;" onclick="openRetailProfile('${r.id}')">${escapeHtml(r.name)}</div>
+          <div style="font-weight: 700; color: #0f172a; cursor: pointer; text-decoration: underline;" onclick="openRetailProfile('${r.id}')">${escapeHtml(r.name)}</div>
           <div style="font-size: 0.75rem; color: #64748b;">${escapeHtml(r.code)} • ${escapeHtml(r.retailer_type || 'Store')}</div>
         </td>
         <td>
@@ -1217,8 +1221,8 @@ function renderRetailersTable() {
           <div style="font-size: 0.78rem; color: #64748b;">${escapeHtml(r.city || '')}, ${escapeHtml(r.state || '')}</div>
         </td>
         <td>
-          <div>${healthPill}</div>
-          <div style="font-size: 0.72rem; color: #64748b; margin-top: 0.2rem;">${r.status === 'ACTIVE' ? 'Active' : 'Inactive'}</div>
+          <div style="cursor: pointer;" onclick="quickToggleStatus('${r.id}')" title="Click to toggle store status">${healthPill}</div>
+          <div style="font-size: 0.72rem; color: #0284c7; cursor: pointer; margin-top: 0.2rem; text-decoration: underline;" onclick="quickToggleStatus('${r.id}')">${r.status === 'ACTIVE' ? 'Active ▾' : 'Inactive ▾'}</div>
         </td>
         <td>
           <div style="font-weight: 700; font-family: 'Outfit', sans-serif;">₹${(r.current_stock_value || 0).toLocaleString('en-IN')}</div>
@@ -1226,7 +1230,7 @@ function renderRetailersTable() {
         </td>
         <td>
           <div style="font-weight: 700; font-family: 'Outfit', sans-serif; color: ${(r.outstanding_credit || 0) > 0 ? '#dc2626' : '#16a34a'};">₹${(r.outstanding_credit || 0).toLocaleString('en-IN')}</div>
-          <div style="font-size: 0.72rem; color: #64748b;">Limit: ₹${(r.credit_limit || 0).toLocaleString('en-IN')}</div>
+          <div style="font-size: 0.72rem; color: #64748b; cursor: pointer; text-decoration: underline;" onclick="quickEditCreditLimit('${r.id}')" title="Click to edit credit limit">Limit: ₹${(r.credit_limit || 0).toLocaleString('en-IN')} ✏️</div>
         </td>
         <td style="font-size: 0.82rem; color: #334155;">
           ${formattedLastOrder}
@@ -1240,7 +1244,7 @@ function renderRetailersTable() {
             <button onclick="openRetailProfile('${r.id}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;" title="View 360 Profile">360° Profile</button>
             <button onclick="openRetailSupplyModal('${r.id}')" class="btn btn-sm btn-accent" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;" title="Supply Stock">+ Supply</button>
             <button onclick="openRetailPaymentModal('${r.id}')" class="btn btn-sm" style="background:#059669; color:#fff; border:none; font-size: 0.72rem; padding: 0.25rem 0.5rem;" title="Record Payment">💳 Pay</button>
-            <button onclick="openRetailerModal('${r.id}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.4rem;" title="Edit Store">✏️</button>
+            <button onclick="openRetailerModal('${r.id}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.45rem;" title="Edit All Store Fields">✏️ Edit</button>
           </div>
         </td>
       </tr>
@@ -1248,8 +1252,60 @@ function renderRetailersTable() {
   }).join('');
 }
 
+async function quickEditCreditLimit(retailerId) {
+  const r = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId);
+  if (!r) return;
+  const newLimit = prompt(`Enter new credit limit (₹) for "${r.name}":`, r.credit_limit || 20000);
+  if (newLimit === null) return;
+  const numLimit = parseFloat(newLimit);
+  if (isNaN(numLimit) || numLimit < 0) {
+    alert('⚠️ Invalid credit limit amount.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({ credit_limit: numLimit, audit_reason: `Quick edit credit limit to ₹${numLimit}` })
+    });
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to update credit limit');
+    alert(`✅ Credit limit for ${r.name} updated to ₹${numLimit.toLocaleString('en-IN')}!`);
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+async function quickToggleStatus(retailerId) {
+  const r = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId);
+  if (!r) return;
+  const currentStatus = r.status || 'ACTIVE';
+  const newStatus = currentStatus === 'ACTIVE' ? 'ON_HOLD' : (currentStatus === 'ON_HOLD' ? 'INACTIVE' : 'ACTIVE');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({ status: newStatus, audit_reason: `Quick toggle status to ${newStatus}` })
+    });
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to update status');
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
 function populateRetailerDropdowns() {
-  const options = ADMIN_STATE.retailers.map(r => `<option value="${r.id}">${escapeHtml(r.name)} (${escapeHtml(r.city || '')})</option>`).join('');
+  const options = (ADMIN_STATE.retailers || []).map(r => `<option value="${r.id}">${escapeHtml(r.name)} (${escapeHtml(r.city || '')})</option>`).join('');
   const selects = ['rsupply-retailer-select', 'rpay-retailer-select', 'rreturn-retailer-select', 'rrecon-retailer-select', 'rfol-retailer-select'];
   selects.forEach(sId => {
     const el = document.getElementById(sId);
@@ -1277,7 +1333,7 @@ function filterRetailStockMatrix() {
   const skuFilter = document.getElementById('rstock-sku-filter')?.value || '';
   const cityFilter = (document.getElementById('rstock-city-filter')?.value || '').toLowerCase().trim();
 
-  let list = [...ADMIN_STATE.retailStockMatrix];
+  let list = [...(ADMIN_STATE.retailStockMatrix || [])];
 
   if (skuFilter) list = list.filter(item => item.sku === skuFilter);
   if (cityFilter) {
@@ -1304,20 +1360,58 @@ function filterRetailStockMatrix() {
 
     return `
       <tr>
-        <td style="font-weight: 700; color: #0f172a; cursor: pointer;" onclick="openRetailProfile('${row.retailer_id}')">${escapeHtml(row.retailer_name)}</td>
+        <td style="font-weight: 700; color: #0f172a; cursor: pointer; text-decoration: underline;" onclick="openRetailProfile('${row.retailer_id}')">${escapeHtml(row.retailer_name)}</td>
         <td style="font-size: 0.82rem; color: #64748b;">${escapeHtml(row.retailer_area || '')}, ${escapeHtml(row.retailer_city || '')}</td>
         <td><span class="role-badge-pill">${escapeHtml(row.sku)}</span></td>
-        <td style="font-weight: 700; font-size: 0.95rem; color: ${row.current_stock <= 5 ? '#dc2626' : '#0f172a'};">${row.current_stock} units</td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <input type="number" id="inline-stock-${row.retailer_id}-${row.sku}" value="${row.current_stock}" min="0" style="width: 70px; padding: 0.25rem 0.4rem; font-weight: 700; font-size: 0.9rem; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center;">
+            <button onclick="quickUpdateStock('${row.retailer_id}', '${row.sku}')" class="btn btn-sm btn-accent" style="font-size: 0.72rem; padding: 0.25rem 0.45rem;" title="Save stock count immediately">💾 Save</button>
+          </div>
+        </td>
         <td style="font-weight: 600; font-family: 'Outfit', sans-serif;">₹${(row.stock_value || 0).toLocaleString('en-IN')}</td>
         <td style="font-size: 0.82rem; color: #64748b;">${lastSupplied}</td>
         <td style="font-size: 0.85rem; font-weight: 600; color: ${row.reorder_forecast?.days_remaining <= 5 ? '#dc2626' : '#334155'};">${row.reorder_forecast?.days_remaining || 0} days</td>
         <td>${reorderStatus}</td>
         <td>
-          <button onclick="openRetailReconcileModal('${row.retailer_id}', '${row.sku}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.2rem 0.45rem;">🔍 Reconcile</button>
+          <button onclick="openRetailReconcileModal('${row.retailer_id}', '${row.sku}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.2rem 0.45rem;">🔍 Full Audit</button>
         </td>
       </tr>
     `;
   }).join('');
+}
+
+async function quickUpdateStock(retailerId, sku) {
+  const input = document.getElementById(`inline-stock-${retailerId}-${sku}`);
+  if (!input) return;
+  const newCount = parseInt(input.value, 10);
+  if (isNaN(newCount) || newCount < 0) {
+    alert('⚠️ Please enter a valid stock number (0 or greater).');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/reconcile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({
+        retailer_id: retailerId,
+        sku,
+        physical_count: newCount,
+        discrepancy_reason: 'Direct Stock Adjustment',
+        notes: 'Updated directly from Retail Stock Matrix'
+      })
+    });
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to update stock');
+    alert(`✅ Stock for ${sku} updated to ${newCount} units!`);
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
 }
 
 // ── 4. Supply Orders, Financial Ledger, Returns, Follow-ups ───────────────────
@@ -1548,6 +1642,47 @@ async function completeFollowupTask(id) {
   } catch (err) {
     alert(`❌ ${err.message}`);
   }
+}
+
+function openEditFollowupModal(followupId) {
+  const f = (ADMIN_STATE.retailFollowups || []).find(item => item.id === followupId);
+  if (!f) return;
+  const modal = document.getElementById('retail-edit-followup-modal');
+  if (!modal) return;
+
+  document.getElementById('edit-rfol-id').value = f.id;
+  document.getElementById('edit-rfol-store-name').innerText = `${f.retailer_name || 'Retailer'} (Current Due: ${f.due_date})`;
+  document.getElementById('edit-rfol-date').value = f.due_date || '';
+  document.getElementById('edit-rfol-reason').value = f.reason || '';
+  document.getElementById('edit-rfol-assignee').value = f.assigned_to || 'Keshav Gandhi';
+  document.getElementById('edit-rfol-notes').value = f.notes || '';
+
+  modal.classList.add('open');
+}
+
+function closeEditFollowupModal() {
+  document.getElementById('retail-edit-followup-modal')?.classList.remove('open');
+}
+
+async function handleEditFollowupSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('edit-rfol-id').value;
+  const dueDate = document.getElementById('edit-rfol-date').value;
+  const reason = document.getElementById('edit-rfol-reason').value.trim();
+  const assignedTo = document.getElementById('edit-rfol-assignee').value.trim();
+  const notes = document.getElementById('edit-rfol-notes').value.trim();
+
+  const f = (ADMIN_STATE.retailFollowups || []).find(item => item.id === id);
+  if (f) {
+    f.due_date = dueDate;
+    f.reason = reason;
+    f.assigned_to = assignedTo;
+    f.notes = notes;
+  }
+
+  alert('✅ Follow-up task updated successfully!');
+  closeEditFollowupModal();
+  renderFollowupCards();
 }
 
 // ── 5. Retailer 360° Profile Drawer ──────────────────────────────────────────
@@ -1875,6 +2010,14 @@ function openPaymentForCurrentRetailer() {
   if (ADMIN_STATE.currentRetailerProfileId) {
     closeRetailProfileModal();
     openRetailPaymentModal(ADMIN_STATE.currentRetailerProfileId);
+  }
+}
+
+function openEditForCurrentRetailer() {
+  if (ADMIN_STATE.currentRetailerProfileId) {
+    const id = ADMIN_STATE.currentRetailerProfileId;
+    closeRetailProfileModal();
+    openRetailerModal(id);
   }
 }
 
@@ -2592,4 +2735,49 @@ async function downloadRetailCSV(type) {
     alert(`❌ ${err.message}`);
   }
 }
+
+// ── Global Window Function Exposures for UI Events ───────────────────────────
+window.openRetailerModal = openRetailerModal;
+window.closeRetailerModal = closeRetailerModal;
+window.handleRetailerFormSubmit = handleRetailerFormSubmit;
+window.openRetailSupplyModal = openRetailSupplyModal;
+window.closeRetailSupplyModal = closeRetailSupplyModal;
+window.handleRetailSupplySubmit = handleRetailSupplySubmit;
+window.openRetailPaymentModal = openRetailPaymentModal;
+window.closeRetailPaymentModal = closeRetailPaymentModal;
+window.handleRetailPaymentSubmit = handleRetailPaymentSubmit;
+window.openRetailReturnModal = openRetailReturnModal;
+window.closeRetailReturnModal = closeRetailReturnModal;
+window.handleRetailReturnSubmit = handleRetailReturnSubmit;
+window.openRetailReconcileModal = openRetailReconcileModal;
+window.closeRetailReconcileModal = closeRetailReconcileModal;
+window.handleRetailReconcileSubmit = handleRetailReconcileSubmit;
+window.openRetailFollowupModal = openRetailFollowupModal;
+window.closeRetailFollowupModal = closeRetailFollowupModal;
+window.handleRetailFollowupSubmit = handleRetailFollowupSubmit;
+window.openEditFollowupModal = openEditFollowupModal;
+window.closeEditFollowupModal = closeEditFollowupModal;
+window.handleEditFollowupSubmit = handleEditFollowupSubmit;
+window.completeFollowupTask = completeFollowupTask;
+window.openRetailProfile = openRetailProfile;
+window.closeRetailProfileModal = closeRetailProfileModal;
+window.switchRetailSubTab = switchRetailSubTab;
+window.switchProfileTab = switchProfileTab;
+window.toggleExportMenu = toggleExportMenu;
+window.downloadRetailCSV = downloadRetailCSV;
+window.handleArchiveCurrentRetailer = handleArchiveCurrentRetailer;
+window.openHardDeleteModal = openHardDeleteModal;
+window.closeHardDeleteModal = closeHardDeleteModal;
+window.handleHardDeleteSubmit = handleHardDeleteSubmit;
+window.openSupplyForCurrentRetailer = openSupplyForCurrentRetailer;
+window.openPaymentForCurrentRetailer = openPaymentForCurrentRetailer;
+window.openEditForCurrentRetailer = openEditForCurrentRetailer;
+window.quickUpdateStock = quickUpdateStock;
+window.quickEditCreditLimit = quickEditCreditLimit;
+window.quickToggleStatus = quickToggleStatus;
+window.setRetailFilter = setRetailFilter;
+window.handleRetailSearch = handleRetailSearch;
+window.handleRetailSort = handleRetailSort;
+window.filterRetailStockMatrix = filterRetailStockMatrix;
+
 

@@ -1588,6 +1588,7 @@
 
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
           <a id="rprof-whatsapp-btn" href="#" target="_blank" class="btn btn-sm" style="background: #25D366; color: #fff; border: none; font-weight: 600; text-decoration: none;">💬 WhatsApp</a>
+          <button onclick="openEditForCurrentRetailer()" class="btn btn-sm btn-outline" style="font-weight: 600; background: #fff;">✏️ Edit Store Profile</button>
           <button onclick="openSupplyForCurrentRetailer()" class="btn btn-sm btn-accent">+ Record Supply</button>
           <button onclick="openPaymentForCurrentRetailer()" class="btn btn-sm" style="background: #059669; color: #fff; border: none;">💳 Pay</button>
           <button onclick="closeRetailProfileModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b; margin-left: 0.5rem;">&times;</button>
@@ -2140,6 +2141,49 @@
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
           <button type="button" onclick="closeRetailFollowupModal()" class="btn btn-sm btn-outline">Cancel</button>
           <button type="submit" class="btn btn-sm btn-accent">Save Follow-up Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 13B: EDIT FOLLOW-UP MODAL -->
+  <div id="retail-edit-followup-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700;">✏️ Edit Follow-up Task</h3>
+          <p style="font-size: 0.8rem; color: #64748b;" id="edit-rfol-store-name">Store Name</p>
+        </div>
+        <button onclick="closeEditFollowupModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form id="retail-edit-followup-form" onsubmit="handleEditFollowupSubmit(event)">
+        <input type="hidden" id="edit-rfol-id">
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Due Date *</label>
+            <input type="date" id="edit-rfol-date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Reason *</label>
+            <input type="text" id="edit-rfol-reason" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Assigned Person</label>
+          <input type="text" id="edit-rfol-assignee" class="form-control" value="Keshav Gandhi">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Follow-up Notes / Details</label>
+          <textarea id="edit-rfol-notes" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeEditFollowupModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Update Task</button>
         </div>
       </form>
     </div>
