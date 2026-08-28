@@ -441,6 +441,101 @@ router.get('/customers', async (req, res, next) => {
   }
 });
 
+/**
+ * DELETE /api/admin/orders/:id — Delete or Cancel an Order
+ */
+router.delete('/orders/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    try {
+      await supabase.from('order_items').delete().eq('order_id', id);
+    } catch (_) {}
+    const { error } = await supabase.from('orders').delete().eq('id', id);
+    if (error) throw error;
+
+    await logAuditEvent({
+      actorName: req.admin?.name || 'Admin',
+      actorEmail: req.admin?.email || 'admin@veyano.in',
+      actorRole: req.admin?.role || 'OWNER',
+      action: 'ORDER_DELETED',
+      entityType: 'ORDER',
+      entityId: id,
+      entityName: `Order #${id}`,
+      reason: req.body?.reason || 'Order removed by admin'
+    });
+
+    res.json({ success: true, message: `Order ${id} deleted successfully.` });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * DELETE /api/admin/customers/:id — Delete Customer Profile & Orders
+ */
+router.delete('/customers/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    try {
+      await supabase.from('users').delete().or(`id.eq.${id},email.eq.${id},clerk_id.eq.${id}`);
+    } catch (_) {}
+
+    await logAuditEvent({
+      actorName: req.admin?.name || 'Admin',
+      actorEmail: req.admin?.email || 'admin@veyano.in',
+      actorRole: req.admin?.role || 'OWNER',
+      action: 'CUSTOMER_DELETED',
+      entityType: 'CUSTOMER',
+      entityId: id,
+      entityName: `Customer ${id}`,
+      reason: req.body?.reason || 'Customer removed by admin'
+    });
+
+    res.json({ success: true, message: `Customer ${id} deleted successfully.` });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/admin/bulk-delete — Bulk Delete Hub
+ */
+router.post('/bulk-delete', async (req, res, next) => {
+  try {
+    const { type, ids, reason } = req.body || {};
+    if (!type || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Valid entity type and array of IDs required.' });
+    }
+
+    if (type === 'retailer') {
+      for (const id of ids) {
+        try {
+          retailService.deleteRetailerPermanently(id, 'DELETE RETAILER PERMANENTLY', reason || 'Bulk permanent delete', req.admin);
+        } catch (_) {
+          try { retailService.archiveRetailer(id, reason || 'Bulk archive', req.admin); } catch (__) {}
+        }
+      }
+    } else if (type === 'order') {
+      for (const id of ids) {
+        try {
+          await supabase.from('order_items').delete().eq('order_id', id);
+          await supabase.from('orders').delete().eq('id', id);
+        } catch (_) {}
+      }
+    } else if (type === 'customer') {
+      for (const id of ids) {
+        try {
+          await supabase.from('users').delete().or(`id.eq.${id},email.eq.${id}`);
+        } catch (_) {}
+      }
+    }
+
+    res.json({ success: true, message: `Successfully deleted ${ids.length} ${type}(s).` });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── 3. PRODUCT MASTER & PRICING MANAGEMENT ──────────────────────────────────
 router.get('/products', (req, res) => {
   const products = getAllProducts({ includeInactive: true });

@@ -366,6 +366,9 @@
       </div>
       <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
         <span class="role-badge-pill" id="current-role-badge">👑 OWNER</span>
+        <button onclick="openUniversalDeleteModal()" class="btn btn-sm" style="background: #dc2626; color: #fff; border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+          <span>🗑️</span> Quick Delete Hub
+        </button>
         <button onclick="refreshDashboardData()" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.4rem;">
           <span>🔄</span> Sync Data
         </button>
@@ -2217,6 +2220,62 @@
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
           <button type="button" onclick="closeHardDeleteModal()" class="btn btn-sm btn-outline">Cancel</button>
           <button type="submit" class="btn btn-sm" style="background: #dc2626; color: #fff; border: none; font-weight: 700;">Permanently Delete Store</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 15: UNIVERSAL SELECT & DELETE DROPBOX MODAL -->
+  <div id="universal-delete-modal" class="admin-modal">
+    <div class="admin-modal-content" style="max-width: 560px; border-top: 4px solid #dc2626;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.2rem; font-weight: 700; color: #dc2626; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🗑️</span> Universal Delete & Management Dropbox
+        </h3>
+        <button onclick="closeUniversalDeleteModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.85rem 1rem; border-radius: var(--radius-md); font-size: 0.82rem; color: #475569; margin-bottom: 1.25rem;">
+        Select any category (Retailers, Orders, Customers) and pick the exact item from the dropdown below to delete or archive it immediately.
+      </div>
+
+      <form id="universal-delete-form" onsubmit="executeUniversalDelete(event)">
+        <!-- Step 1: Category Selection -->
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">1. Select Entity Type *</label>
+          <select id="univ-entity-type" class="form-control" onchange="handleUniversalTypeChange()" required style="font-weight: 600; padding: 0.55rem;">
+            <option value="retailer">🏢 Retail Partner (Store)</option>
+            <option value="order">🛒 Order</option>
+            <option value="customer">👥 Customer Profile</option>
+          </select>
+        </div>
+
+        <!-- Step 2: Item Selection Dropdown -->
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 700;" id="univ-item-label">2. Select Store to Delete *</label>
+          <select id="univ-item-select" class="form-control" required style="padding: 0.55rem;">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <!-- Step 3: Action Type -->
+        <div class="form-group" id="univ-action-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">3. Action *</label>
+          <select id="univ-action-select" class="form-control" style="padding: 0.55rem;">
+            <option value="permanent_delete">🗑️ Permanent Delete (Remove from Database)</option>
+            <option value="archive">📦 Archive Store (Preserve History)</option>
+          </select>
+        </div>
+
+        <!-- Step 4: Reason -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Reason (Optional)</label>
+          <input type="text" id="univ-delete-reason" class="form-control" placeholder="e.g. Duplicate test record or cancelled account">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeUniversalDeleteModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm" style="background: #dc2626; color: #fff; border: none; font-weight: 700; padding: 0.5rem 1.25rem;">Execute Delete</button>
         </div>
       </form>
     </div>

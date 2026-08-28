@@ -274,11 +274,38 @@ function renderOrdersTable() {
           <div style="display:flex; gap:0.35rem;">
             <button onclick="openTrackingModal('${order.id}')" class="btn btn-sm btn-outline" style="font-size:0.74rem; padding:0.25rem 0.5rem;" title="Edit Tracking & Status">🚚 Update</button>
             <button onclick="openOrderDetailsModal('${order.id}')" class="btn btn-sm btn-outline" style="font-size:0.74rem; padding:0.25rem 0.5rem;" title="View Complete Receipt">👁️ Details</button>
+            <button onclick="deleteOrder('${order.id}')" class="btn btn-sm" style="background:#fee2e2; color:#dc2626; border:none; font-size:0.74rem; padding:0.25rem 0.45rem;" title="Delete Order">🗑️</button>
           </div>
         </td>
       </tr>
     `;
   }).join('');
+}
+
+async function deleteOrder(orderId) {
+  if (!confirm(`Are you sure you want to delete order "${orderId}"? This will remove the order permanently.`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/orders/${orderId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({ reason: 'Deleted by admin via Orders Table' })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to delete order');
+
+    ADMIN_STATE.orders = ADMIN_STATE.orders.filter(o => o.id !== orderId);
+    ADMIN_STATE.filteredOrders = ADMIN_STATE.filteredOrders.filter(o => o.id !== orderId);
+    document.getElementById('badge-orders-count').innerText = ADMIN_STATE.orders.length;
+    renderOrdersTable();
+    alert(`🗑️ Order ${orderId} deleted successfully.`);
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
 }
 
 // ── 3. Customers Directory ────────────────────────────────────────────────────
@@ -342,11 +369,40 @@ function renderCustomersTable() {
         <td style="font-weight:700;">${cust.totalOrders}</td>
         <td style="font-weight:700; color:#0f172a;">₹${(cust.totalSpent || 0).toLocaleString('en-IN')}</td>
         <td>
-          <button onclick="openCustomerModal('${cust.email}')" class="btn btn-sm btn-outline" style="font-size:0.74rem;">👁️ History</button>
+          <div style="display:flex; gap:0.35rem;">
+            <button onclick="openCustomerModal('${cust.email}')" class="btn btn-sm btn-outline" style="font-size:0.74rem; padding:0.25rem 0.5rem;">👁️ History</button>
+            <button onclick="deleteCustomer('${cust.id || cust.email}')" class="btn btn-sm" style="background:#fee2e2; color:#dc2626; border:none; font-size:0.74rem; padding:0.25rem 0.45rem;" title="Delete Customer">🗑️</button>
+          </div>
         </td>
       </tr>
     `;
   }).join('');
+}
+
+async function deleteCustomer(customerId) {
+  if (!confirm(`Are you sure you want to delete customer "${customerId}"?`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/customers/${customerId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({ reason: 'Deleted by admin via Customers Table' })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to delete customer');
+
+    ADMIN_STATE.customers = ADMIN_STATE.customers.filter(c => c.id !== customerId && c.email !== customerId);
+    ADMIN_STATE.filteredCustomers = ADMIN_STATE.filteredCustomers.filter(c => c.id !== customerId && c.email !== customerId);
+    document.getElementById('badge-customers-count').innerText = ADMIN_STATE.customers.length;
+    renderCustomersTable();
+    alert(`🗑️ Customer profile removed successfully.`);
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
 }
 
 // ── 4. Product Master & Single Source of Truth ────────────────────────────────
@@ -1241,15 +1297,59 @@ function renderRetailersTable() {
         </td>
         <td>
           <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
-            <button onclick="openRetailProfile('${r.id}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;" title="View 360 Profile">360° Profile</button>
-            <button onclick="openRetailSupplyModal('${r.id}')" class="btn btn-sm btn-accent" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;" title="Supply Stock">+ Supply</button>
-            <button onclick="openRetailPaymentModal('${r.id}')" class="btn btn-sm" style="background:#059669; color:#fff; border:none; font-size: 0.72rem; padding: 0.25rem 0.5rem;" title="Record Payment">💳 Pay</button>
-            <button onclick="openRetailerModal('${r.id}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.45rem;" title="Edit All Store Fields">✏️ Edit</button>
+            <button onclick="openRetailProfile('${r.id}')" class="btn btn-sm btn-outline" style="font-size: 0.74rem; font-weight: 600; padding: 0.25rem 0.5rem;" title="View 360 Profile">360° Profile</button>
+            <button onclick="openRetailSupplyModal('${r.id}')" class="btn btn-sm btn-accent" style="font-size: 0.74rem; font-weight: 600; padding: 0.25rem 0.5rem;" title="Supply Stock">+ Supply</button>
+            <button onclick="openRetailPaymentModal('${r.id}')" class="btn btn-sm" style="background:#059669; color:#fff; border:none; font-size: 0.74rem; font-weight: 600; padding: 0.25rem 0.5rem;" title="Record Payment">💳 Pay</button>
+            <button onclick="openRetailerModal('${r.id}')" class="btn btn-sm btn-outline" style="font-size: 0.74rem; font-weight: 600; padding: 0.25rem 0.45rem;" title="Edit Store Details & Dates">✏️ Edit</button>
+            <button onclick="promptDeleteRetailer('${r.id}')" class="btn btn-sm" style="background:#fee2e2; color:#dc2626; border:none; font-size:0.74rem; font-weight: 600; padding:0.25rem 0.45rem;" title="Delete / Archive Store">🗑️</button>
           </div>
         </td>
       </tr>
     `;
   }).join('');
+}
+
+async function promptDeleteRetailer(retailerId) {
+  const r = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId || item.code === retailerId || item.retailer_code === retailerId);
+  const name = r ? r.name : retailerId;
+  const choice = prompt(`Choose action for store "${name}":\nType "1" to ARCHIVE (Soft-delete, preserve ledger)\nType "2" to PERMANENTLY DELETE (Remove store from database)\nOr click Cancel:`, '1');
+  if (!choice) return;
+
+  if (choice.trim() === '1') {
+    const reason = prompt('Enter archive reason:', 'Archived by admin');
+    if (reason === null) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
+        body: JSON.stringify({ reason })
+      });
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.error || 'Failed to archive');
+      ADMIN_STATE.retailers = ADMIN_STATE.retailers.filter(item => item.id !== retailerId);
+      filterRetailersTable();
+      alert(`📦 Store "${name}" archived successfully.`);
+    } catch (err) {
+      alert(`❌ ${err.message}`);
+    }
+  } else if (choice.trim() === '2') {
+    const reason = prompt('Enter mandatory deletion justification:', 'Store closed / duplicate');
+    if (!reason) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}/hard-delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
+        body: JSON.stringify({ confirmation_phrase: 'DELETE RETAILER PERMANENTLY', reason })
+      });
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.error || 'Failed to delete permanently');
+      ADMIN_STATE.retailers = ADMIN_STATE.retailers.filter(item => item.id !== retailerId);
+      filterRetailersTable();
+      alert(`🗑️ Store "${name}" permanently deleted.`);
+    } catch (err) {
+      alert(`❌ ${err.message}`);
+    }
+  }
 }
 
 async function quickEditCreditLimit(retailerId) {
@@ -1691,17 +1791,35 @@ async function openRetailProfile(retailerId) {
   const modal = document.getElementById('retail-profile-modal');
   if (!modal) return;
 
+  // 1. Optimistically find retailer in memory and open modal immediately
+  const localR = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId || item.code === retailerId || item.retailer_code === retailerId || item.name === retailerId);
+  if (localR) {
+    renderRetailProfileDrawer({
+      retailer: localR,
+      inventory: [],
+      movements: [],
+      orders: localR.supply_orders || [],
+      financial_ledger: [],
+      returns: localR.returns || [],
+      followups: [],
+      notes: [],
+      change_history: []
+    });
+    modal.classList.add('open');
+  }
+
+  // 2. Fetch full 360 profile from backend to enrich
   try {
     const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}`, {
       headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
     });
     const resJson = await res.json();
-    if (!res.ok) throw new Error(resJson.error || 'Failed to load profile');
-
-    renderRetailProfileDrawer(resJson.data);
-    modal.classList.add('open');
+    if (res.ok && resJson.data) {
+      renderRetailProfileDrawer(resJson.data);
+      modal.classList.add('open');
+    }
   } catch (err) {
-    alert(`❌ ${err.message}`);
+    if (!localR) alert(`❌ ${err.message}`);
   }
 }
 
@@ -2736,6 +2854,119 @@ async function downloadRetailCSV(type) {
   }
 }
 
+// ── 13. Universal Delete & Management Dropbox Controller ─────────────────────
+function openUniversalDeleteModal() {
+  const modal = document.getElementById('universal-delete-modal');
+  if (!modal) return;
+  handleUniversalTypeChange();
+  modal.classList.add('open');
+}
+
+function closeUniversalDeleteModal() {
+  document.getElementById('universal-delete-modal')?.classList.remove('open');
+}
+
+function handleUniversalTypeChange() {
+  const type = document.getElementById('univ-entity-type')?.value || 'retailer';
+  const itemSelect = document.getElementById('univ-item-select');
+  const itemLabel = document.getElementById('univ-item-label');
+  const actionGroup = document.getElementById('univ-action-group');
+  if (!itemSelect) return;
+
+  if (type === 'retailer') {
+    if (itemLabel) itemLabel.innerText = '2. Select Store to Delete / Archive *';
+    if (actionGroup) actionGroup.style.display = 'block';
+    const list = ADMIN_STATE.retailers || [];
+    itemSelect.innerHTML = list.length > 0 
+      ? list.map(r => `<option value="${r.id}">${escapeHtml(r.name)} (${escapeHtml(r.city || '')}) [${escapeHtml(r.code || r.id)}]</option>`).join('')
+      : '<option value="">No retailers available</option>';
+  } else if (type === 'order') {
+    if (itemLabel) itemLabel.innerText = '2. Select Order to Delete *';
+    if (actionGroup) actionGroup.style.display = 'none';
+    const list = ADMIN_STATE.orders || [];
+    itemSelect.innerHTML = list.length > 0
+      ? list.map(o => `<option value="${o.id}">${escapeHtml(o.order_number || o.id)} — ${escapeHtml(o.customer_name || 'Customer')} (₹${(o.total_amount || 0).toLocaleString('en-IN')}) [${o.status || 'pending'}]</option>`).join('')
+      : '<option value="">No orders available</option>';
+  } else if (type === 'customer') {
+    if (itemLabel) itemLabel.innerText = '2. Select Customer Profile to Delete *';
+    if (actionGroup) actionGroup.style.display = 'none';
+    const list = ADMIN_STATE.customers || [];
+    itemSelect.innerHTML = list.length > 0
+      ? list.map(c => `<option value="${c.id || c.email}">${escapeHtml(c.name)} (${escapeHtml(c.email)}) [Orders: ${c.totalOrders || 0}]</option>`).join('')
+      : '<option value="">No customers available</option>';
+  }
+}
+
+async function executeUniversalDelete(e) {
+  e.preventDefault();
+  const type = document.getElementById('univ-entity-type').value;
+  const id = document.getElementById('univ-item-select').value;
+  const action = document.getElementById('univ-action-select')?.value || 'permanent_delete';
+  const reason = document.getElementById('univ-delete-reason')?.value.trim() || 'Deleted via Universal Delete Hub';
+
+  if (!id) {
+    alert('⚠️ Please select a valid item to delete.');
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to delete the selected ${type}?`)) return;
+
+  try {
+    if (type === 'retailer') {
+      if (action === 'archive') {
+        const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
+          body: JSON.stringify({ reason })
+        });
+        const resJson = await res.json();
+        if (!res.ok) throw new Error(resJson.error || 'Failed to archive retailer');
+        alert('📦 Store archived successfully.');
+      } else {
+        const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${id}/hard-delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
+          body: JSON.stringify({ confirmation_phrase: 'DELETE RETAILER PERMANENTLY', reason })
+        });
+        const resJson = await res.json();
+        if (!res.ok) throw new Error(resJson.error || 'Failed to delete retailer permanently');
+        alert('🗑️ Store permanently removed from database.');
+      }
+      ADMIN_STATE.retailers = ADMIN_STATE.retailers.filter(r => r.id !== id);
+      filterRetailersTable();
+    } else if (type === 'order') {
+      const res = await fetch(`${API_BASE}/api/admin/orders/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
+        body: JSON.stringify({ reason })
+      });
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.error || 'Failed to delete order');
+      ADMIN_STATE.orders = ADMIN_STATE.orders.filter(o => o.id !== id);
+      ADMIN_STATE.filteredOrders = ADMIN_STATE.filteredOrders.filter(o => o.id !== id);
+      renderOrdersTable();
+      alert(`🗑️ Order ${id} deleted successfully.`);
+    } else if (type === 'customer') {
+      const res = await fetch(`${API_BASE}/api/admin/customers/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
+        body: JSON.stringify({ reason })
+      });
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.error || 'Failed to delete customer');
+      ADMIN_STATE.customers = ADMIN_STATE.customers.filter(c => c.id !== id && c.email !== id);
+      ADMIN_STATE.filteredCustomers = ADMIN_STATE.filteredCustomers.filter(c => c.id !== id && c.email !== id);
+      renderCustomersTable();
+      alert(`🗑️ Customer profile deleted successfully.`);
+    }
+
+    closeUniversalDeleteModal();
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
 // ── Global Window Function Exposures for UI Events ───────────────────────────
 window.openRetailerModal = openRetailerModal;
 window.closeRetailerModal = closeRetailerModal;
@@ -2775,6 +3006,13 @@ window.openEditForCurrentRetailer = openEditForCurrentRetailer;
 window.quickUpdateStock = quickUpdateStock;
 window.quickEditCreditLimit = quickEditCreditLimit;
 window.quickToggleStatus = quickToggleStatus;
+window.promptDeleteRetailer = promptDeleteRetailer;
+window.deleteOrder = deleteOrder;
+window.deleteCustomer = deleteCustomer;
+window.openUniversalDeleteModal = openUniversalDeleteModal;
+window.closeUniversalDeleteModal = closeUniversalDeleteModal;
+window.handleUniversalTypeChange = handleUniversalTypeChange;
+window.executeUniversalDelete = executeUniversalDelete;
 window.setRetailFilter = setRetailFilter;
 window.handleRetailSearch = handleRetailSearch;
 window.handleRetailSort = handleRetailSort;

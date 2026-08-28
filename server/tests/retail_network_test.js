@@ -44,6 +44,7 @@ console.log('✅ Directory, search, and filters verified.\n');
 console.log('▶ Testing Create Retailer...');
 const testCode = `RET-T-${Date.now().toString(36).toUpperCase()}`;
 const newRetailer = retailService.createRetailer({
+  id: testCode,
   code: testCode,
   retailer_code: testCode,
   name: `Modern Bazaar Test Store ${Date.now().toString().slice(-4)}`,

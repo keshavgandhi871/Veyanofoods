@@ -397,6 +397,107 @@ router.get('/customers', async (req, res) => {
 });
 
 /**
+ * DELETE /api/admin/orders/:id — Delete or Cancel an Order
+ */
+router.delete('/orders/:id', async (req, res) => {
+  try {
+    const db = getDB();
+    const { id } = req.params;
+    try {
+      await db.from('order_items').delete().eq('order_id', id);
+    } catch (_) {}
+    await db.from('orders').delete().eq('id', id);
+
+    globalAuditLogs.unshift({
+      id: `EVT-${Date.now()}`,
+      event_id: `EVT-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      actor_name: req.admin?.name || 'Admin',
+      actor_role: req.admin?.role || 'OWNER',
+      action: 'ORDER_DELETED',
+      entity_type: 'ORDER',
+      entity_id: id,
+      entity_name: `Order #${id}`,
+      reason: req.body?.reason || 'Order deleted by admin'
+    });
+
+    res.json({ success: true, message: `Order ${id} deleted successfully.` });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete order', detail: err.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/customers/:id — Delete Customer Profile
+ */
+router.delete('/customers/:id', async (req, res) => {
+  try {
+    const db = getDB();
+    const { id } = req.params;
+    try {
+      await db.from('users').delete().or(`id.eq.${id},email.eq.${id},clerk_id.eq.${id}`);
+    } catch (_) {}
+
+    globalAuditLogs.unshift({
+      id: `EVT-${Date.now()}`,
+      event_id: `EVT-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      actor_name: req.admin?.name || 'Admin',
+      actor_role: req.admin?.role || 'OWNER',
+      action: 'CUSTOMER_DELETED',
+      entity_type: 'CUSTOMER',
+      entity_id: id,
+      entity_name: `Customer ${id}`,
+      reason: req.body?.reason || 'Customer removed by admin'
+    });
+
+    res.json({ success: true, message: `Customer ${id} deleted successfully.` });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete customer', detail: err.message });
+  }
+});
+
+/**
+ * POST /api/admin/bulk-delete — Universal Bulk Deletion Hub
+ */
+router.post('/bulk-delete', async (req, res) => {
+  try {
+    const db = getDB();
+    const { type, ids, reason } = req.body || {};
+    if (!type || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Valid entity type and array of IDs required.' });
+    }
+
+    if (type === 'retailer' && retailService) {
+      for (const id of ids) {
+        try {
+          retailService.deleteRetailerPermanently(id, 'DELETE RETAILER PERMANENTLY', reason || 'Bulk delete', { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' });
+        } catch (_) {
+          try { retailService.archiveRetailer(id, reason || 'Bulk archive', { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' }); } catch (__) {}
+        }
+      }
+    } else if (type === 'order') {
+      for (const id of ids) {
+        try {
+          await db.from('order_items').delete().eq('order_id', id);
+          await db.from('orders').delete().eq('id', id);
+        } catch (_) {}
+      }
+    } else if (type === 'customer') {
+      for (const id of ids) {
+        try {
+          await db.from('users').delete().or(`id.eq.${id},email.eq.${id}`);
+        } catch (_) {}
+      }
+    }
+
+    res.json({ success: true, message: `Successfully deleted ${ids.length} ${type}(s).` });
+  } catch (err) {
+    res.status(500).json({ error: 'Bulk delete failed', detail: err.message });
+  }
+});
+
+/**
  * GET /api/admin/products
  */
 router.get('/products', async (req, res) => {
