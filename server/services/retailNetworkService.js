@@ -40,6 +40,7 @@ function savePersistentRetailData() {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
     const payload = {
+      is_seeded: true,
       retailers: RETAILERS,
       inventory: RETAILER_INVENTORY,
       movements: INVENTORY_MOVEMENTS,
@@ -51,7 +52,9 @@ function savePersistentRetailData() {
       documents: DOCUMENTS,
       updated_at: new Date().toISOString()
     };
-    fs.writeFileSync(LOCAL_RETAIL_DATA_FILE, JSON.stringify(payload, null, 2), 'utf8');
+    const tempFile = `${LOCAL_RETAIL_DATA_FILE}.tmp`;
+    fs.writeFileSync(tempFile, JSON.stringify(payload, null, 2), 'utf8');
+    fs.renameSync(tempFile, LOCAL_RETAIL_DATA_FILE);
   } catch (err) {
     console.warn('⚠️ Could not write persistent retail data file:', err.message);
   }
@@ -62,8 +65,8 @@ function loadPersistentRetailData() {
     if (fs.existsSync(LOCAL_RETAIL_DATA_FILE)) {
       const raw = fs.readFileSync(LOCAL_RETAIL_DATA_FILE, 'utf8');
       const data = JSON.parse(raw || '{}');
-      if (data.retailers && Array.isArray(data.retailers)) {
-        RETAILERS = data.retailers;
+      if (data && (Array.isArray(data.retailers) || data.is_seeded)) {
+        RETAILERS = data.retailers || [];
         RETAILER_INVENTORY = data.inventory || [];
         INVENTORY_MOVEMENTS = data.movements || [];
         SUPPLY_ORDERS = data.orders || [];
@@ -79,7 +82,7 @@ function loadPersistentRetailData() {
     console.warn('⚠️ Could not load local retail file, initializing default store:', e.message);
   }
 
-  // Initialize initial dataset if empty
+  // Initialize initial dataset if file never existed
   seedInitialRetailNetwork();
   savePersistentRetailData();
 }
@@ -839,7 +842,13 @@ function getRetailDashboardKPIs() {
 
 // ── 2. Retailer Directory with Search, Filter & Sort ──────────────────────────
 function getAllRetailers({ search = '', filter = 'all', flag = '', status = '', sort = 'name_asc' } = {}) {
-  let list = RETAILERS.filter(r => !r.deleted_at);
+  let list = RETAILERS.filter(r => !r.deleted_at && r.status !== 'ARCHIVED');
+
+  // If explicitly filtering for inactive or archived
+  const activeFilter = (filter !== 'all' ? filter : '') || flag || status || 'all';
+  if (activeFilter === 'inactive' || activeFilter === 'INACTIVE' || activeFilter === 'archived' || activeFilter === 'ARCHIVED') {
+    list = RETAILERS.filter(r => r.deleted_at || r.status === 'INACTIVE' || r.status === 'ON_HOLD' || r.status === 'ARCHIVED');
+  }
 
   // Search
   if (search && search.trim()) {
@@ -881,7 +890,6 @@ function getAllRetailers({ search = '', filter = 'all', flag = '', status = '', 
   });
 
   // Filter Pills
-  const activeFilter = (filter !== 'all' ? filter : '') || flag || status || 'all';
   if (activeFilter === 'active' || activeFilter === 'ACTIVE') enriched = enriched.filter(r => r.status === 'ACTIVE');
   else if (activeFilter === 'inactive' || activeFilter === 'INACTIVE') enriched = enriched.filter(r => r.status === 'INACTIVE' || r.status === 'ON_HOLD' || r.status === 'ARCHIVED');
   else if (activeFilter === 'has_stock') enriched = enriched.filter(r => r.stats.currentStockUnits > 0);
@@ -908,7 +916,7 @@ function getAllRetailers({ search = '', filter = 'all', flag = '', status = '', 
 // ── 3. Get Retailer Profile 360° ──────────────────────────────────────────────
 function getRetailerProfile(id) {
   const retailer = RETAILERS.find(r => r.id === id || r.retailer_code === id || r.code === id);
-  if (!retailer || retailer.deleted_at) {
+  if (!retailer || retailer.deleted_at || retailer.status === 'ARCHIVED') {
     throw new Error(`Retailer ${id} not found or has been archived.`);
   }
 
@@ -989,21 +997,40 @@ function getRetailerProfile(id) {
 
 // ── 4. Create Retailer ────────────────────────────────────────────────────────
 function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
-  if (!data.name || !data.contact_person || !data.phone || !data.city || !data.address) {
-    throw new Error('Retailer Name, Contact Person, Phone, City, and Address are required.');
+  if (!data || !data.name || !data.name.trim()) {
+    throw new Error('Retailer / Store Name is required.');
   }
 
-  const nextNum = RETAILERS.length + 1;
-  const retailer_code = data.retailer_code || data.code || `RET-${String(nextNum).padStart(3, '0')}`;
-  let id = data.id || `RET-2026-${String(nextNum).padStart(3, '0')}`;
+  // Find max numeric index across all existing and historical retailers
+  let maxNum = 0;
+  RETAILERS.forEach(r => {
+    const codeStr = String(r.retailer_code || r.code || r.id || '');
+    const match = codeStr.match(/RET-(\d+)/i) || codeStr.match(/RET-2026-(\d+)/i);
+    if (match) {
+      const n = parseInt(match[1], 10);
+      if (!isNaN(n) && n > maxNum) maxNum = n;
+    }
+  });
+
+  const nextCodeNum = maxNum + 1;
+  const autoCode = `RET-${String(nextCodeNum).padStart(3, '0')}`;
+
+  let retailer_code = (data.retailer_code || data.code || '').trim();
+  if (!retailer_code) {
+    retailer_code = autoCode;
+  } else {
+    // If a custom code was provided, check if an active non-archived store has it
+    const activeWithCode = RETAILERS.find(r => !r.deleted_at && r.status !== 'ARCHIVED' && (r.retailer_code === retailer_code || r.code === retailer_code));
+    if (activeWithCode) {
+      // Auto-assign next unique code to avoid collision failure
+      retailer_code = autoCode;
+    }
+  }
+
+  const generatedId = `RET-2026-${String(nextCodeNum).padStart(3, '0')}`;
+  let id = data.id && !RETAILERS.some(r => r.id === data.id) ? String(data.id).trim() : generatedId;
   if (RETAILERS.some(r => r.id === id)) {
-    id = `RET-${Date.now().toString(36).toUpperCase()}-${String(nextNum).padStart(3, '0')}`;
-  }
-
-  // Check duplicate code
-  const existingWithCode = RETAILERS.find(r => !r.deleted_at && (r.retailer_code === retailer_code || r.code === retailer_code));
-  if (existingWithCode) {
-    throw new Error(`Retailer code '${retailer_code}' is already in use by store '${existingWithCode.name}'.`);
+    id = `RET-${Date.now().toString(36).toUpperCase()}-${String(nextCodeNum).padStart(3, '0')}`;
   }
 
   const nowStr = data.created_at ? new Date(data.created_at).toISOString() : new Date().toISOString();
@@ -1013,24 +1040,24 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
     retailer_code,
     code: retailer_code,
     name: data.name.trim(),
-    contact_person: data.contact_person.trim(),
-    phone: data.phone.trim(),
-    whatsapp: data.whatsapp ? data.whatsapp.trim() : data.phone.trim(),
+    contact_person: (data.contact_person || data.name || 'Store Manager').trim(),
+    phone: (data.phone || '9999999999').trim(),
+    whatsapp: data.whatsapp ? data.whatsapp.trim() : (data.phone ? data.phone.trim() : ''),
     email: data.email ? data.email.trim().toLowerCase() : '',
     gstin: data.gstin ? data.gstin.trim().toUpperCase() : '',
     retailer_type: data.retailer_type || 'Gourmet Store',
     channel_type: data.channel_type || 'RETAILER',
-    address: data.address.trim(),
-    area: data.area ? data.area.trim() : data.city.trim(),
-    city: data.city.trim(),
+    address: (data.address || 'Delhi').trim(),
+    area: (data.area || data.city || 'Delhi').trim(),
+    city: (data.city || 'New Delhi').trim(),
     state: data.state || 'Delhi',
     pincode: data.pincode ? data.pincode.trim() : '',
     landmark: data.landmark ? data.landmark.trim() : '',
     gps_coordinates: data.gps_coordinates || '',
     status: data.status || 'ACTIVE',
-    assigned_salesperson: data.assigned_salesperson || actor.name,
+    assigned_salesperson: data.assigned_salesperson || actor.name || 'Keshav Gandhi',
     payment_terms: data.payment_terms || '15_DAYS',
-    credit_limit: parseFloat(data.credit_limit) || 20000,
+    credit_limit: parseFloat(data.credit_limit) >= 0 ? parseFloat(data.credit_limit) : 20000,
     current_outstanding: 0,
     reorder_frequency_days: parseInt(data.reorder_frequency_days || data.usual_reorder_frequency_days, 10) || 14,
     usual_reorder_frequency_days: parseInt(data.reorder_frequency_days || data.usual_reorder_frequency_days, 10) || 14,
@@ -1095,7 +1122,7 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
 // ── 5. Update Retailer ────────────────────────────────────────────────────────
 function updateRetailer(id, data, actor = { name: 'Admin', role: 'OWNER' }) {
   const retailer = RETAILERS.find(r => r.id === id || r.retailer_code === id || r.code === id);
-  if (!retailer || retailer.deleted_at) {
+  if (!retailer || retailer.deleted_at || retailer.status === 'ARCHIVED') {
     throw new Error(`Retailer ${id} not found.`);
   }
 
@@ -1172,14 +1199,14 @@ function updateRetailer(id, data, actor = { name: 'Admin', role: 'OWNER' }) {
 
 // ── 6. Archive / Soft-Delete Retailer ─────────────────────────────────────────
 function archiveRetailer(id, reason = 'Archived via Admin Portal', actor = { name: 'Admin', role: 'OWNER' }) {
-  const retailer = RETAILERS.find(r => r.id === id || r.retailer_code === id);
-  if (!retailer || retailer.deleted_at) {
-    throw new Error(`Retailer ${id} not found.`);
+  const retailer = RETAILERS.find(r => r.id === id || r.retailer_code === id || r.code === id);
+  if (!retailer || retailer.deleted_at || retailer.status === 'ARCHIVED') {
+    throw new Error(`Retailer ${id} not found or is already archived.`);
   }
 
   retailer.status = 'ARCHIVED';
   retailer.deleted_at = new Date().toISOString();
-  retailer.deleted_by = actor.name;
+  retailer.deleted_by = actor.name || 'Admin';
   retailer.updated_at = new Date().toISOString();
 
   logAuditEvent({
@@ -1187,8 +1214,8 @@ function archiveRetailer(id, reason = 'Archived via Admin Portal', actor = { nam
     entity_type: 'RETAILER',
     entity_id: retailer.id,
     entity_name: retailer.name,
-    actor_name: actor.name,
-    actor_role: actor.role,
+    actor_name: actor.name || 'Admin',
+    actor_role: actor.role || 'OWNER',
     reason: reason || 'Retailer archived (historical data preserved)'
   });
 
@@ -1196,39 +1223,67 @@ function archiveRetailer(id, reason = 'Archived via Admin Portal', actor = { nam
   return { success: true, message: `Retailer ${retailer.name} archived successfully.` };
 }
 
-// ── 7. Permanent Delete Retailer (Owner-Only Hard Delete) ──────────────────────
+// ── 7. Permanent Delete Retailer (Hard Delete) ────────────────────────────────
 function deleteRetailerPermanently(id, confirmationPhrase, reason, actor = { name: 'Admin', role: 'OWNER' }) {
-  if (actor.role !== 'OWNER') {
-    throw new Error('PERMISSION DENIED: Permanent deletion is strictly restricted to OWNER role.');
+  const actorRole = (actor && actor.role) || 'OWNER';
+  const actorName = (actor && actor.name) || 'Admin';
+
+  if (actorRole !== 'OWNER' && actorRole !== 'ADMIN') {
+    throw new Error('PERMISSION DENIED: Permanent deletion is restricted to OWNER or ADMIN role.');
   }
 
-  if (confirmationPhrase !== 'DELETE RETAILER PERMANENTLY') {
+  if (!confirmationPhrase || confirmationPhrase.trim().toUpperCase() !== 'DELETE RETAILER PERMANENTLY') {
     throw new Error('CONFIRMATION MISMATCH: You must type "DELETE RETAILER PERMANENTLY" to confirm.');
   }
 
-  if (!reason || reason.trim().length < 5) {
-    throw new Error('A detailed justification reason is required for permanent deletion.');
+  if (!reason || reason.trim().length < 3) {
+    throw new Error('A justification reason is required for permanent deletion.');
   }
 
-  const idx = RETAILERS.findIndex(r => r.id === id || r.retailer_code === id);
+  const idx = RETAILERS.findIndex(r => r.id === id || r.retailer_code === id || r.code === id);
   if (idx === -1) {
     throw new Error(`Retailer ${id} not found.`);
   }
 
-  const targetName = RETAILERS[idx].name;
+  const target = RETAILERS[idx];
+  const targetId = target.id;
+  const targetCode = target.retailer_code || target.code || target.id;
+  const targetName = target.name;
+
+  // Remove from main retailer list
   RETAILERS.splice(idx, 1);
+
+  // Cascade cleanup of associated child inventory and sub-records
+  RETAILER_INVENTORY = RETAILER_INVENTORY.filter(i => i.retailer_id !== targetId && i.retailer_id !== targetCode);
+  INVENTORY_MOVEMENTS = INVENTORY_MOVEMENTS.filter(m => m.retailer_id !== targetId && m.retailer_id !== targetCode);
+  SUPPLY_ORDERS = SUPPLY_ORDERS.filter(o => o.retailer_id !== targetId && o.retailer_id !== targetCode);
+  FINANCIAL_LEDGER = FINANCIAL_LEDGER.filter(l => l.retailer_id !== targetId && l.retailer_id !== targetCode);
+  RETURNS = RETURNS.filter(r => r.retailer_id !== targetId && r.retailer_id !== targetCode);
+  FOLLOWUPS = FOLLOWUPS.filter(f => f.retailer_id !== targetId && f.retailer_id !== targetCode);
+  NOTES = NOTES.filter(n => n.retailer_id !== targetId && n.retailer_id !== targetCode);
+  DOCUMENTS = DOCUMENTS.filter(d => d.retailer_id !== targetId && d.retailer_id !== targetCode);
 
   logAuditEvent({
     action: 'RETAILER_PERMANENTLY_DELETED',
     entity_type: 'RETAILER',
-    entity_id: id,
+    entity_id: targetId,
     entity_name: targetName,
-    actor_name: actor.name,
-    actor_role: actor.role,
-    reason: `Owner Hard Delete: ${reason}`
+    actor_name: actorName,
+    actor_role: actorRole,
+    reason: `Hard Delete: ${reason}`
   });
 
   savePersistentRetailData();
+
+  // Try Supabase async delete if configured
+  try {
+    if (supabase && process.env.SUPABASE_URL) {
+      supabase.from('retailers').delete().eq('id', targetId).then(({ error }) => {
+        if (error) console.warn('Supabase delete note:', error.message);
+      });
+    }
+  } catch (e) {}
+
   return { success: true, message: `Retailer ${targetName} permanently removed.` };
 }
 

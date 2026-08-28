@@ -1,8 +1,20 @@
 // server/config/db.js
 // Sequelize ORM connected to SQLite (zero-infra, swap to PostgreSQL by changing dialect + connection)
-
 const { Sequelize } = require('sequelize');
 const path = require('path');
+const fs = require('fs');
+
+const envPaths = [
+  path.join(__dirname, '../.env'),
+  path.join(process.cwd(), 'server/.env'),
+  path.join(process.cwd(), '.env')
+];
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+    break;
+  }
+}
 require('dotenv').config();
 
 const dbPath = process.env.DB_PATH || './veyano.db';

@@ -1322,13 +1322,15 @@ async function promptDeleteRetailer(retailerId) {
       const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
-        body: JSON.stringify({ reason })
+        body: JSON.stringify({ reason: reason || 'Archived by admin' })
       });
       const resJson = await res.json();
       if (!res.ok) throw new Error(resJson.error || 'Failed to archive');
-      ADMIN_STATE.retailers = ADMIN_STATE.retailers.filter(item => item.id !== retailerId);
+      ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(item => item.id !== retailerId && item.code !== retailerId && item.retailer_code !== retailerId);
       filterRetailersTable();
+      populateRetailerDropdowns();
       alert(`📦 Store "${name}" archived successfully.`);
+      refreshDashboardData();
     } catch (err) {
       alert(`❌ ${err.message}`);
     }
@@ -1343,9 +1345,11 @@ async function promptDeleteRetailer(retailerId) {
       });
       const resJson = await res.json();
       if (!res.ok) throw new Error(resJson.error || 'Failed to delete permanently');
-      ADMIN_STATE.retailers = ADMIN_STATE.retailers.filter(item => item.id !== retailerId);
+      ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(item => item.id !== retailerId && item.code !== retailerId && item.retailer_code !== retailerId);
       filterRetailersTable();
+      populateRetailerDropdowns();
       alert(`🗑️ Store "${name}" permanently deleted.`);
+      refreshDashboardData();
     } catch (err) {
       alert(`❌ ${err.message}`);
     }
@@ -2662,8 +2666,15 @@ async function openRetailerModal(retailerId = null) {
     if (title) title.innerText = '+ Add New Retail Partner';
     if (idInput) idInput.value = '';
 
-    const nextCount = (ADMIN_STATE.retailers || []).length + 1;
-    const autoCode = `RET-${String(nextCount).padStart(3, '0')}`;
+    let maxNum = 0;
+    (ADMIN_STATE.retailers || []).forEach(item => {
+      const match = String(item.code || item.retailer_code || item.id || '').match(/RET-(\d+)/i) || String(item.code || item.retailer_code || item.id || '').match(/RET-2026-(\d+)/i);
+      if (match) {
+        const n = parseInt(match[1], 10);
+        if (!isNaN(n) && n > maxNum) maxNum = n;
+      }
+    });
+    const autoCode = `RET-${String(maxNum + 1).padStart(3, '0')}`;
     
     setVal('ret-form-code', autoCode);
     setVal('ret-form-name', '');

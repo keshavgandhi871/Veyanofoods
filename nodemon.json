@@ -1,0 +1,19 @@
+{
+  "watch": [
+    "server/",
+    "api/",
+    "public/"
+  ],
+  "ignore": [
+    "scratch/**",
+    "server/invoices/**",
+    "invoices/**",
+    "*.db",
+    "*.sqlite",
+    "*.log",
+    "*.json",
+    "coverage/**",
+    "node_modules/**"
+  ],
+  "ext": "js,html,css"
+}
