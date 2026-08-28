@@ -30,7 +30,7 @@ Then call the setup endpoint (use Postman, Thunder Client, or curl):
 Invoke-WebRequest -Uri "http://localhost:3001/api/auth/setup" `
   -Method POST `
   -ContentType "application/json" `
-  -Body '{"name":"Kesha","email":"veyanofoods@gmail.com","password":"YourPassword123"}'
+  -Body '{"name":"Kesha","email":"veyanosupport@gmail.com","password":"YourPassword123"}'
 ```
 Save the returned `token` — you'll use it for all admin API calls.
 

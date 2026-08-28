@@ -52,7 +52,7 @@ function baseTemplate(content, preheader = '') {
         <!-- Footer -->
         <tr><td style="background:#0A0A0A;padding:20px 40px;text-align:center;">
           <p style="color:#888888;font-size:11px;margin:0 0 6px;">
-            FSSAI License: 20826010000397 &nbsp;|&nbsp; veyanofoods@gmail.com
+            FSSAI License: 20826010000397 &nbsp;|&nbsp; veyanosupport@gmail.com
           </p>
           <p style="color:#555555;font-size:10px;margin:0;">
             © ${new Date().getFullYear()} Veyano Foods. All rights reserved.

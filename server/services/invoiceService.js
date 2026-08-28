@@ -45,7 +45,7 @@ async function generateInvoice(order, items) {
     doc.fontSize(9).fillColor(SILVER)
       .text('Thoughtfully Made for You', 50, 65)
       .text(`FSSAI License No: ${FSSAI_ID}`, 50, 80)
-      .text('veyanofoods@gmail.com  |  Instagram: @veyanofoods', 50, 95);
+      .text('veyanosupport@gmail.com  |  Instagram: @veyanofoods', 50, 95);
 
     // Invoice Title (right side of header)
     doc.fontSize(20).fillColor(SAFFRON).font('Helvetica-Bold')
@@ -144,7 +144,7 @@ async function generateInvoice(order, items) {
       .text('This is a computer-generated invoice. No signature required.', 50, footerY + 15, { align: 'center', width: 495 })
       .text(`FSSAI License: ${FSSAI_ID}  |  All prices inclusive of applicable taxes`, 50, footerY + 32, { align: 'center', width: 495 })
       .text('Thank you for choosing Veyano — Thoughtfully Made for You', 50, footerY + 50, { align: 'center', width: 495 });
-    doc.fillColor(SAFFRON).text('veyanofoods@gmail.com', 50, footerY + 65, { align: 'center', width: 495 });
+    doc.fillColor(SAFFRON).text('veyanosupport@gmail.com', 50, footerY + 65, { align: 'center', width: 495 });
 
     doc.end();
 
