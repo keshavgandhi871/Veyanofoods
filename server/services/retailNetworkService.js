@@ -39,7 +39,7 @@ let lastSupabaseSync = 0;
 
 async function syncWithSupabaseStorage() {
   try {
-    if (!supabase || !process.env.SUPABASE_URL) return;
+    if (!supabase || !process.env.SUPABASE_URL) return false;
     const { data, error } = await supabase.storage.from('retail-data').download('retail_network_data.json');
     if (data && !error) {
       const text = await data.text();
@@ -75,10 +75,10 @@ async function syncWithSupabaseStorage() {
 }
 
 async function ensureDataLoaded(forceRefresh = false) {
-  if (!isLoadedFromSupabase || forceRefresh || (Date.now() - lastSupabaseSync > 10000)) {
+  if (!isLoadedFromSupabase || forceRefresh || (Date.now() - lastSupabaseSync > 5000)) {
     await syncWithSupabaseStorage();
   }
-  if (RETAILERS.length === 0 && !fs.existsSync(LOCAL_RETAIL_DATA_FILE)) {
+  if (!isLoadedFromSupabase && fs.existsSync(LOCAL_RETAIL_DATA_FILE)) {
     loadPersistentRetailData();
   }
 }
@@ -114,7 +114,7 @@ function savePersistentRetailData() {
   try {
     if (supabase && process.env.SUPABASE_URL) {
       supabase.storage.from('retail-data')
-        .upload('retail_network_data.json', payloadStr, { contentType: 'application/json', upsert: true })
+        .upload('retail_network_data.json', payloadStr, { contentType: 'application/json', upsert: true, cacheControl: '0' })
         .then(({ error }) => {
           if (!error) lastSupabaseSync = Date.now();
         })
@@ -141,7 +141,7 @@ async function savePersistentRetailDataAsync() {
         updated_at: new Date().toISOString()
       };
       await supabase.storage.from('retail-data')
-        .upload('retail_network_data.json', JSON.stringify(payload, null, 2), { contentType: 'application/json', upsert: true });
+        .upload('retail_network_data.json', JSON.stringify(payload, null, 2), { contentType: 'application/json', upsert: true, cacheControl: '0' });
       lastSupabaseSync = Date.now();
     }
   } catch (_) {}
@@ -166,17 +166,22 @@ function loadPersistentRetailData() {
       }
     }
   } catch (e) {
-    console.warn('⚠️ Could not load local retail file, initializing default store:', e.message);
+    console.warn('⚠️ Could not load local retail file:', e.message);
   }
 
-  // Initialize initial dataset if file never existed
-  seedInitialRetailNetwork();
-  savePersistentRetailData();
+  // Only seed if file never existed
+  if (!fs.existsSync(LOCAL_RETAIL_DATA_FILE)) {
+    seedInitialRetailNetwork();
+    savePersistentRetailData();
+  }
 }
+
+// Immediately load local disk data on startup
+loadPersistentRetailData();
 
 // ── Seed Initial Live Retail Network Dataset ──────────────────────────────────
 function seedInitialRetailNetwork() {
-  if (RETAILERS.length > 0) return;
+  if (RETAILERS.length > 0 || fs.existsSync(LOCAL_RETAIL_DATA_FILE)) return;
 
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
