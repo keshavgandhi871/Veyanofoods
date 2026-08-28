@@ -2592,12 +2592,12 @@ async function handleRetailFollowupSubmit(e) {
 }
 
 // ── 11. Add / Edit Retailer Modal Controller ──────────────────────────────────
-function openRetailerModal(retailerId = null) {
+async function openRetailerModal(retailerId = null) {
   const modal = document.getElementById('retailer-modal');
   if (!modal) return;
 
   const form = document.getElementById('retailer-form');
-  form.reset();
+  if (form) form.reset();
 
   const title = document.getElementById('retailer-modal-title');
   const idInput = document.getElementById('ret-form-id');
@@ -2605,54 +2605,92 @@ function openRetailerModal(retailerId = null) {
   const deleteBtn = document.getElementById('ret-form-delete-btn');
 
   if (retailerId) {
-    title.innerText = '✏️ Edit Retail Partner Master Profile';
-    idInput.value = retailerId;
+    if (title) title.innerText = '✏️ Edit Retail Partner Master Profile';
+    if (idInput) idInput.value = retailerId;
 
-    const r = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId);
-    if (r) {
-      document.getElementById('ret-form-name').value = r.name || '';
-      document.getElementById('ret-form-code').value = r.code || r.retailer_code || '';
-      document.getElementById('ret-form-contact').value = r.contact_person || '';
-      document.getElementById('ret-form-phone').value = r.phone || '';
-      document.getElementById('ret-form-whatsapp').value = r.whatsapp || '';
-      document.getElementById('ret-form-email').value = r.email || '';
-      document.getElementById('ret-form-gstin').value = r.gstin || '';
-      document.getElementById('ret-form-type').value = r.retailer_type || 'Gourmet Store';
-      document.getElementById('ret-form-address').value = r.address || '';
-      document.getElementById('ret-form-area').value = r.area || '';
-      document.getElementById('ret-form-city').value = r.city || '';
-      document.getElementById('ret-form-state').value = r.state || 'Delhi';
-      document.getElementById('ret-form-pincode').value = r.pincode || '';
-      document.getElementById('ret-form-landmark').value = r.landmark || '';
-      document.getElementById('ret-form-gps').value = r.gps_coordinates || '';
-      document.getElementById('ret-form-status').value = r.status || 'ACTIVE';
-      document.getElementById('ret-form-terms').value = r.payment_terms || '15_DAYS';
-      document.getElementById('ret-form-limit').value = r.credit_limit || 20000;
-      document.getElementById('ret-form-frequency').value = r.reorder_frequency_days || r.usual_reorder_frequency_days || 14;
-      document.getElementById('ret-form-pref-contact').value = r.preferred_contact_method || 'WHATSAPP';
-      document.getElementById('ret-form-salesperson').value = r.assigned_salesperson || 'Keshav Gandhi';
-      document.getElementById('ret-form-notes').value = r.notes || '';
+    let r = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId || item.code === retailerId || item.retailer_code === retailerId || item.name === retailerId);
 
-      // Editable Dates
+    const populateForm = (data) => {
+      if (!data) return;
+      document.getElementById('ret-form-name').value = data.name || '';
+      document.getElementById('ret-form-code').value = data.code || data.retailer_code || '';
+      document.getElementById('ret-form-contact').value = data.contact_person || '';
+      document.getElementById('ret-form-phone').value = data.phone || '';
+      document.getElementById('ret-form-whatsapp').value = data.whatsapp || '';
+      document.getElementById('ret-form-email').value = data.email || '';
+      document.getElementById('ret-form-gstin').value = data.gstin || '';
+      document.getElementById('ret-form-type').value = data.retailer_type || 'Gourmet Store';
+      document.getElementById('ret-form-address').value = data.address || '';
+      document.getElementById('ret-form-area').value = data.area || '';
+      document.getElementById('ret-form-city').value = data.city || 'New Delhi';
+      document.getElementById('ret-form-state').value = data.state || 'Delhi';
+      document.getElementById('ret-form-pincode').value = data.pincode || '';
+      document.getElementById('ret-form-landmark').value = data.landmark || '';
+      document.getElementById('ret-form-gps').value = data.gps_coordinates || '';
+      document.getElementById('ret-form-status').value = data.status || 'ACTIVE';
+      document.getElementById('ret-form-terms').value = data.payment_terms || '15_DAYS';
+      document.getElementById('ret-form-limit').value = data.credit_limit || 20000;
+      document.getElementById('ret-form-frequency').value = data.reorder_frequency_days || data.usual_reorder_frequency_days || 14;
+      document.getElementById('ret-form-pref-contact').value = data.preferred_contact_method || 'WHATSAPP';
+      document.getElementById('ret-form-salesperson').value = data.assigned_salesperson || 'Keshav Gandhi';
+      document.getElementById('ret-form-notes').value = data.notes || '';
+
       if (document.getElementById('ret-form-created-at')) {
-        document.getElementById('ret-form-created-at').value = r.created_at ? r.created_at.slice(0, 10) : '';
+        document.getElementById('ret-form-created-at').value = data.created_at ? data.created_at.slice(0, 10) : '';
       }
       if (document.getElementById('ret-form-last-order')) {
-        document.getElementById('ret-form-last-order').value = r.last_order_date ? r.last_order_date.slice(0, 10) : '';
+        document.getElementById('ret-form-last-order').value = data.last_order_date ? data.last_order_date.slice(0, 10) : '';
       }
       if (document.getElementById('ret-form-next-order')) {
-        const nextOrd = r.expected_next_order_date || r.next_expected_order_date;
+        const nextOrd = data.expected_next_order_date || data.next_expected_order_date;
         document.getElementById('ret-form-next-order').value = nextOrd ? nextOrd.slice(0, 10) : '';
       }
+    };
 
-      // Action buttons
-      if (archiveBtn) archiveBtn.style.display = 'inline-block';
-      if (deleteBtn) deleteBtn.style.display = ADMIN_STATE.role === 'OWNER' ? 'inline-block' : 'none';
+    if (r) {
+      populateForm(r);
+    } else {
+      // Background fetch if not immediately in memory
+      fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}`, {
+        headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+      })
+        .then(res => res.json())
+        .then(json => { if (json.data && json.data.retailer) populateForm(json.data.retailer); })
+        .catch(() => {});
     }
+
+    if (archiveBtn) archiveBtn.style.display = 'inline-block';
+    if (deleteBtn) deleteBtn.style.display = ADMIN_STATE.role === 'OWNER' ? 'inline-block' : 'none';
   } else {
-    title.innerText = '+ Add New Retail Partner';
-    idInput.value = '';
-    document.getElementById('ret-form-code').value = `RET-00${ADMIN_STATE.retailers.length + 1}`;
+    if (title) title.innerText = '+ Add New Retail Partner';
+    if (idInput) idInput.value = '';
+
+    const nextCount = (ADMIN_STATE.retailers || []).length + 1;
+    const autoCode = `RET-${String(nextCount).padStart(3, '0')}`;
+    
+    document.getElementById('ret-form-code').value = autoCode;
+    document.getElementById('ret-form-name').value = '';
+    document.getElementById('ret-form-contact').value = '';
+    document.getElementById('ret-form-phone').value = '';
+    document.getElementById('ret-form-whatsapp').value = '';
+    document.getElementById('ret-form-email').value = '';
+    document.getElementById('ret-form-gstin').value = '';
+    document.getElementById('ret-form-type').value = 'Gourmet Store';
+    document.getElementById('ret-form-address').value = '';
+    document.getElementById('ret-form-area').value = '';
+    document.getElementById('ret-form-city').value = 'New Delhi';
+    document.getElementById('ret-form-state').value = 'Delhi';
+    document.getElementById('ret-form-pincode').value = '';
+    document.getElementById('ret-form-landmark').value = '';
+    document.getElementById('ret-form-gps').value = '';
+    document.getElementById('ret-form-status').value = 'ACTIVE';
+    document.getElementById('ret-form-terms').value = '15_DAYS';
+    document.getElementById('ret-form-limit').value = '20000';
+    document.getElementById('ret-form-frequency').value = '14';
+    document.getElementById('ret-form-pref-contact').value = 'WHATSAPP';
+    document.getElementById('ret-form-salesperson').value = 'Keshav Gandhi';
+    document.getElementById('ret-form-notes').value = '';
+
     if (document.getElementById('ret-form-created-at')) {
       document.getElementById('ret-form-created-at').value = new Date().toISOString().slice(0, 10);
     }
@@ -2662,6 +2700,7 @@ function openRetailerModal(retailerId = null) {
     if (document.getElementById('ret-form-next-order')) {
       document.getElementById('ret-form-next-order').value = '';
     }
+
     if (archiveBtn) archiveBtn.style.display = 'none';
     if (deleteBtn) deleteBtn.style.display = 'none';
   }
@@ -2727,7 +2766,21 @@ async function handleRetailerFormSubmit(e) {
     const resJson = await res.json();
     if (!res.ok) throw new Error(resJson.error || 'Failed to save retailer');
 
-    alert(`✅ Retailer ${payload.name} saved successfully!`);
+    // Optimistically update memory
+    if (id) {
+      const idx = ADMIN_STATE.retailers.findIndex(item => item.id === id || item.code === id);
+      if (idx !== -1) {
+        ADMIN_STATE.retailers[idx] = { ...ADMIN_STATE.retailers[idx], ...payload, ...(resJson.data || {}) };
+      }
+    } else {
+      const newRet = resJson.data || { id: `RET-${Date.now()}`, ...payload };
+      ADMIN_STATE.retailers.unshift(newRet);
+    }
+
+    filterRetailersTable();
+    populateRetailerDropdowns();
+
+    alert(`✅ Retail Partner "${payload.name}" saved successfully!`);
     closeRetailerModal();
     refreshDashboardData();
   } catch (err) {
