@@ -19,7 +19,13 @@ let ADMIN_STATE = {
   auditLogs: [],
   finance: null,
   leads: [],
-  currentOrderFilter: 'all'
+  currentOrderFilter: 'all',
+  retailers: [],
+  filteredRetailers: [],
+  retailStockMatrix: [],
+  retailFollowups: [],
+  currentRetailFilter: 'all',
+  currentRetailerProfileId: null
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -135,7 +141,11 @@ async function refreshDashboardData() {
     fetchApprovals(),
     fetchAuditLogs(),
     fetchFinanceSummary(),
-    fetchLeads()
+    fetchLeads(),
+    fetchRetailDashboard(),
+    fetchRetailers(),
+    fetchRetailStock(),
+    fetchRetailFollowups()
   ]);
 }
 
@@ -1031,3 +1041,1406 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── RETAIL NETWORK CONTROLLER & STATE MANAGEMENT ──────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Sub-Tab Navigation inside Retail Module
+function switchRetailSubTab(paneId, btn) {
+  document.querySelectorAll('.retail-subtab-pane').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.sub-nav-bar .sub-nav-btn').forEach(b => b.classList.remove('active'));
+
+  const pane = document.getElementById(paneId);
+  if (pane) pane.style.display = 'block';
+  if (btn) btn.classList.add('active');
+
+  // Lazy refresh matching subtab data
+  if (paneId === 'rsub-supplies') fetchRetailSupplies();
+  if (paneId === 'rsub-ledger') fetchRetailLedger();
+  if (paneId === 'rsub-returns') fetchRetailReturns();
+}
+
+// Sub-Tab Navigation inside Retailer 360 Profile Drawer
+function switchProfileTab(paneId, btn) {
+  document.querySelectorAll('.profile-subtab-pane').forEach(p => p.style.display = 'none');
+  const modalSubNav = document.querySelector('#retail-profile-modal .sub-nav-bar');
+  if (modalSubNav) modalSubNav.querySelectorAll('.sub-nav-btn').forEach(b => b.classList.remove('active'));
+
+  const pane = document.getElementById(paneId);
+  if (pane) pane.style.display = 'block';
+  if (btn) btn.classList.add('active');
+}
+
+// ── 1. Fetch Retail Dashboard KPIs ────────────────────────────────────────────
+async function fetchRetailDashboard() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/dashboard`, {
+      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    });
+    const resJson = await res.json();
+    if (!res.ok || !resJson.data) return;
+
+    renderRetailKPIs(resJson.data);
+  } catch (err) {
+    console.warn('Retail dashboard fetch error:', err);
+  }
+}
+
+function renderRetailKPIs(kpis) {
+  const setEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = val;
+  };
+
+  setEl('rkpi-total', kpis.total_retailers || 0);
+  setEl('rkpi-active', kpis.active_retailers || 0);
+  setEl('rkpi-with-stock', kpis.retailers_with_stock || 0);
+  setEl('rkpi-low-stock', kpis.low_stock_retailers || 0);
+  setEl('rkpi-reorder-due', kpis.reorder_due_retailers || 0);
+  setEl('rkpi-stock-units', (kpis.total_stock_units || 0).toLocaleString('en-IN') + ' units');
+  setEl('rkpi-stock-value', `₹${(kpis.total_stock_value || 0).toLocaleString('en-IN')}`);
+  setEl('rkpi-credit-outstanding', `₹${(kpis.total_credit_outstanding || 0).toLocaleString('en-IN')}`);
+  setEl('rkpi-amount-received', `₹${(kpis.total_amount_received || 0).toLocaleString('en-IN')}`);
+  setEl('rkpi-returns', `${kpis.total_returns_count || 0} (${kpis.total_returns_units || 0} u)`);
+  setEl('rkpi-capital-tied', `₹${(kpis.total_capital_tied_up || 0).toLocaleString('en-IN')}`);
+
+  const badge = document.getElementById('badge-retailers-count');
+  if (badge) badge.innerText = kpis.active_retailers || kpis.total_retailers || 0;
+}
+
+// ── 2. Fetch & Render Retailers Directory ──────────────────────────────────────
+async function fetchRetailers() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers`, {
+      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    });
+    const resJson = await res.json();
+    if (!res.ok) return;
+
+    ADMIN_STATE.retailers = resJson.data || [];
+    filterRetailersTable();
+    populateRetailerDropdowns();
+  } catch (err) {
+    console.warn('Retailers fetch error:', err);
+  }
+}
+
+function handleRetailSearch() {
+  filterRetailersTable();
+}
+
+function setRetailFilter(filterType, pillEl) {
+  ADMIN_STATE.currentRetailFilter = filterType;
+  const parent = pillEl.parentElement;
+  if (parent) {
+    parent.querySelectorAll('.status-pill').forEach(p => p.classList.remove('active'));
+  }
+  pillEl.classList.add('active');
+  filterRetailersTable();
+}
+
+function handleRetailSort() {
+  filterRetailersTable();
+}
+
+function filterRetailersTable() {
+  const query = (document.getElementById('retail-search-input')?.value || '').toLowerCase().trim();
+  const filter = ADMIN_STATE.currentRetailFilter || 'all';
+  const sort = document.getElementById('retail-sort-select')?.value || 'name_asc';
+
+  let list = [...ADMIN_STATE.retailers];
+
+  // 1. Search filter
+  if (query) {
+    list = list.filter(r => 
+      (r.name && r.name.toLowerCase().includes(query)) ||
+      (r.code && r.code.toLowerCase().includes(query)) ||
+      (r.contact_person && r.contact_person.toLowerCase().includes(query)) ||
+      (r.phone && r.phone.includes(query)) ||
+      (r.city && r.city.toLowerCase().includes(query)) ||
+      (r.area && r.area.toLowerCase().includes(query))
+    );
+  }
+
+  // 2. Status / Flag filter
+  if (filter === 'active') list = list.filter(r => r.status === 'ACTIVE');
+  else if (filter === 'inactive') list = list.filter(r => r.status === 'INACTIVE' || r.status === 'ON_HOLD');
+  else if (filter === 'has_stock') list = list.filter(r => (r.current_stock_units || 0) > 0);
+  else if (filter === 'low_stock') list = list.filter(r => (r.current_stock_units || 0) > 0 && (r.current_stock_units || 0) < 15);
+  else if (filter === 'credit_outstanding') list = list.filter(r => (r.outstanding_credit || 0) > 0);
+  else if (filter === 'payment_due') list = list.filter(r => r.health_status?.is_overdue || (r.outstanding_credit || 0) > (r.credit_limit || 0));
+  else if (filter === 'reorder_due') list = list.filter(r => r.health_status?.reorder_due || (r.current_stock_units || 0) === 0);
+
+  // 3. Sorting
+  if (sort === 'name_asc') list.sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === 'name_desc') list.sort((a, b) => b.name.localeCompare(a.name));
+  else if (sort === 'stock_high') list.sort((a, b) => (b.current_stock_value || 0) - (a.current_stock_value || 0));
+  else if (sort === 'outstanding_high') list.sort((a, b) => (b.outstanding_credit || 0) - (a.outstanding_credit || 0));
+  else if (sort === 'last_order') list.sort((a, b) => new Date(b.last_order_date || 0) - new Date(a.last_order_date || 0));
+
+  ADMIN_STATE.filteredRetailers = list;
+  renderRetailersTable();
+}
+
+function renderRetailersTable() {
+  const tbody = document.getElementById('retailers-table-body');
+  if (!tbody) return;
+
+  if (ADMIN_STATE.filteredRetailers.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 2.5rem 1rem;">No retail partners match the selected filter.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = ADMIN_STATE.filteredRetailers.map(r => {
+    const health = r.health_status || { color: 'green', label: 'HEALTHY', reasons: [] };
+    const healthPill = `<span class="health-pill ${health.color}" title="${escapeHtml(health.reasons.join(' | ') || health.label)}">● ${health.label}</span>`;
+    
+    const formattedLastOrder = r.last_order_date ? new Date(r.last_order_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Never';
+    const formattedNextOrder = r.next_expected_order_date ? new Date(r.next_expected_order_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'N/A';
+
+    const waLink = r.whatsapp ? `https://wa.me/91${r.whatsapp.replace(/\D/g, '')}` : `https://wa.me/91${(r.phone || '').replace(/\D/g, '')}`;
+
+    return `
+      <tr>
+        <td>
+          <div style="font-weight: 700; color: #0f172a; cursor: pointer;" onclick="openRetailProfile('${r.id}')">${escapeHtml(r.name)}</div>
+          <div style="font-size: 0.75rem; color: #64748b;">${escapeHtml(r.code)} • ${escapeHtml(r.retailer_type || 'Store')}</div>
+        </td>
+        <td>
+          <div style="font-size: 0.85rem; font-weight: 600;">${escapeHtml(r.contact_person)}</div>
+          <div style="font-size: 0.78rem; color: #64748b;">📞 ${escapeHtml(r.phone)}</div>
+          <a href="${waLink}" target="_blank" style="font-size: 0.75rem; color: #059669; text-decoration: none; font-weight: 600;">💬 WhatsApp</a>
+        </td>
+        <td>
+          <div style="font-size: 0.85rem;">${escapeHtml(r.area || '')}</div>
+          <div style="font-size: 0.78rem; color: #64748b;">${escapeHtml(r.city || '')}, ${escapeHtml(r.state || '')}</div>
+        </td>
+        <td>
+          <div>${healthPill}</div>
+          <div style="font-size: 0.72rem; color: #64748b; margin-top: 0.2rem;">${r.status === 'ACTIVE' ? 'Active' : 'Inactive'}</div>
+        </td>
+        <td>
+          <div style="font-weight: 700; font-family: 'Outfit', sans-serif;">₹${(r.current_stock_value || 0).toLocaleString('en-IN')}</div>
+          <div style="font-size: 0.75rem; color: #64748b;">${r.current_stock_units || 0} units</div>
+        </td>
+        <td>
+          <div style="font-weight: 700; font-family: 'Outfit', sans-serif; color: ${(r.outstanding_credit || 0) > 0 ? '#dc2626' : '#16a34a'};">₹${(r.outstanding_credit || 0).toLocaleString('en-IN')}</div>
+          <div style="font-size: 0.72rem; color: #64748b;">Limit: ₹${(r.credit_limit || 0).toLocaleString('en-IN')}</div>
+        </td>
+        <td style="font-size: 0.82rem; color: #334155;">
+          ${formattedLastOrder}
+        </td>
+        <td>
+          <div style="font-size: 0.82rem; font-weight: 600; color: ${health.reorder_due ? '#e11d48' : '#334155'};">${formattedNextOrder}</div>
+          ${health.reorder_due ? '<span style="font-size:0.7rem; color:#e11d48; font-weight:700;">Reorder Due!</span>' : ''}
+        </td>
+        <td>
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+            <button onclick="openRetailProfile('${r.id}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;" title="View 360 Profile">360° Profile</button>
+            <button onclick="openRetailSupplyModal('${r.id}')" class="btn btn-sm btn-accent" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;" title="Supply Stock">+ Supply</button>
+            <button onclick="openRetailPaymentModal('${r.id}')" class="btn btn-sm" style="background:#059669; color:#fff; border:none; font-size: 0.72rem; padding: 0.25rem 0.5rem;" title="Record Payment">💳 Pay</button>
+            <button onclick="openRetailerModal('${r.id}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.25rem 0.4rem;" title="Edit Store">✏️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function populateRetailerDropdowns() {
+  const options = ADMIN_STATE.retailers.map(r => `<option value="${r.id}">${escapeHtml(r.name)} (${escapeHtml(r.city || '')})</option>`).join('');
+  const selects = ['rsupply-retailer-select', 'rpay-retailer-select', 'rreturn-retailer-select', 'rrecon-retailer-select', 'rfol-retailer-select'];
+  selects.forEach(sId => {
+    const el = document.getElementById(sId);
+    if (el) el.innerHTML = options || '<option value="">No retailers registered</option>';
+  });
+}
+
+// ── 3. Retail Stock Matrix View ───────────────────────────────────────────────
+async function fetchRetailStock() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/stock`, {
+      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    });
+    const resJson = await res.json();
+    if (!res.ok) return;
+
+    ADMIN_STATE.retailStockMatrix = resJson.data || [];
+    filterRetailStockMatrix();
+  } catch (err) {
+    console.warn('Retail stock matrix fetch error:', err);
+  }
+}
+
+function filterRetailStockMatrix() {
+  const skuFilter = document.getElementById('rstock-sku-filter')?.value || '';
+  const cityFilter = (document.getElementById('rstock-city-filter')?.value || '').toLowerCase().trim();
+
+  let list = [...ADMIN_STATE.retailStockMatrix];
+
+  if (skuFilter) list = list.filter(item => item.sku === skuFilter);
+  if (cityFilter) {
+    list = list.filter(item => 
+      (item.retailer_city && item.retailer_city.toLowerCase().includes(cityFilter)) ||
+      (item.retailer_area && item.retailer_area.toLowerCase().includes(cityFilter)) ||
+      (item.retailer_name && item.retailer_name.toLowerCase().includes(cityFilter))
+    );
+  }
+
+  const tbody = document.getElementById('retail-stock-matrix-body');
+  if (!tbody) return;
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#64748b; padding:2rem 1rem;">No retail stock rows match the filter.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(row => {
+    const lastSupplied = row.last_supplied_at ? new Date(row.last_supplied_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Never';
+    const reorderStatus = row.reorder_forecast?.reorder_suggested 
+      ? `<span class="health-pill red">● Reorder Due</span>` 
+      : `<span class="health-pill green">● Stock Adequate</span>`;
+
+    return `
+      <tr>
+        <td style="font-weight: 700; color: #0f172a; cursor: pointer;" onclick="openRetailProfile('${row.retailer_id}')">${escapeHtml(row.retailer_name)}</td>
+        <td style="font-size: 0.82rem; color: #64748b;">${escapeHtml(row.retailer_area || '')}, ${escapeHtml(row.retailer_city || '')}</td>
+        <td><span class="role-badge-pill">${escapeHtml(row.sku)}</span></td>
+        <td style="font-weight: 700; font-size: 0.95rem; color: ${row.current_stock <= 5 ? '#dc2626' : '#0f172a'};">${row.current_stock} units</td>
+        <td style="font-weight: 600; font-family: 'Outfit', sans-serif;">₹${(row.stock_value || 0).toLocaleString('en-IN')}</td>
+        <td style="font-size: 0.82rem; color: #64748b;">${lastSupplied}</td>
+        <td style="font-size: 0.85rem; font-weight: 600; color: ${row.reorder_forecast?.days_remaining <= 5 ? '#dc2626' : '#334155'};">${row.reorder_forecast?.days_remaining || 0} days</td>
+        <td>${reorderStatus}</td>
+        <td>
+          <button onclick="openRetailReconcileModal('${row.retailer_id}', '${row.sku}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.2rem 0.45rem;">🔍 Reconcile</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ── 4. Supply Orders, Financial Ledger, Returns, Follow-ups ───────────────────
+async function fetchRetailSupplies() {
+  const tbody = document.getElementById('retail-supplies-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:1.5rem;">Loading supply history...</td></tr>`;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers`, {
+      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    });
+    const resJson = await res.json();
+    if (!res.ok) return;
+
+    let allOrders = [];
+    (resJson.data || []).forEach(r => {
+      (r.supply_orders || []).forEach(o => {
+        allOrders.push({ ...o, retailer_name: r.name, retailer_id: r.id });
+      });
+    });
+
+    allOrders.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+    if (allOrders.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#64748b; padding:2rem 1rem;">No supply orders recorded yet.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = allOrders.map(o => {
+      const itemsList = (o.items || []).map(i => `${i.sku} (${i.quantity}u @ ₹${i.unit_price})`).join(', ');
+      const isPaid = (o.amount_paid || 0) >= (o.total_amount || 0);
+      const outstanding = Math.max(0, (o.total_amount || 0) - (o.amount_paid || 0));
+
+      return `
+        <tr>
+          <td style="font-weight: 700; font-size: 0.85rem;">${escapeHtml(o.order_number)}</td>
+          <td style="font-weight: 600; cursor:pointer;" onclick="openRetailProfile('${o.retailer_id}')">${escapeHtml(o.retailer_name)}</td>
+          <td style="font-size: 0.82rem; color: #64748b;">${new Date(o.supply_date || o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+          <td style="font-size: 0.78rem; color: #475569; max-width: 200px;">${escapeHtml(itemsList)}</td>
+          <td style="font-weight: 700;">${o.total_units || 0}</td>
+          <td style="font-weight: 700; font-family: 'Outfit', sans-serif;">₹${(o.total_amount || 0).toLocaleString('en-IN')}</td>
+          <td style="font-size: 0.82rem; color: #64748b;">${o.payment_due_date ? new Date(o.payment_due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'N/A'}</td>
+          <td>
+            <span class="health-pill ${isPaid ? 'green' : (outstanding === o.total_amount ? 'red' : 'yellow')}">
+              ${isPaid ? 'PAID' : (outstanding === o.total_amount ? 'UNPAID' : 'PARTIAL')}
+            </span>
+          </td>
+          <td style="font-weight: 700; color: ${outstanding > 0 ? '#dc2626' : '#16a34a'};">₹${outstanding.toLocaleString('en-IN')}</td>
+          <td>
+            ${outstanding > 0 ? `<button onclick="openRetailPaymentModal('${o.retailer_id}')" class="btn btn-sm btn-accent" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">Pay</button>` : '—'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch (e) {
+    console.warn('Supply fetch error:', e);
+  }
+}
+
+async function fetchRetailLedger() {
+  const tbody = document.getElementById('retail-ledger-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:1.5rem;">Loading financial ledger entries...</td></tr>`;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers`, {
+      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    });
+    const resJson = await res.json();
+    if (!res.ok) return;
+
+    let allEntries = [];
+    (resJson.data || []).forEach(r => {
+      (r.financial_ledger || []).forEach(e => {
+        allEntries.push({ ...e, retailer_name: r.name, retailer_id: r.id });
+      });
+    });
+
+    allEntries.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+    if (allEntries.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#64748b; padding:2rem 1rem;">No financial ledger records found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = allEntries.map(e => `
+      <tr>
+        <td style="font-size: 0.8rem; color: #64748b;">${new Date(e.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+        <td style="font-weight: 600; cursor:pointer;" onclick="openRetailProfile('${e.retailer_id}')">${escapeHtml(e.retailer_name)}</td>
+        <td><span class="role-badge-pill">${escapeHtml(e.entry_type)}</span></td>
+        <td style="font-size: 0.8rem; font-family: monospace;">${escapeHtml(e.reference_id || '—')}</td>
+        <td style="font-weight: 700; color: ${e.debit > 0 ? '#dc2626' : '#64748b'};">${e.debit > 0 ? `+₹${e.debit.toLocaleString('en-IN')}` : '—'}</td>
+        <td style="font-weight: 700; color: ${e.credit > 0 ? '#16a34a' : '#64748b'};">${e.credit > 0 ? `-₹${e.credit.toLocaleString('en-IN')}` : '—'}</td>
+        <td style="font-weight: 700; font-family: 'Outfit', sans-serif;">₹${(e.running_balance || 0).toLocaleString('en-IN')}</td>
+        <td style="font-size: 0.78rem; color: #475569;">${escapeHtml(e.payment_method || '—')} ${e.utr_number ? `(${escapeHtml(e.utr_number)})` : ''}</td>
+        <td style="font-size: 0.78rem; color: #64748b;">${escapeHtml(e.actor_name || 'System')}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.warn('Ledger fetch error:', e);
+  }
+}
+
+async function fetchRetailReturns() {
+  const tbody = document.getElementById('retail-returns-table-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:1.5rem;">Loading return & quarantine log...</td></tr>`;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers`, {
+      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    });
+    const resJson = await res.json();
+    if (!res.ok) return;
+
+    let allReturns = [];
+    (resJson.data || []).forEach(r => {
+      (r.returns || []).forEach(ret => {
+        allReturns.push({ ...ret, retailer_name: r.name, retailer_id: r.id });
+      });
+    });
+
+    allReturns.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+    if (allReturns.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#64748b; padding:2rem 1rem;">No returned food items recorded.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = allReturns.map(ret => `
+      <tr>
+        <td style="font-weight: 700; font-size: 0.85rem;">${escapeHtml(ret.return_number)}</td>
+        <td style="font-weight: 600; cursor:pointer;" onclick="openRetailProfile('${ret.retailer_id}')">${escapeHtml(ret.retailer_name)}</td>
+        <td style="font-size: 0.82rem; color: #64748b;">${new Date(ret.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
+        <td><span class="role-badge-pill">${escapeHtml(ret.sku)}</span></td>
+        <td style="font-weight: 700; color: #dc2626;">${ret.quantity} units</td>
+        <td style="font-weight: 700; font-family: 'Outfit', sans-serif;">₹${(ret.credit_amount || 0).toLocaleString('en-IN')}</td>
+        <td style="font-size: 0.82rem; font-weight: 600;">${escapeHtml(ret.reason)}</td>
+        <td style="font-size: 0.78rem; color: #64748b;">${escapeHtml(ret.condition || '—')} ${ret.batch_number ? `(${escapeHtml(ret.batch_number)})` : ''}</td>
+        <td><span class="health-pill red">● QUARANTINED</span></td>
+        <td style="font-size: 0.78rem; color: #64748b;">${escapeHtml(ret.received_by || 'Staff')}</td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.warn('Returns fetch error:', e);
+  }
+}
+
+async function fetchRetailFollowups() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/followups`, {
+      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    });
+    const resJson = await res.json();
+    if (!res.ok) return;
+
+    ADMIN_STATE.retailFollowups = resJson.data || [];
+    renderFollowupCards();
+  } catch (e) {
+    console.warn('Followups fetch error:', e);
+  }
+}
+
+function renderFollowupCards() {
+  const container = document.getElementById('retail-followups-cards-container');
+  if (!container) return;
+
+  if (ADMIN_STATE.retailFollowups.length === 0) {
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 2rem;">No pending follow-ups scheduled.</div>`;
+    return;
+  }
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  container.innerHTML = ADMIN_STATE.retailFollowups.map(f => {
+    const isOverdue = !f.completed && f.due_date < todayStr;
+    const isToday = !f.completed && f.due_date === todayStr;
+
+    return `
+      <div style="background: ${f.completed ? '#f8fafc' : (isOverdue ? '#fff1f2' : (isToday ? '#fffbeb' : '#ffffff'))}; border: 1px solid ${isOverdue ? '#fecdd3' : '#e2e8f0'}; border-radius: var(--radius-md); padding: 1.1rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; cursor: pointer;" onclick="openRetailProfile('${f.retailer_id}')">${escapeHtml(f.retailer_name)}</h4>
+            <div style="font-size: 0.78rem; color: #64748b;">${escapeHtml(f.retailer_city || '')} • 📞 ${escapeHtml(f.retailer_phone || '')}</div>
+          </div>
+          <span class="health-pill ${f.completed ? 'green' : (isOverdue ? 'red' : (isToday ? 'yellow' : 'blue'))}">
+            ${f.completed ? 'COMPLETED' : (isOverdue ? 'OVERDUE' : (isToday ? 'DUE TODAY' : 'UPCOMING'))}
+          </span>
+        </div>
+
+        <div style="font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-bottom: 0.35rem;">
+          📌 ${escapeHtml(f.reason)}
+        </div>
+        <p style="font-size: 0.8rem; color: #475569; margin-bottom: 0.75rem; line-height: 1.4;">
+          ${escapeHtml(f.notes || 'No extra notes provided.')}
+        </p>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 0.6rem; font-size: 0.75rem; color: #64748b;">
+          <div>📅 Due: <strong>${new Date(f.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</strong> (${escapeHtml(f.assigned_to)})</div>
+          ${!f.completed ? `<button onclick="completeFollowupTask('${f.id}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; background: #fff;">Mark Done ✓</button>` : '<span style="color:#059669; font-weight:600;">✓ Completed</span>'}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function completeFollowupTask(id) {
+  const notes = prompt('Enter any outcome / resolution notes (optional):');
+  if (notes === null) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/followups/${id}/complete`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({ notes: notes || 'Completed via Retail Follow-ups Dashboard' })
+    });
+
+    if (!res.ok) throw new Error('Failed to complete task');
+    fetchRetailFollowups();
+    fetchRetailDashboard();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// ── 5. Retailer 360° Profile Drawer ──────────────────────────────────────────
+async function openRetailProfile(retailerId) {
+  ADMIN_STATE.currentRetailerProfileId = retailerId;
+  const modal = document.getElementById('retail-profile-modal');
+  if (!modal) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}`, {
+      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    });
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to load profile');
+
+    renderRetailProfileDrawer(resJson.data);
+    modal.classList.add('open');
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+function closeRetailProfileModal() {
+  document.getElementById('retail-profile-modal')?.classList.remove('open');
+}
+
+function renderRetailProfileDrawer(data) {
+  const r = data.retailer;
+  const health = data.health || { color: 'green', label: 'HEALTHY', reasons: [] };
+
+  document.getElementById('rprof-name').innerText = r.name;
+  document.getElementById('rprof-code').innerText = `${r.code} (${r.retailer_type || 'Store'})`;
+  document.getElementById('rprof-address').innerText = `${r.address || ''}, ${r.area || ''}, ${r.city || ''} - ${r.pincode || ''}`;
+  document.getElementById('rprof-contact-line').innerText = `Manager: ${r.contact_person} | 📞 ${r.phone} | Credit Terms: ${r.payment_terms} | Credit Limit: ₹${(r.credit_limit || 0).toLocaleString('en-IN')}`;
+
+  const waLink = r.whatsapp ? `https://wa.me/91${r.whatsapp.replace(/\D/g, '')}` : `https://wa.me/91${(r.phone || '').replace(/\D/g, '')}`;
+  document.getElementById('rprof-whatsapp-btn').href = waLink;
+
+  document.getElementById('rprof-health-badge').innerHTML = `<span class="health-pill ${health.color}">● ${health.label}</span>`;
+
+  const healthAlert = document.getElementById('rprof-health-alert');
+  if (health.reasons && health.reasons.length > 0) {
+    healthAlert.style.display = 'block';
+    healthAlert.style.background = health.color === 'red' ? '#fff1f2' : '#fffbeb';
+    healthAlert.style.color = health.color === 'red' ? '#991b1b' : '#92400e';
+    healthAlert.style.border = `1px solid ${health.color === 'red' ? '#fecdd3' : '#fde68a'}`;
+    healthAlert.innerHTML = `<strong>Store Health Notice:</strong> ${escapeHtml(health.reasons.join(' • '))}`;
+  } else {
+    healthAlert.style.display = 'none';
+  }
+
+  // KPIs
+  document.getElementById('rprof-kpi-supplied').innerText = `₹${(r.total_supplied_value || 0).toLocaleString('en-IN')}`;
+  document.getElementById('rprof-kpi-stock').innerText = `${r.current_stock_units || 0} units`;
+  document.getElementById('rprof-kpi-stock-val').innerText = `₹${(r.current_stock_value || 0).toLocaleString('en-IN')}`;
+  document.getElementById('rprof-kpi-outstanding').innerText = `₹${(r.outstanding_credit || 0).toLocaleString('en-IN')}`;
+  document.getElementById('rprof-kpi-paid').innerText = `₹${(r.total_amount_received || 0).toLocaleString('en-IN')}`;
+  document.getElementById('rprof-kpi-reorder').innerText = r.next_expected_order_date ? new Date(r.next_expected_order_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'N/A';
+
+  // 1. Stock Breakdown
+  const stockBody = document.getElementById('rprof-stock-table-body');
+  if (stockBody) {
+    stockBody.innerHTML = (data.inventory || []).map(inv => `
+      <tr>
+        <td><span class="role-badge-pill">${escapeHtml(inv.sku)}</span></td>
+        <td style="font-weight: 600;">${escapeHtml(inv.product_name)}</td>
+        <td>${inv.total_supplied || 0}</td>
+        <td>${inv.quantity_sold || 0}</td>
+        <td>${inv.quantity_returned || 0}</td>
+        <td>${inv.quantity_damaged || 0}</td>
+        <td style="font-weight: 700; font-size: 1rem; color: ${inv.current_stock <= 5 ? '#dc2626' : '#0f172a'};">${inv.current_stock || 0} units</td>
+        <td style="font-weight: 700; font-family: 'Outfit', sans-serif;">₹${((inv.current_stock || 0) * (inv.unit_price || 0)).toLocaleString('en-IN')}</td>
+        <td>
+          <button onclick="openRetailReconcileModal('${r.id}', '${inv.sku}')" class="btn btn-sm btn-outline" style="font-size: 0.72rem; padding: 0.2rem 0.4rem;">Audit</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // 2. Stock Ledger Movements
+  const moveBody = document.getElementById('rprof-movements-table-body');
+  if (moveBody) {
+    moveBody.innerHTML = (data.movements || []).map(m => `
+      <tr>
+        <td style="font-size: 0.8rem; color: #64748b;">${new Date(m.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+        <td><span class="role-badge-pill">${escapeHtml(m.sku)}</span></td>
+        <td style="font-weight: 600;">${escapeHtml(m.movement_type)}</td>
+        <td style="font-weight: 700; color: ${m.quantity_delta > 0 ? '#16a34a' : '#dc2626'};">${m.quantity_delta > 0 ? `+${m.quantity_delta}` : m.quantity_delta}</td>
+        <td style="font-size: 0.8rem;">${m.before_quantity} ➔ ${m.after_quantity}</td>
+        <td style="font-size: 0.78rem; color: #475569;">${escapeHtml(m.reason || '')} ${m.reference_id ? `(${escapeHtml(m.reference_id)})` : ''}</td>
+        <td style="font-size: 0.78rem; color: #64748b;">${escapeHtml(m.actor_name || 'Admin')}</td>
+      </tr>
+    `).join('');
+  }
+
+  // 3. Financial Ledger
+  const ledBody = document.getElementById('rprof-ledger-table-body');
+  if (ledBody) {
+    ledBody.innerHTML = (data.ledger || []).map(e => `
+      <tr>
+        <td style="font-size: 0.8rem; color: #64748b;">${new Date(e.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+        <td><span class="role-badge-pill">${escapeHtml(e.entry_type)}</span></td>
+        <td style="font-size: 0.8rem; font-family: monospace;">${escapeHtml(e.reference_id || '—')}</td>
+        <td style="font-weight: 700; color: ${e.debit > 0 ? '#dc2626' : '#64748b'};">${e.debit > 0 ? `+₹${e.debit.toLocaleString('en-IN')}` : '—'}</td>
+        <td style="font-weight: 700; color: ${e.credit > 0 ? '#16a34a' : '#64748b'};">${e.credit > 0 ? `-₹${e.credit.toLocaleString('en-IN')}` : '—'}</td>
+        <td style="font-weight: 700; font-family: 'Outfit', sans-serif;">₹${(e.running_balance || 0).toLocaleString('en-IN')}</td>
+        <td style="font-size: 0.78rem; color: #475569;">${escapeHtml(e.payment_method || '—')} ${e.utr_number ? `(${escapeHtml(e.utr_number)})` : ''}</td>
+        <td style="font-size: 0.78rem; color: #64748b;">${escapeHtml(e.actor_name || 'Admin')}</td>
+      </tr>
+    `).join('');
+  }
+
+  // 4. Supply Orders
+  const ordBody = document.getElementById('rprof-orders-table-body');
+  if (ordBody) {
+    ordBody.innerHTML = (data.supply_orders || []).map(o => {
+      const isPaid = (o.amount_paid || 0) >= (o.total_amount || 0);
+      const out = Math.max(0, (o.total_amount || 0) - (o.amount_paid || 0));
+      return `
+        <tr>
+          <td style="font-weight: 700;">${escapeHtml(o.order_number)}</td>
+          <td style="font-size: 0.82rem;">${new Date(o.supply_date || o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
+          <td style="font-size: 0.78rem; color: #475569;">${(o.items || []).map(i => `${i.sku} (${i.quantity}u)`).join(', ')}</td>
+          <td style="font-weight: 700;">${o.total_units || 0}</td>
+          <td style="font-weight: 700; font-family: 'Outfit', sans-serif;">₹${(o.total_amount || 0).toLocaleString('en-IN')}</td>
+          <td><span class="health-pill ${isPaid ? 'green' : (out === o.total_amount ? 'red' : 'yellow')}">${isPaid ? 'PAID' : (out === o.total_amount ? 'UNPAID' : 'PARTIAL')}</span></td>
+          <td style="font-weight: 600; color: #059669;">₹${(o.amount_paid || 0).toLocaleString('en-IN')}</td>
+          <td style="font-weight: 700; color: ${out > 0 ? '#dc2626' : '#16a34a'};">₹${out.toLocaleString('en-IN')}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 5. Returns
+  const retBody = document.getElementById('rprof-returns-table-body');
+  if (retBody) {
+    retBody.innerHTML = (data.returns || []).map(ret => `
+      <tr>
+        <td style="font-weight: 700;">${escapeHtml(ret.return_number)}</td>
+        <td style="font-size: 0.82rem;">${new Date(ret.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
+        <td><span class="role-badge-pill">${escapeHtml(ret.sku)}</span></td>
+        <td style="font-weight: 700; color: #dc2626;">${ret.quantity}</td>
+        <td style="font-weight: 700;">₹${(ret.credit_amount || 0).toLocaleString('en-IN')}</td>
+        <td style="font-size: 0.82rem;">${escapeHtml(ret.reason)}</td>
+        <td><span class="health-pill red">● QUARANTINED</span></td>
+      </tr>
+    `).join('');
+  }
+
+  // 6. Notes & Follow-ups
+  const notesList = document.getElementById('rprof-notes-list');
+  if (notesList) {
+    notesList.innerHTML = (data.notes || []).map(n => `
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 0.65rem 0.85rem; font-size: 0.82rem;">
+        <p style="margin-bottom: 0.25rem; color: #1e293b;">${escapeHtml(n.content)}</p>
+        <div style="font-size: 0.72rem; color: #64748b;">${escapeHtml(n.author_name)} • ${new Date(n.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+      </div>
+    `).join('') || '<p style="font-size:0.8rem; color:#64748b;">No notes recorded yet.</p>';
+  }
+
+  const fList = document.getElementById('rprof-followups-list');
+  if (fList) {
+    fList.innerHTML = (data.followups || []).map(f => `
+      <div style="background: ${f.completed ? '#f8fafc' : '#fffbeb'}; border: 1px solid ${f.completed ? '#e2e8f0' : '#fde68a'}; border-radius: var(--radius-md); padding: 0.65rem 0.85rem; font-size: 0.82rem;">
+        <div style="display: flex; justify-content: space-between;">
+          <strong>${escapeHtml(f.reason)}</strong>
+          <span style="font-size: 0.72rem; font-weight: 700; color: ${f.completed ? '#059669' : '#b45309'};">${f.completed ? '✓ Completed' : 'Pending'}</span>
+        </div>
+        <p style="margin: 0.25rem 0; color: #475569; font-size: 0.78rem;">${escapeHtml(f.notes || '')}</p>
+        <div style="font-size: 0.72rem; color: #64748b;">Due: ${new Date(f.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} (${escapeHtml(f.assigned_to)})</div>
+      </div>
+    `).join('') || '<p style="font-size:0.8rem; color:#64748b;">No follow-ups recorded.</p>';
+  }
+
+  // 7. Statement of Account
+  const stContainer = document.getElementById('rprof-statement-container');
+  if (stContainer) {
+    stContainer.innerHTML = `
+      <div style="border-bottom: 2px solid #0f172a; padding-bottom: 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <h2 style="font-size: 1.3rem; font-weight: 800; color: #0f172a; margin: 0;">VEYANO FOODS PRIVATE LIMITED</h2>
+          <p style="font-size: 0.78rem; color: #64748b; margin: 0.2rem 0 0 0;">FSSAI Lic: 20826010000397 | Email: veyanosupport@gmail.com</p>
+        </div>
+        <div style="text-align: right;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0;">STATEMENT OF ACCOUNT</h3>
+          <p style="font-size: 0.78rem; color: #64748b; margin: 0.2rem 0 0 0;">Date: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; margin-bottom: 1.25rem; font-size: 0.84rem;">
+        <div>
+          <strong>Statement To:</strong><br>
+          <span style="font-size: 1rem; font-weight: 700; color: #0f172a;">${escapeHtml(r.name)}</span><br>
+          ${escapeHtml(r.address || '')}, ${escapeHtml(r.city || '')}<br>
+          Contact: ${escapeHtml(r.contact_person)} (📞 ${escapeHtml(r.phone)})
+        </div>
+        <div style="text-align: right; background: #f8fafc; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid #e2e8f0;">
+          <div style="font-size: 0.78rem; color: #64748b;">Closing Outstanding Balance</div>
+          <div style="font-size: 1.45rem; font-weight: 800; color: #dc2626; font-family: 'Outfit', sans-serif;">₹${(r.outstanding_credit || 0).toLocaleString('en-IN')}</div>
+          <div style="font-size: 0.75rem; color: #64748b;">Credit Limit: ₹${(r.credit_limit || 0).toLocaleString('en-IN')}</div>
+        </div>
+      </div>
+
+      <table class="admin-table statement-table" style="width: 100%; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description & Reference #</th>
+            <th>Type</th>
+            <th style="text-align: right;">Debit (+)</th>
+            <th style="text-align: right;">Credit (-)</th>
+            <th style="text-align: right;">Running Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(data.ledger || []).map(e => `
+            <tr>
+              <td style="font-size: 0.8rem;">${new Date(e.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+              <td style="font-size: 0.82rem; font-weight: 600;">${escapeHtml(e.notes || e.reference_id || 'Transaction')}</td>
+              <td><span class="role-badge-pill">${escapeHtml(e.entry_type)}</span></td>
+              <td style="text-align: right; font-weight: 600; color: #dc2626;">${e.debit > 0 ? `₹${e.debit.toLocaleString('en-IN')}` : '—'}</td>
+              <td style="text-align: right; font-weight: 600; color: #16a34a;">${e.credit > 0 ? `₹${e.credit.toLocaleString('en-IN')}` : '—'}</td>
+              <td style="text-align: right; font-weight: 700; font-family: 'Outfit', sans-serif;">₹${(e.running_balance || 0).toLocaleString('en-IN')}</td>
+            </tr>
+          `).join('') || '<tr><td colspan="6" style="text-align:center;">No statement entries</td></tr>'}
+        </tbody>
+      </table>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 0.75rem;">
+        <div>For inquiries regarding this statement, please contact VEYANO Accounts at veyanosupport@gmail.com</div>
+        <div><strong>Auth Signatory:</strong> Veyano Operations</div>
+      </div>
+    `;
+  }
+}
+
+async function handleAddProfileNote() {
+  const input = document.getElementById('rprof-new-note-input');
+  if (!input || !input.value.trim() || !ADMIN_STATE.currentRetailerProfileId) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/notes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({
+        retailer_id: ADMIN_STATE.currentRetailerProfileId,
+        content: input.value.trim()
+      })
+    });
+
+    if (!res.ok) throw new Error('Failed to save note');
+    input.value = '';
+    openRetailProfile(ADMIN_STATE.currentRetailerProfileId);
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+function printCurrentStatement() {
+  const container = document.getElementById('rprof-statement-container');
+  if (!container) return;
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>VEYANO Statement of Account</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 2rem; color: #0f172a; }
+          table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+          th, td { border: 1px solid #cbd5e1; padding: 0.65rem 0.8rem; font-size: 0.85rem; }
+          th { background: #f1f5f9; text-align: left; }
+          .role-badge-pill { display: inline-block; padding: 0.2rem 0.5rem; background: #e2e8f0; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        </style>
+      </head>
+      <body>
+        ${container.innerHTML}
+        <script>
+          window.onload = function() { window.print(); };
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+function openSupplyForCurrentRetailer() {
+  if (ADMIN_STATE.currentRetailerProfileId) {
+    closeRetailProfileModal();
+    openRetailSupplyModal(ADMIN_STATE.currentRetailerProfileId);
+  }
+}
+
+function openPaymentForCurrentRetailer() {
+  if (ADMIN_STATE.currentRetailerProfileId) {
+    closeRetailProfileModal();
+    openRetailPaymentModal(ADMIN_STATE.currentRetailerProfileId);
+  }
+}
+
+// ── 6. Supply Order Modal Controller ──────────────────────────────────────────
+function openRetailSupplyModal(preselectedRetailerId = null) {
+  const modal = document.getElementById('retail-supply-modal');
+  if (!modal) return;
+
+  populateRetailerDropdowns();
+
+  if (preselectedRetailerId) {
+    const sel = document.getElementById('rsupply-retailer-select');
+    if (sel) sel.value = preselectedRetailerId;
+  }
+
+  const dateInput = document.getElementById('rsupply-date');
+  if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+
+  const dueInput = document.getElementById('rsupply-due-date');
+  if (dueInput) {
+    const due = new Date();
+    due.setDate(due.getDate() + 15);
+    dueInput.value = due.toISOString().slice(0, 10);
+  }
+
+  // Populate dynamic supply items with live warehouse stock
+  const tbody = document.getElementById('rsupply-items-tbody');
+  if (tbody) {
+    const defaultSkus = [
+      { sku: 'PLAIN-200', name: 'Classic Plain Roasted Makhana', price: 239 },
+      { sku: 'SALTED-200', name: 'Lightly Salted Roasted Makhana', price: 239 },
+      { sku: 'PERIPERI-200', name: 'Fiery Peri-Peri Roasted Makhana', price: 239 },
+      { sku: 'COMBO-600', name: 'The Trio Discovery Combo', price: 679 }
+    ];
+
+    tbody.innerHTML = defaultSkus.map(p => {
+      const liveProd = (ADMIN_STATE.products || []).find(prod => prod.sku === p.sku);
+      const whStock = liveProd ? liveProd.stock_quantity : 100;
+
+      return `
+        <tr data-sku="${p.sku}">
+          <td>
+            <strong>${escapeHtml(p.name)}</strong>
+            <div style="font-size: 0.75rem; color: #64748b;">${p.sku}</div>
+          </td>
+          <td>
+            <span class="role-badge-pill" style="background: ${whStock < 25 ? '#fee2e2' : '#f1f5f9'}; color: ${whStock < 25 ? '#dc2626' : '#334155'}; font-weight: 700;">
+              ${whStock} units
+            </span>
+          </td>
+          <td>
+            <input type="number" class="form-control rsupply-item-qty" data-sku="${p.sku}" data-price="${p.price}" value="0" min="0" max="${whStock}" style="width: 90px;" oninput="recalcSupplyTotals()">
+          </td>
+          <td>
+            <input type="number" class="form-control rsupply-item-price" data-sku="${p.sku}" value="${p.price}" min="1" style="width: 100px;" oninput="recalcSupplyTotals()">
+          </td>
+          <td style="font-weight: 700; font-family: 'Outfit', sans-serif;" class="rsupply-item-total" id="rsupply-tot-${p.sku}">₹0</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  updateSupplyCreditWarning();
+  recalcSupplyTotals();
+  modal.classList.add('open');
+}
+
+function closeRetailSupplyModal() {
+  document.getElementById('retail-supply-modal')?.classList.remove('open');
+}
+
+function recalcSupplyTotals() {
+  let totalUnits = 0;
+  let totalAmount = 0;
+
+  const rows = document.querySelectorAll('#rsupply-items-tbody tr');
+  rows.forEach(r => {
+    const sku = r.getAttribute('data-sku');
+    const qty = parseInt(r.querySelector('.rsupply-item-qty')?.value || 0, 10);
+    const price = parseFloat(r.querySelector('.rsupply-item-price')?.value || 0);
+    const lineTot = qty * price;
+
+    totalUnits += qty;
+    totalAmount += lineTot;
+
+    const lineTotEl = document.getElementById(`rsupply-tot-${sku}`);
+    if (lineTotEl) lineTotEl.innerText = `₹${lineTot.toLocaleString('en-IN')}`;
+  });
+
+  const unitsEl = document.getElementById('rsupply-total-units');
+  const amtEl = document.getElementById('rsupply-total-amount');
+
+  if (unitsEl) unitsEl.innerText = totalUnits;
+  if (amtEl) amtEl.innerText = `₹${totalAmount.toLocaleString('en-IN')}`;
+
+  updateSupplyCreditWarning(totalAmount);
+}
+
+function updateSupplyCreditWarning(newOrderAmount = 0) {
+  const retId = document.getElementById('rsupply-retailer-select')?.value;
+  const retailer = (ADMIN_STATE.retailers || []).find(r => r.id === retId);
+  const warnBox = document.getElementById('rsupply-credit-warning');
+  const warnText = document.getElementById('rsupply-credit-warning-text');
+
+  if (!warnBox || !retailer) return;
+
+  const currentOutstanding = retailer.outstanding_credit || 0;
+  const limit = retailer.credit_limit || 20000;
+  const projected = currentOutstanding + newOrderAmount;
+
+  if (projected > limit) {
+    warnBox.style.display = 'block';
+    warnText.innerText = `This order will bring outstanding to ₹${projected.toLocaleString('en-IN')}, exceeding credit limit of ₹${limit.toLocaleString('en-IN')}. Dual approval or credit override will be applied.`;
+  } else {
+    warnBox.style.display = 'none';
+  }
+}
+
+async function handleRetailSupplySubmit(e) {
+  e.preventDefault();
+
+  const retailerId = document.getElementById('rsupply-retailer-select').value;
+  const supplyDate = document.getElementById('rsupply-date').value;
+  const paymentTerms = document.getElementById('rsupply-terms').value;
+  const paymentDueDate = document.getElementById('rsupply-due-date').value;
+  const notes = document.getElementById('rsupply-notes').value;
+
+  const items = [];
+  const rows = document.querySelectorAll('#rsupply-items-tbody tr');
+  rows.forEach(r => {
+    const sku = r.getAttribute('data-sku');
+    const qty = parseInt(r.querySelector('.rsupply-item-qty')?.value || 0, 10);
+    const price = parseFloat(r.querySelector('.rsupply-item-price')?.value || 0);
+
+    if (qty > 0) {
+      items.push({ sku, quantity: qty, unit_price: price });
+    }
+  });
+
+  if (items.length === 0) {
+    alert('⚠️ Please specify at least 1 unit of a product to supply.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/supply`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({
+        retailer_id: retailerId,
+        items,
+        supply_date: supplyDate,
+        payment_terms: paymentTerms,
+        payment_due_date: paymentDueDate,
+        notes
+      })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to record supply');
+
+    alert(`✅ Supply order ${resJson.order?.order_number || ''} recorded successfully!`);
+    closeRetailSupplyModal();
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// ── 7. Payment Modal Controller ───────────────────────────────────────────────
+function openRetailPaymentModal(preselectedRetailerId = null) {
+  const modal = document.getElementById('retail-payment-modal');
+  if (!modal) return;
+
+  populateRetailerDropdowns();
+
+  if (preselectedRetailerId) {
+    const sel = document.getElementById('rpay-retailer-select');
+    if (sel) sel.value = preselectedRetailerId;
+  }
+
+  const dateInput = document.getElementById('rpay-date');
+  if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+
+  updatePaymentOutstandingNotice();
+  modal.classList.add('open');
+}
+
+function closeRetailPaymentModal() {
+  document.getElementById('retail-payment-modal')?.classList.remove('open');
+}
+
+function updatePaymentOutstandingNotice() {
+  const retId = document.getElementById('rpay-retailer-select')?.value;
+  const retailer = (ADMIN_STATE.retailers || []).find(r => r.id === retId);
+  const outEl = document.getElementById('rpay-outstanding-val');
+
+  if (outEl && retailer) {
+    outEl.innerText = `₹${(retailer.outstanding_credit || 0).toLocaleString('en-IN')}`;
+  }
+}
+
+async function handleRetailPaymentSubmit(e) {
+  e.preventDefault();
+
+  const retailerId = document.getElementById('rpay-retailer-select').value;
+  const amount = parseFloat(document.getElementById('rpay-amount').value);
+  const paymentDate = document.getElementById('rpay-date').value;
+  const paymentMethod = document.getElementById('rpay-method').value;
+  const utrNumber = document.getElementById('rpay-ref').value;
+  const notes = document.getElementById('rpay-notes').value;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/payments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({
+        retailer_id: retailerId,
+        amount,
+        payment_date: paymentDate,
+        payment_method: paymentMethod,
+        utr_number: utrNumber,
+        notes
+      })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to record payment');
+
+    alert(`✅ Payment of ₹${amount.toLocaleString('en-IN')} posted to ledger successfully!`);
+    closeRetailPaymentModal();
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// ── 8. Return & Quarantine Modal Controller ───────────────────────────────────
+function openRetailReturnModal(preselectedRetailerId = null) {
+  const modal = document.getElementById('retail-return-modal');
+  if (!modal) return;
+
+  populateRetailerDropdowns();
+
+  if (preselectedRetailerId) {
+    const sel = document.getElementById('rreturn-retailer-select');
+    if (sel) sel.value = preselectedRetailerId;
+  }
+
+  modal.classList.add('open');
+}
+
+function closeRetailReturnModal() {
+  document.getElementById('retail-return-modal')?.classList.remove('open');
+}
+
+async function handleRetailReturnSubmit(e) {
+  e.preventDefault();
+
+  const retailerId = document.getElementById('rreturn-retailer-select').value;
+  const sku = document.getElementById('rreturn-sku').value;
+  const quantity = parseInt(document.getElementById('rreturn-qty').value, 10);
+  const reason = document.getElementById('rreturn-reason').value;
+  const condition = document.getElementById('rreturn-condition').value;
+  const batchNumber = document.getElementById('rreturn-batch').value;
+  const creditValue = document.getElementById('rreturn-credit-val').value;
+  const notes = document.getElementById('rreturn-notes').value;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/returns`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({
+        retailer_id: retailerId,
+        sku,
+        quantity,
+        reason,
+        condition,
+        batch_number: batchNumber,
+        credit_amount: creditValue ? parseFloat(creditValue) : undefined,
+        notes
+      })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to record return');
+
+    alert(`✅ Return ${resJson.return_record?.return_number || ''} recorded to QUARANTINE! Retailer inventory decremented.`);
+    closeRetailReturnModal();
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// ── 9. Physical Stock Reconciliation Modal Controller ─────────────────────────
+function openRetailReconcileModal(preselectedRetailerId = null, preselectedSku = null) {
+  const modal = document.getElementById('retail-reconcile-modal');
+  if (!modal) return;
+
+  populateRetailerDropdowns();
+
+  if (preselectedRetailerId) {
+    const sel = document.getElementById('rrecon-retailer-select');
+    if (sel) sel.value = preselectedRetailerId;
+  }
+  if (preselectedSku) {
+    const skuSel = document.getElementById('rrecon-sku');
+    if (skuSel) skuSel.value = preselectedSku;
+  }
+
+  updateReconcileSystemStock();
+  modal.classList.add('open');
+}
+
+function closeRetailReconcileModal() {
+  document.getElementById('retail-reconcile-modal')?.classList.remove('open');
+}
+
+function updateReconcileSystemStock() {
+  const retId = document.getElementById('rrecon-retailer-select')?.value;
+  const sku = document.getElementById('rrecon-sku')?.value;
+  const sysEl = document.getElementById('rrecon-current-system-stock');
+
+  const matrixItem = (ADMIN_STATE.retailStockMatrix || []).find(m => m.retailer_id === retId && m.sku === sku);
+  const sysStock = matrixItem ? matrixItem.current_stock : 0;
+
+  if (sysEl) sysEl.innerText = `${sysStock} units`;
+  calculateReconcileDelta();
+}
+
+function calculateReconcileDelta() {
+  const retId = document.getElementById('rrecon-retailer-select')?.value;
+  const sku = document.getElementById('rrecon-sku')?.value;
+  const physicalInput = document.getElementById('rrecon-physical-count');
+  const deltaEl = document.getElementById('rrecon-delta-val');
+
+  const matrixItem = (ADMIN_STATE.retailStockMatrix || []).find(m => m.retailer_id === retId && m.sku === sku);
+  const sysStock = matrixItem ? matrixItem.current_stock : 0;
+  const physicalCount = parseInt(physicalInput?.value || sysStock, 10);
+  const delta = physicalCount - sysStock;
+
+  if (deltaEl) {
+    deltaEl.innerText = delta > 0 ? `+${delta}` : `${delta}`;
+    deltaEl.style.color = delta === 0 ? '#16a34a' : (delta < 0 ? '#dc2626' : '#2563eb');
+  }
+}
+
+async function handleRetailReconcileSubmit(e) {
+  e.preventDefault();
+
+  const retailerId = document.getElementById('rrecon-retailer-select').value;
+  const sku = document.getElementById('rrecon-sku').value;
+  const physicalCount = parseInt(document.getElementById('rrecon-physical-count').value, 10);
+  const reason = document.getElementById('rrecon-reason').value;
+  const notes = document.getElementById('rrecon-notes').value;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/reconcile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({
+        retailer_id: retailerId,
+        sku,
+        physical_count: physicalCount,
+        discrepancy_reason: reason,
+        notes
+      })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to reconcile stock');
+
+    alert(`✅ Stock reconciled! Delta of ${resJson.delta > 0 ? `+${resJson.delta}` : resJson.delta} logged to movement ledger.`);
+    closeRetailReconcileModal();
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// ── 10. Follow-up Modal Controller ────────────────────────────────────────────
+function openRetailFollowupModal(preselectedRetailerId = null) {
+  const modal = document.getElementById('retail-followup-modal');
+  if (!modal) return;
+
+  populateRetailerDropdowns();
+
+  if (preselectedRetailerId) {
+    const sel = document.getElementById('rfol-retailer-select');
+    if (sel) sel.value = preselectedRetailerId;
+  }
+
+  const dateInput = document.getElementById('rfol-date');
+  if (dateInput) {
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    dateInput.value = nextWeek.toISOString().slice(0, 10);
+  }
+
+  modal.classList.add('open');
+}
+
+function closeRetailFollowupModal() {
+  document.getElementById('retail-followup-modal')?.classList.remove('open');
+}
+
+async function handleRetailFollowupSubmit(e) {
+  e.preventDefault();
+
+  const retailerId = document.getElementById('rfol-retailer-select').value;
+  const dueDate = document.getElementById('rfol-date').value;
+  const reason = document.getElementById('rfol-reason').value;
+  const assignedTo = document.getElementById('rfol-assignee').value;
+  const notes = document.getElementById('rfol-notes').value;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/followups`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({
+        retailer_id: retailerId,
+        due_date: dueDate,
+        reason,
+        assigned_to: assignedTo,
+        notes
+      })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to schedule follow-up');
+
+    alert('✅ Follow-up task scheduled successfully!');
+    closeRetailFollowupModal();
+    fetchRetailFollowups();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// ── 11. Add / Edit Retailer Modal Controller ──────────────────────────────────
+function openRetailerModal(retailerId = null) {
+  const modal = document.getElementById('retailer-modal');
+  if (!modal) return;
+
+  const form = document.getElementById('retailer-form');
+  form.reset();
+
+  const title = document.getElementById('retailer-modal-title');
+  const idInput = document.getElementById('ret-form-id');
+
+  if (retailerId) {
+    title.innerText = '✏️ Edit Retail Partner Master Profile';
+    idInput.value = retailerId;
+
+    const r = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId);
+    if (r) {
+      document.getElementById('ret-form-name').value = r.name || '';
+      document.getElementById('ret-form-code').value = r.code || '';
+      document.getElementById('ret-form-contact').value = r.contact_person || '';
+      document.getElementById('ret-form-phone').value = r.phone || '';
+      document.getElementById('ret-form-whatsapp').value = r.whatsapp || '';
+      document.getElementById('ret-form-email').value = r.email || '';
+      document.getElementById('ret-form-gstin').value = r.gstin || '';
+      document.getElementById('ret-form-type').value = r.retailer_type || 'Gourmet Store';
+      document.getElementById('ret-form-address').value = r.address || '';
+      document.getElementById('ret-form-area').value = r.area || '';
+      document.getElementById('ret-form-city').value = r.city || '';
+      document.getElementById('ret-form-state').value = r.state || 'Delhi';
+      document.getElementById('ret-form-pincode').value = r.pincode || '';
+      document.getElementById('ret-form-landmark').value = r.landmark || '';
+      document.getElementById('ret-form-gps').value = r.gps_coordinates || '';
+      document.getElementById('ret-form-status').value = r.status || 'ACTIVE';
+      document.getElementById('ret-form-terms').value = r.payment_terms || '15_DAYS';
+      document.getElementById('ret-form-limit').value = r.credit_limit || 20000;
+      document.getElementById('ret-form-frequency').value = r.usual_reorder_frequency_days || 14;
+      document.getElementById('ret-form-pref-contact').value = r.preferred_contact_method || 'WHATSAPP';
+      document.getElementById('ret-form-salesperson').value = r.assigned_salesperson || 'Keshav Gandhi';
+      document.getElementById('ret-form-notes').value = r.notes || '';
+    }
+  } else {
+    title.innerText = '+ Add New Retail Partner';
+    idInput.value = '';
+    document.getElementById('ret-form-code').value = `RET-00${ADMIN_STATE.retailers.length + 1}`;
+  }
+
+  modal.classList.add('open');
+}
+
+function closeRetailerModal() {
+  document.getElementById('retailer-modal')?.classList.remove('open');
+}
+
+async function handleRetailerFormSubmit(e) {
+  e.preventDefault();
+
+  const id = document.getElementById('ret-form-id').value;
+  const payload = {
+    name: document.getElementById('ret-form-name').value.trim(),
+    code: document.getElementById('ret-form-code').value.trim(),
+    contact_person: document.getElementById('ret-form-contact').value.trim(),
+    phone: document.getElementById('ret-form-phone').value.trim(),
+    whatsapp: document.getElementById('ret-form-whatsapp').value.trim(),
+    email: document.getElementById('ret-form-email').value.trim(),
+    gstin: document.getElementById('ret-form-gstin').value.trim(),
+    retailer_type: document.getElementById('ret-form-type').value,
+    address: document.getElementById('ret-form-address').value.trim(),
+    area: document.getElementById('ret-form-area').value.trim(),
+    city: document.getElementById('ret-form-city').value.trim(),
+    state: document.getElementById('ret-form-state').value.trim(),
+    pincode: document.getElementById('ret-form-pincode').value.trim(),
+    landmark: document.getElementById('ret-form-landmark').value.trim(),
+    gps_coordinates: document.getElementById('ret-form-gps').value.trim(),
+    status: document.getElementById('ret-form-status').value,
+    payment_terms: document.getElementById('ret-form-terms').value,
+    credit_limit: parseFloat(document.getElementById('ret-form-limit').value || 0),
+    usual_reorder_frequency_days: parseInt(document.getElementById('ret-form-frequency').value || 14, 10),
+    preferred_contact_method: document.getElementById('ret-form-pref-contact').value,
+    assigned_salesperson: document.getElementById('ret-form-salesperson').value.trim(),
+    notes: document.getElementById('ret-form-notes').value.trim()
+  };
+
+  try {
+    const url = id ? `${API_BASE}/api/admin/retail/retailers/${id}` : `${API_BASE}/api/admin/retail/retailers`;
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to save retailer');
+
+    alert(`✅ Retailer ${payload.name} saved successfully!`);
+    closeRetailerModal();
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// ── 12. CSV Export Handlers ───────────────────────────────────────────────────
+function toggleExportMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('retail-export-menu');
+  if (menu) {
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  }
+}
+
+document.addEventListener('click', () => {
+  const menu = document.getElementById('retail-export-menu');
+  if (menu) menu.style.display = 'none';
+});
+
+async function downloadRetailCSV(type) {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/export/${type}`, {
+      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    });
+    if (!res.ok) throw new Error('Failed to generate CSV');
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `veyano_retail_${type}_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+

@@ -9,6 +9,7 @@ const { logAuditEvent, getAuditLogs } = require('../services/auditLogger');
 const { recordInventoryMovement, getInventoryLedger } = require('../services/inventoryService');
 const { createApprovalRequest, getApprovals, reviewApprovalRequest } = require('../services/approvalService');
 const { getAllProducts, getProductByIdOrSlug, upsertProduct, getPriceHistory } = require('../services/productMasterService');
+const retailService = require('../services/retailNetworkService');
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET_KEY || process.env.JWT_SECRET || 'veyano_vault_secret_admin_key_2026';
 const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || 'veyano2026';
@@ -679,6 +680,192 @@ router.get('/system/health', async (req, res) => {
     compliance: { fssai: '20826010000397', validUntil: '2031' },
     timestamp: new Date().toISOString()
   });
+});
+
+// ── 9. RETAIL NETWORK & INVENTORY MODULE ENDPOINTS ────────────────────────────
+
+// 9.1 Dashboard KPIs
+router.get('/retail/dashboard', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+  try {
+    const kpis = retailService.getRetailDashboardKPIs();
+    res.json({ success: true, data: kpis });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch retail dashboard KPIs', detail: err.message });
+  }
+});
+
+// 9.2 Retailer Directory (Search, Filter, Sort)
+router.get('/retail/retailers', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+  try {
+    const retailers = retailService.getAllRetailers(req.query);
+    res.json({ success: true, data: retailers, total: retailers.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch retailers', detail: err.message });
+  }
+});
+
+// 9.3 Retailer 360 Profile
+router.get('/retail/retailers/:id', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+  try {
+    const profile = retailService.getRetailerProfile(req.params.id);
+    res.json({ success: true, data: profile });
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+// 9.4 Create Retailer
+router.post('/retail/retailers', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const retailer = retailService.createRetailer(req.body, actor);
+    res.status(201).json({ success: true, message: 'Retailer created successfully.', data: retailer });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.5 Update Retailer
+router.put('/retail/retailers/:id', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const updated = retailService.updateRetailer(req.params.id, req.body, actor);
+    res.json({ success: true, message: 'Retailer updated successfully.', data: updated });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.6 Archive / Soft Delete Retailer
+router.delete('/retail/retailers/:id', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const result = retailService.archiveRetailer(req.params.id, actor);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.7 Record Supply Order
+router.post('/retail/supply', requirePermission(PERMISSIONS.RECORD_RETAIL_SUPPLY), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const result = retailService.recordSupplyOrder(req.body, actor);
+    if (result.requires_approval) {
+      return res.status(403).json(result);
+    }
+    res.status(201).json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.8 Record Payment
+router.post('/retail/payments', requirePermission(PERMISSIONS.RECORD_RETAIL_PAYMENT), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'FINANCE' };
+    const result = retailService.recordPayment(req.body, actor);
+    res.status(201).json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.9 Record Return & Quarantine
+router.post('/retail/returns', requirePermission(PERMISSIONS.RECORD_RETAIL_RETURN), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
+    const result = retailService.recordReturn(req.body, actor);
+    res.status(201).json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.10 Physical Stock Reconciliation
+router.post('/retail/reconcile', requirePermission(PERMISSIONS.RECONCILE_RETAIL_STOCK), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
+    const result = retailService.reconcileStock(req.body, actor);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.11 Global Retail Stock Matrix
+router.get('/retail/stock', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+  try {
+    const matrix = retailService.getRetailStockMatrix(req.query);
+    res.json({ success: true, data: matrix, total: matrix.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch stock matrix', detail: err.message });
+  }
+});
+
+// 9.12 Follow-ups (Get & Create & Complete)
+router.get('/retail/followups', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+  try {
+    const list = retailService.getFollowups(req.query);
+    res.json({ success: true, data: list, total: list.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch follow-ups', detail: err.message });
+  }
+});
+
+router.post('/retail/followups', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'SALES' };
+    const item = retailService.createFollowup(req.body, actor);
+    res.status(201).json({ success: true, data: item });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.patch('/retail/followups/:id/complete', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'SALES' };
+    const item = retailService.completeFollowup(req.params.id, req.body?.notes, actor);
+    res.json({ success: true, data: item });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.13 Internal Notes
+router.post('/retail/notes', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
+    const note = retailService.addRetailerNote(req.body.retailer_id, req.body.content, actor);
+    res.status(201).json({ success: true, data: note });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.14 Statement
+router.get('/retail/statement/:id', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+  try {
+    const statement = retailService.getRetailerStatement(req.params.id, req.query);
+    res.json({ success: true, data: statement });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9.15 CSV Export
+router.get('/retail/export/:type', requirePermission(PERMISSIONS.EXPORT_RETAIL_REPORTS), (req, res) => {
+  try {
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const csvContent = retailService.exportRetailCSV(req.params.type, req.query, actor);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="veyano_retail_${req.params.type}_${Date.now()}.csv"`);
+    res.status(200).send(csvContent);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to export CSV', detail: err.message });
+  }
 });
 
 module.exports = router;

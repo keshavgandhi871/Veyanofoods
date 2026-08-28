@@ -273,6 +273,52 @@
     }
     .diff-old { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; padding: 0.75rem; }
     .diff-new { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.75rem; }
+
+    /* Retail Network Custom Styles */
+    .sub-nav-bar {
+      display: flex;
+      gap: 0.35rem;
+      background: #f8fafc;
+      padding: 0.35rem;
+      border-radius: var(--radius-md);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 1.25rem;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .sub-nav-btn {
+      padding: 0.5rem 0.95rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.82rem;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .sub-nav-btn:hover { background: #edf2f7; color: #0f172a; }
+    .sub-nav-btn.active { background: #0f172a; color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    
+    .health-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .health-pill.green { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .health-pill.yellow { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .health-pill.red { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    .statement-table th { background: #f1f5f9; padding: 0.6rem 0.8rem; font-size: 0.76rem; }
+    .statement-table td { padding: 0.65rem 0.8rem; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; }
   </style>
 </head>
 <body>
@@ -293,6 +339,7 @@
             <option value="OPERATIONS">🚚 OPERATIONS (Fulfillment & Shipping)</option>
             <option value="INVENTORY_MANAGER">📦 INVENTORY MANAGER (Ledger & Stock)</option>
             <option value="FINANCE">💰 FINANCE (Revenue & Payments)</option>
+            <option value="SALES">💼 SALES (Retail Network & Direct Outlets)</option>
             <option value="MARKETING">📢 MARKETING (Catalog Content & B2B)</option>
             <option value="CUSTOMER_SUPPORT">🎧 CUSTOMER SUPPORT (Orders & Help)</option>
             <option value="VIEWER">👁️ VIEWER (Read Only)</option>
@@ -373,6 +420,7 @@
       <button class="admin-nav-item" data-tab="tab-customers">👥 Customers <span class="nav-badge" id="badge-customers-count">0</span></button>
       <button class="admin-nav-item" data-tab="tab-products">📦 Product Master</button>
       <button class="admin-nav-item" data-tab="tab-inventory">📈 Inventory Ledger</button>
+      <button class="admin-nav-item" data-tab="tab-retail">🏢 Retail Network <span class="nav-badge" id="badge-retailers-count">0</span></button>
       <button class="admin-nav-item" data-tab="tab-approvals">⚖️ Approvals <span class="nav-badge" id="badge-approvals-count" style="background: #ef4444;">0</span></button>
       <button class="admin-nav-item" data-tab="tab-finance">💵 Finance & Analytics</button>
       <button class="admin-nav-item" data-tab="tab-leads">💼 B2B CRM</button>
@@ -584,6 +632,338 @@
               <!-- Populated by admin.js -->
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: RETAIL NETWORK & DISTRIBUTION -->
+    <div id="tab-retail" class="admin-tab-content" style="display: none;">
+      <!-- Section Header & Action Toolbar -->
+      <div class="admin-card">
+        <div class="card-header-bar" style="margin-bottom: 1.5rem;">
+          <div>
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🏢</span> Retail Network & Offline Distribution
+            </h2>
+            <p style="font-size: 0.84rem; color: #64748b;">
+              Direct retail partners, store-level inventory ledgers, double-entry credit ledger, quarantined returns, and capital management.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button onclick="openRetailerModal()" class="btn btn-accent btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>+</span> Add Retailer
+            </button>
+            <button onclick="openRetailSupplyModal()" class="btn btn-sm" style="background: #0f172a; color: #fff; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>🚚</span> Record Supply
+            </button>
+            <button onclick="openRetailPaymentModal()" class="btn btn-sm" style="background: #059669; color: #fff; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>💳</span> Record Payment
+            </button>
+            <button onclick="openRetailReturnModal()" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>🔄</span> Record Return
+            </button>
+            <button onclick="openRetailReconcileModal()" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>🔍</span> Reconcile Stock
+            </button>
+            <button onclick="openRetailFollowupModal()" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+              <span>📅</span> + Follow-up
+            </button>
+            <div style="position: relative; display: inline-block;">
+              <button onclick="toggleExportMenu(event)" class="btn btn-sm btn-outline" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                <span>📥</span> Export CSV ▾
+              </button>
+              <div id="retail-export-menu" style="display: none; position: absolute; right: 0; top: 110%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 100; min-width: 190px; padding: 0.4rem 0;">
+                <a href="javascript:void(0)" onclick="downloadRetailCSV('retailers')" style="display: block; padding: 0.5rem 1rem; font-size: 0.82rem; color: #334155; text-decoration: none; font-weight: 600;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">📋 Retailer Master CSV</a>
+                <a href="javascript:void(0)" onclick="downloadRetailCSV('stock')" style="display: block; padding: 0.5rem 1rem; font-size: 0.82rem; color: #334155; text-decoration: none; font-weight: 600;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">📦 Retail Stock Matrix CSV</a>
+                <a href="javascript:void(0)" onclick="downloadRetailCSV('supplies')" style="display: block; padding: 0.5rem 1rem; font-size: 0.82rem; color: #334155; text-decoration: none; font-weight: 600;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">🚚 Supply History CSV</a>
+                <a href="javascript:void(0)" onclick="downloadRetailCSV('ledger')" style="display: block; padding: 0.5rem 1rem; font-size: 0.82rem; color: #334155; text-decoration: none; font-weight: 600;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">💳 Financial Ledger CSV</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 11 DYNAMIC KPI METRICS GRID -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem;">
+          <!-- KPI 1: Total Retailers -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Retailers</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #0f172a; margin-top: 0.2rem;" id="rkpi-total">0</div>
+          </div>
+
+          <!-- KPI 2: Active Retailers -->
+          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #065f46; font-weight: 700; text-transform: uppercase;">Active Retailers</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #047857; margin-top: 0.2rem;" id="rkpi-active">0</div>
+          </div>
+
+          <!-- KPI 3: Retailers With Stock -->
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #1e40af; font-weight: 700; text-transform: uppercase;">Stores With Stock</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #2563eb; margin-top: 0.2rem;" id="rkpi-with-stock">0</div>
+          </div>
+
+          <!-- KPI 4: Low On Stock -->
+          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #92400e; font-weight: 700; text-transform: uppercase;">Low Stock Alert</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #d97706; margin-top: 0.2rem;" id="rkpi-low-stock">0</div>
+          </div>
+
+          <!-- KPI 5: Reorder Due -->
+          <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #9f1239; font-weight: 700; text-transform: uppercase;">Reorder Due</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #e11d48; margin-top: 0.2rem;" id="rkpi-reorder-due">0</div>
+          </div>
+
+          <!-- KPI 6: Total Units With Retailers -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Stock Units Held</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #0f172a; margin-top: 0.2rem;" id="rkpi-stock-units">0</div>
+          </div>
+
+          <!-- KPI 7: Total Value of Retail Stock -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Retail Stock Value</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #0f172a; margin-top: 0.2rem;" id="rkpi-stock-value">₹0</div>
+          </div>
+
+          <!-- KPI 8: Total Credit Outstanding -->
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #991b1b; font-weight: 700; text-transform: uppercase;">Credit Outstanding</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #dc2626; margin-top: 0.2rem;" id="rkpi-credit-outstanding">₹0</div>
+          </div>
+
+          <!-- KPI 9: Total Amount Received -->
+          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #065f46; font-weight: 700; text-transform: uppercase;">Amount Received</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #16a34a; margin-top: 0.2rem;" id="rkpi-amount-received">₹0</div>
+          </div>
+
+          <!-- KPI 10: Total Returns -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 0.95rem 1.1rem;">
+            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Returns (Quarantine)</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #475569; margin-top: 0.2rem;" id="rkpi-returns">0 units</div>
+          </div>
+
+          <!-- KPI 11: Capital Tied Up in Retail -->
+          <div style="background: #0f172a; color: #ffffff; border-radius: var(--radius-md); padding: 0.95rem 1.1rem; border: 1px solid #334155;">
+            <div style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; text-transform: uppercase;">Capital Tied Up</div>
+            <div style="font-size: 1.45rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #f8fafc; margin-top: 0.2rem;" id="rkpi-capital-tied">₹0</div>
+          </div>
+        </div>
+
+        <!-- RETAIL SUB-NAVIGATION TABS -->
+        <div class="sub-nav-bar">
+          <button class="sub-nav-btn active" onclick="switchRetailSubTab('rsub-directory', this)">📋 Retailer Directory</button>
+          <button class="sub-nav-btn" onclick="switchRetailSubTab('rsub-stock', this)">📦 Retail Stock Matrix</button>
+          <button class="sub-nav-btn" onclick="switchRetailSubTab('rsub-supplies', this)">🚚 Supply Invoices & Orders</button>
+          <button class="sub-nav-btn" onclick="switchRetailSubTab('rsub-ledger', this)">💳 Financial & Credit Ledger</button>
+          <button class="sub-nav-btn" onclick="switchRetailSubTab('rsub-returns', this)">🔄 Returns & Quarantine Log</button>
+          <button class="sub-nav-btn" onclick="switchRetailSubTab('rsub-followups', this)">📅 Follow-ups & Reminders</button>
+        </div>
+
+        <!-- SUBTAB 1: RETAILER DIRECTORY -->
+        <div id="rsub-directory" class="retail-subtab-pane">
+          <div class="card-header-bar" style="margin-top: 0.5rem;">
+            <div class="search-filter-box">
+              <input type="text" id="retail-search-input" class="admin-search-input" placeholder="🔍 Search retailer, contact, phone, city, area..." oninput="handleRetailSearch()">
+              
+              <div class="status-filter-pills">
+                <span class="status-pill active" onclick="setRetailFilter('all', this)">All</span>
+                <span class="status-pill" onclick="setRetailFilter('active', this)">Active</span>
+                <span class="status-pill" onclick="setRetailFilter('has_stock', this)">Has Stock</span>
+                <span class="status-pill" onclick="setRetailFilter('low_stock', this)">Low Stock</span>
+                <span class="status-pill" onclick="setRetailFilter('credit_outstanding', this)">Credit Outstanding</span>
+                <span class="status-pill" onclick="setRetailFilter('payment_due', this)">Payment Due</span>
+                <span class="status-pill" onclick="setRetailFilter('reorder_due', this)">Reorder Due</span>
+                <span class="status-pill" onclick="setRetailFilter('inactive', this)">Inactive</span>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Sort:</span>
+              <select id="retail-sort-select" class="form-control" style="font-size: 0.82rem; padding: 0.4rem 0.8rem;" onchange="handleRetailSort()">
+                <option value="name_asc">Name (A ➔ Z)</option>
+                <option value="name_desc">Name (Z ➔ A)</option>
+                <option value="stock_high">Highest Stock Value</option>
+                <option value="outstanding_high">Highest Outstanding Credit</option>
+                <option value="last_order">Most Recent Supply</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Retailer Name & Code</th>
+                  <th>Contact & WhatsApp</th>
+                  <th>Location</th>
+                  <th>Status & Health</th>
+                  <th>Stock Value</th>
+                  <th>Outstanding</th>
+                  <th>Last Order</th>
+                  <th>Next Reorder (Est.)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="retailers-table-body">
+                <!-- Populated dynamically by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUBTAB 2: RETAIL STOCK MATRIX -->
+        <div id="rsub-stock" class="retail-subtab-pane" style="display: none;">
+          <div class="card-header-bar" style="margin-top: 0.5rem;">
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+              <select id="rstock-sku-filter" class="form-control" style="font-size: 0.82rem; width: auto;" onchange="filterRetailStockMatrix()">
+                <option value="">All Product SKUs</option>
+                <option value="PLAIN-200">PLAIN-200 — Classic Plain</option>
+                <option value="SALTED-200">SALTED-200 — Himalayan Salted</option>
+                <option value="PERIPERI-200">PERIPERI-200 — Fiery Peri-Peri</option>
+                <option value="COMBO-600">COMBO-600 — Trio Discovery Combo</option>
+              </select>
+              <input type="text" id="rstock-city-filter" class="admin-search-input" placeholder="Filter by City or Area..." oninput="filterRetailStockMatrix()" style="min-width: 200px;">
+            </div>
+            <div>
+              <button onclick="openRetailReconcileModal()" class="btn btn-sm btn-outline">🔍 Reconcile Physical Stock</button>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Retailer Name</th>
+                  <th>City / Area</th>
+                  <th>Product SKU</th>
+                  <th>Stock with Retailer</th>
+                  <th>Stock Value (₹)</th>
+                  <th>Last Supplied</th>
+                  <th>Days of Stock (Est.)</th>
+                  <th>Reorder Forecast</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="retail-stock-matrix-body">
+                <!-- Populated by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUBTAB 3: SUPPLY INVOICES & ORDERS -->
+        <div id="rsub-supplies" class="retail-subtab-pane" style="display: none;">
+          <div class="card-header-bar" style="margin-top: 0.5rem;">
+            <div>
+              <h3 style="font-size: 1.05rem; font-weight: 700;">Supply Orders & Batch Invoices</h3>
+              <p style="font-size: 0.8rem; color: #64748b;">Historical snapshot of every batch supplied with locked historical prices.</p>
+            </div>
+            <button onclick="openRetailSupplyModal()" class="btn btn-accent btn-sm">+ Record New Supply Order</button>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Supply Order #</th>
+                  <th>Retailer Name</th>
+                  <th>Date</th>
+                  <th>Items Supplied</th>
+                  <th>Total Units</th>
+                  <th>Invoice Value</th>
+                  <th>Due Date</th>
+                  <th>Payment Status</th>
+                  <th>Outstanding</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="retail-supplies-table-body">
+                <!-- Populated by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUBTAB 4: FINANCIAL & CREDIT LEDGER -->
+        <div id="rsub-ledger" class="retail-subtab-pane" style="display: none;">
+          <div class="card-header-bar" style="margin-top: 0.5rem;">
+            <div>
+              <h3 style="font-size: 1.05rem; font-weight: 700;">Double-Entry Credit & Payment Ledger</h3>
+              <p style="font-size: 0.8rem; color: #64748b;">Full debit/credit audit history across all retailers (Invoices, Payments, Credit Notes).</p>
+            </div>
+            <button onclick="openRetailPaymentModal()" class="btn btn-sm btn-accent">💳 Record Payment Receipt</button>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Retailer</th>
+                  <th>Transaction Type</th>
+                  <th>Reference #</th>
+                  <th>Debit (+)</th>
+                  <th>Credit (-)</th>
+                  <th>Running Balance</th>
+                  <th>Payment Mode & UTR</th>
+                  <th>Recorded By</th>
+                </tr>
+              </thead>
+              <tbody id="retail-ledger-table-body">
+                <!-- Populated by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUBTAB 5: RETURNS & QUARANTINE LOG -->
+        <div id="rsub-returns" class="retail-subtab-pane" style="display: none;">
+          <div class="card-header-bar" style="margin-top: 0.5rem;">
+            <div>
+              <h3 style="font-size: 1.05rem; font-weight: 700;">Returned Stock & Quarantine Management</h3>
+              <p style="font-size: 0.8rem; color: #64748b;">Damaged, near-expiry, or unsold products held in quarantine prior to QC inspection.</p>
+            </div>
+            <button onclick="openRetailReturnModal()" class="btn btn-sm btn-outline">🔄 Record Return / Damage</button>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Return #</th>
+                  <th>Retailer</th>
+                  <th>Return Date</th>
+                  <th>SKU & Product</th>
+                  <th>Quantity</th>
+                  <th>Credit Value</th>
+                  <th>Reason</th>
+                  <th>Condition & Batch</th>
+                  <th>Quarantine Status</th>
+                  <th>Received By</th>
+                </tr>
+              </thead>
+              <tbody id="retail-returns-table-body">
+                <!-- Populated by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUBTAB 6: FOLLOW-UPS & REMINDERS -->
+        <div id="rsub-followups" class="retail-subtab-pane" style="display: none;">
+          <div class="card-header-bar" style="margin-top: 0.5rem;">
+            <div>
+              <h3 style="font-size: 1.05rem; font-weight: 700;">Retail Operations Follow-ups</h3>
+              <p style="font-size: 0.8rem; color: #64748b;">Action queues for payment collections, stock checks, and reorder calls.</p>
+            </div>
+            <button onclick="openRetailFollowupModal()" class="btn btn-sm btn-accent">📅 + Schedule Follow-up</button>
+          </div>
+
+          <div id="retail-followups-cards-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+            <!-- Populated by admin.js -->
+          </div>
         </div>
       </div>
     </div>
@@ -1011,9 +1391,714 @@
           <textarea id="tracking-form-notes" class="form-control" rows="2" placeholder="Internal dispatch notes..."></textarea>
         </div>
 
+  <!-- MODAL 7: RETAILER ADD / EDIT MODAL -->
+  <div id="retailer-modal" class="admin-modal">
+    <div class="admin-modal-content admin-modal-lg">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700;" id="retailer-modal-title">+ Add New Retail Partner</h3>
+          <p style="font-size: 0.8rem; color: #64748b;">Direct retail store master profile, location, and credit terms.</p>
+        </div>
+        <button onclick="closeRetailerModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form id="retailer-form" onsubmit="handleRetailerFormSubmit(event)">
+        <input type="hidden" id="ret-form-id">
+
+        <!-- Tab Section: Basic Info -->
+        <h4 style="font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem; border-left: 3px solid #0f172a; padding-left: 0.5rem;">1. BASIC STORE INFORMATION</h4>
+        <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Store / Business Name *</label>
+            <input type="text" id="ret-form-name" class="form-control" placeholder="e.g. Nature's Basket Indiranagar" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Retailer Code (Auto if blank)</label>
+            <input type="text" id="ret-form-code" class="form-control" placeholder="e.g. RET-006">
+          </div>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Contact Person *</label>
+            <input type="text" id="ret-form-contact" class="form-control" placeholder="Store Manager / Owner" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Phone Number *</label>
+            <input type="tel" id="ret-form-phone" class="form-control" placeholder="10-digit mobile" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">WhatsApp Number</label>
+            <input type="tel" id="ret-form-whatsapp" class="form-control" placeholder="WhatsApp contact">
+          </div>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Email Address</label>
+            <input type="email" id="ret-form-email" class="form-control" placeholder="orders@store.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">GSTIN (If Applicable)</label>
+            <input type="text" id="ret-form-gstin" class="form-control" placeholder="07AAAAA0000A1Z5">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Retailer Type</label>
+            <select id="ret-form-type" class="form-control">
+              <option value="Gourmet Store">Gourmet Store</option>
+              <option value="Supermarket">Supermarket</option>
+              <option value="Organic Store">Organic Store</option>
+              <option value="Gym/Fitness">Gym / Fitness Center</option>
+              <option value="Cafe/Kiosk">Cafe / Snack Kiosk</option>
+              <option value="Pharmacy/Health">Pharmacy / Wellness</option>
+              <option value="Other">Other Outlet</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Section 2: Location -->
+        <h4 style="font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem; border-left: 3px solid #0f172a; padding-left: 0.5rem;">2. LOCATION & ADDRESS</h4>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Full Store Address *</label>
+          <input type="text" id="ret-form-address" class="form-control" placeholder="Shop/Plot #, Street, Market" required>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Area / Locality *</label>
+            <input type="text" id="ret-form-area" class="form-control" placeholder="e.g. Defence Colony" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">City *</label>
+            <input type="text" id="ret-form-city" class="form-control" placeholder="e.g. New Delhi" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">State *</label>
+            <input type="text" id="ret-form-state" class="form-control" value="Delhi" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Pincode</label>
+            <input type="text" id="ret-form-pincode" class="form-control" placeholder="e.g. 110024">
+          </div>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Landmark</label>
+            <input type="text" id="ret-form-landmark" class="form-control" placeholder="Nearby famous spot">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">GPS Coordinates (Optional Lat, Lng)</label>
+            <input type="text" id="ret-form-gps" class="form-control" placeholder="e.g. 28.5729, 77.2315">
+          </div>
+        </div>
+
+        <!-- Section 3: Business & Credit Terms -->
+        <h4 style="font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem; border-left: 3px solid #0f172a; padding-left: 0.5rem;">3. BUSINESS & CREDIT TERMS</h4>
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Status</label>
+            <select id="ret-form-status" class="form-control">
+              <option value="ACTIVE">🟢 Active Partner</option>
+              <option value="ON_HOLD">🟡 On Hold</option>
+              <option value="INACTIVE">⚪ Inactive</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Payment Terms</label>
+            <select id="ret-form-terms" class="form-control">
+              <option value="15_DAYS">15 Days Credit</option>
+              <option value="7_DAYS">7 Days Credit</option>
+              <option value="30_DAYS">30 Days Credit</option>
+              <option value="IMMEDIATE">Immediate / COD</option>
+              <option value="ADVANCE">100% Advance</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Credit Limit (₹)</label>
+            <input type="number" id="ret-form-limit" class="form-control" value="20000" min="0">
+          </div>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Reorder Frequency (Days)</label>
+            <input type="number" id="ret-form-frequency" class="form-control" value="14" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Preferred Contact Method</label>
+            <select id="ret-form-pref-contact" class="form-control">
+              <option value="WHATSAPP">WhatsApp</option>
+              <option value="PHONE">Phone Call</option>
+              <option value="EMAIL">Email</option>
+              <option value="VISIT">In-Person Visit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Assigned Salesperson</label>
+            <input type="text" id="ret-form-salesperson" class="form-control" value="Keshav Gandhi">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Internal Notes / Customer Preferences</label>
+          <textarea id="ret-form-notes" class="form-control" rows="2" placeholder="Owner preferences, delivery timings, favorite SKUs..."></textarea>
+        </div>
+
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-          <button type="button" onclick="closeTrackingModal()" class="btn btn-sm btn-outline">Cancel</button>
-          <button type="submit" class="btn btn-sm btn-accent">Save & Update Status</button>
+          <button type="button" onclick="closeRetailerModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Save Retail Partner</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 8: RETAILER 360° PROFILE DRAWER -->
+  <div id="retail-profile-modal" class="admin-modal">
+    <div class="admin-modal-content admin-modal-lg" style="max-width: 1060px;">
+      <!-- Profile Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: #0f172a;" id="rprof-name">Retailer Name</h2>
+            <span class="role-badge-pill" id="rprof-code">RET-001</span>
+            <span id="rprof-health-badge"></span>
+          </div>
+          <p style="font-size: 0.84rem; color: #64748b; margin-top: 0.25rem;" id="rprof-address">Address, City, Pincode</p>
+          <p style="font-size: 0.8rem; color: #475569; margin-top: 0.2rem;" id="rprof-contact-line">Contact: Name | Phone: 9811234567 | Terms: 15 Days</p>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <a id="rprof-whatsapp-btn" href="#" target="_blank" class="btn btn-sm" style="background: #25D366; color: #fff; border: none; font-weight: 600; text-decoration: none;">💬 WhatsApp</a>
+          <button onclick="openSupplyForCurrentRetailer()" class="btn btn-sm btn-accent">+ Record Supply</button>
+          <button onclick="openPaymentForCurrentRetailer()" class="btn btn-sm" style="background: #059669; color: #fff; border: none;">💳 Pay</button>
+          <button onclick="closeRetailProfileModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b; margin-left: 0.5rem;">&times;</button>
+        </div>
+      </div>
+
+      <!-- Health Reasons Alert if any -->
+      <div id="rprof-health-alert" style="display: none; margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.82rem;"></div>
+
+      <!-- Quick KPI Strip -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.6rem; margin-bottom: 1.25rem;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 0.65rem 0.8rem;">
+          <div style="font-size: 0.68rem; color: #64748b; font-weight: 700;">TOTAL SUPPLIED</div>
+          <div style="font-size: 1.15rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #0f172a;" id="rprof-kpi-supplied">₹0</div>
+        </div>
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 0.65rem 0.8rem;">
+          <div style="font-size: 0.68rem; color: #1e40af; font-weight: 700;">CURRENT STOCK</div>
+          <div style="font-size: 1.15rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #2563eb;" id="rprof-kpi-stock">0 units</div>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 0.65rem 0.8rem;">
+          <div style="font-size: 0.68rem; color: #64748b; font-weight: 700;">STOCK VALUE</div>
+          <div style="font-size: 1.15rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #0f172a;" id="rprof-kpi-stock-val">₹0</div>
+        </div>
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-md); padding: 0.65rem 0.8rem;">
+          <div style="font-size: 0.68rem; color: #991b1b; font-weight: 700;">OUTSTANDING</div>
+          <div style="font-size: 1.15rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #dc2626;" id="rprof-kpi-outstanding">₹0</div>
+        </div>
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-md); padding: 0.65rem 0.8rem;">
+          <div style="font-size: 0.68rem; color: #065f46; font-weight: 700;">AMOUNT PAID</div>
+          <div style="font-size: 1.15rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #059669;" id="rprof-kpi-paid">₹0</div>
+        </div>
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-md); padding: 0.65rem 0.8rem;">
+          <div style="font-size: 0.68rem; color: #92400e; font-weight: 700;">NEXT REORDER (EST)</div>
+          <div style="font-size: 0.95rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: #b45309;" id="rprof-kpi-reorder">N/A</div>
+        </div>
+      </div>
+
+      <!-- Profile Sub-Navigation -->
+      <div class="sub-nav-bar" style="margin-bottom: 1rem;">
+        <button class="sub-nav-btn active" onclick="switchProfileTab('pview-stock', this)">📦 Product Stock Breakdown</button>
+        <button class="sub-nav-btn" onclick="switchProfileTab('pview-movements', this)">📈 Stock Ledger</button>
+        <button class="sub-nav-btn" onclick="switchProfileTab('pview-financials', this)">💳 Financial Ledger</button>
+        <button class="sub-nav-btn" onclick="switchProfileTab('pview-orders', this)">🚚 Supply Invoices</button>
+        <button class="sub-nav-btn" onclick="switchProfileTab('pview-returns', this)">🔄 Returns</button>
+        <button class="sub-nav-btn" onclick="switchProfileTab('pview-notes', this)">📝 Notes & Follow-ups</button>
+        <button class="sub-nav-btn" onclick="switchProfileTab('pview-statement', this)">📄 Account Statement</button>
+      </div>
+
+      <!-- PVIEW 1: Product Stock Breakdown -->
+      <div id="pview-stock" class="profile-subtab-pane">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Product Name</th>
+              <th>Total Supplied</th>
+              <th>Reported Sold</th>
+              <th>Returns</th>
+              <th>Damaged</th>
+              <th>Current Stock</th>
+              <th>Stock Value (₹)</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="rprof-stock-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- PVIEW 2: Stock Ledger Movements -->
+      <div id="pview-movements" class="profile-subtab-pane" style="display: none;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>SKU</th>
+              <th>Movement Type</th>
+              <th>Delta</th>
+              <th>Before ➔ After</th>
+              <th>Reason & Ref</th>
+              <th>Actor</th>
+            </tr>
+          </thead>
+          <tbody id="rprof-movements-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- PVIEW 3: Financial & Credit Ledger -->
+      <div id="pview-financials" class="profile-subtab-pane" style="display: none;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Ref #</th>
+              <th>Debit (+)</th>
+              <th>Credit (-)</th>
+              <th>Running Balance</th>
+              <th>Payment Mode / UTR</th>
+              <th>Recorded By</th>
+            </tr>
+          </thead>
+          <tbody id="rprof-ledger-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- PVIEW 4: Supply Invoices -->
+      <div id="pview-orders" class="profile-subtab-pane" style="display: none;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order #</th>
+              <th>Date</th>
+              <th>Items</th>
+              <th>Units</th>
+              <th>Invoice Value</th>
+              <th>Payment Status</th>
+              <th>Paid</th>
+              <th>Outstanding</th>
+            </tr>
+          </thead>
+          <tbody id="rprof-orders-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- PVIEW 5: Returns -->
+      <div id="pview-returns" class="profile-subtab-pane" style="display: none;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Return #</th>
+              <th>Date</th>
+              <th>SKU</th>
+              <th>Qty</th>
+              <th>Credit Value</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="rprof-returns-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- PVIEW 6: Notes & Follow-ups -->
+      <div id="pview-notes" class="profile-subtab-pane" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;">Internal Store Notes</h4>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+              <input type="text" id="rprof-new-note-input" class="form-control" placeholder="Add an internal note...">
+              <button onclick="handleAddProfileNote()" class="btn btn-sm btn-accent">Post Note</button>
+            </div>
+            <div id="rprof-notes-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 280px; overflow-y: auto;"></div>
+          </div>
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem;">Scheduled Follow-ups</h4>
+            <div id="rprof-followups-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 320px; overflow-y: auto;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PVIEW 7: Printable Account Statement -->
+      <div id="pview-statement" class="profile-subtab-pane" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <div>
+            <h4 style="font-size: 1rem; font-weight: 700;">Statement of Account</h4>
+            <p style="font-size: 0.8rem; color: #64748b;">Chronological audit statement of supplies, payments, and credit adjustments.</p>
+          </div>
+          <button onclick="printCurrentStatement()" class="btn btn-sm btn-outline">🖨️ Print / Save PDF</button>
+        </div>
+        <div id="rprof-statement-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
+          <!-- Populated by admin.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 9: RECORD SUPPLY ORDER MODAL -->
+  <div id="retail-supply-modal" class="admin-modal">
+    <div class="admin-modal-content admin-modal-lg">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 700;">+ Record Retail Stock Supply</h3>
+          <p style="font-size: 0.8rem; color: #64748b;">Deducts from warehouse stock, increments retailer stock, and updates credit ledger.</p>
+        </div>
+        <button onclick="closeRetailSupplyModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form id="retail-supply-form" onsubmit="handleRetailSupplySubmit(event)">
+        <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Select Retail Partner *</label>
+            <select id="rsupply-retailer-select" class="form-control" required style="font-weight: 600;" onchange="updateSupplyCreditWarning()">
+              <!-- Populated by admin.js -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Supply Date *</label>
+            <input type="date" id="rsupply-date" class="form-control" required>
+          </div>
+        </div>
+
+        <!-- Line Items Table -->
+        <h4 style="font-size: 0.88rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">PRODUCTS TO SUPPLY</h4>
+        <table class="admin-table" style="margin-bottom: 1.25rem;">
+          <thead>
+            <tr>
+              <th>Product SKU</th>
+              <th>Warehouse Stock</th>
+              <th>Quantity to Supply</th>
+              <th>Unit Price (₹)</th>
+              <th>Line Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="rsupply-items-tbody">
+            <!-- Populated by admin.js -->
+          </tbody>
+        </table>
+
+        <!-- Credit Limit Warning Box -->
+        <div id="rsupply-credit-warning" style="display: none; background: #fff1f2; border: 1px solid #fecdd3; border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 0.82rem; color: #9f1239;">
+          ⚠️ <strong>Credit Limit Notice:</strong> <span id="rsupply-credit-warning-text"></span>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Payment Terms</label>
+            <select id="rsupply-terms" class="form-control">
+              <option value="15_DAYS">15 Days Credit</option>
+              <option value="7_DAYS">7 Days Credit</option>
+              <option value="30_DAYS">30 Days Credit</option>
+              <option value="IMMEDIATE">Immediate / COD</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Expected Payment Due Date</label>
+            <input type="date" id="rsupply-due-date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Dispatch Notes / Reference</label>
+            <input type="text" id="rsupply-notes" class="form-control" placeholder="e.g. Handed over to store manager Raghav">
+          </div>
+        </div>
+
+        <!-- Totals Strip -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <div>
+            <span style="font-size: 0.82rem; color: #64748b;">Total Units:</span>
+            <strong style="font-size: 1.1rem; color: #0f172a; margin-left: 0.35rem;" id="rsupply-total-units">0</strong>
+          </div>
+          <div>
+            <span style="font-size: 0.82rem; color: #64748b;">Total Invoice Value:</span>
+            <strong style="font-size: 1.35rem; color: #059669; font-family: 'Outfit', sans-serif; margin-left: 0.5rem;" id="rsupply-total-amount">₹0</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeRetailSupplyModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Confirm & Dispatch Supply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 10: RECORD PAYMENT MODAL -->
+  <div id="retail-payment-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700;">💳 Record Retailer Payment</h3>
+          <p style="font-size: 0.8rem; color: #64748b;">Reduces outstanding credit balance and posts entry to financial ledger.</p>
+        </div>
+        <button onclick="closeRetailPaymentModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form id="retail-payment-form" onsubmit="handleRetailPaymentSubmit(event)">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Select Retail Partner *</label>
+          <select id="rpay-retailer-select" class="form-control" required style="font-weight: 600;" onchange="updatePaymentOutstandingNotice()">
+            <!-- Populated by admin.js -->
+          </select>
+        </div>
+
+        <div id="rpay-outstanding-box" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.84rem;">
+          Current Outstanding: <strong style="color: #dc2626;" id="rpay-outstanding-val">₹0</strong>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Amount Received (₹) *</label>
+            <input type="number" id="rpay-amount" class="form-control" placeholder="e.g. 9576" required min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Payment Date *</label>
+            <input type="date" id="rpay-date" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Payment Mode *</label>
+            <select id="rpay-method" class="form-control" required>
+              <option value="UPI">UPI (Google Pay, PhonePe, Paytm)</option>
+              <option value="BANK_TRANSFER">Bank Transfer (NEFT/RTGS/IMPS)</option>
+              <option value="CASH">Cash Collection</option>
+              <option value="CHEQUE">Cheque</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">UTR / Transaction / Cheque Ref # *</label>
+            <input type="text" id="rpay-ref" class="form-control" placeholder="e.g. UPI-1029482910" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Payment Notes</label>
+          <input type="text" id="rpay-notes" class="form-control" placeholder="e.g. Settlement for invoice RSO-001">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeRetailPaymentModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Post Payment to Ledger</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 11: RECORD RETURN & QUARANTINE MODAL -->
+  <div id="retail-return-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700;">🔄 Record Return / Quarantine</h3>
+          <p style="font-size: 0.8rem; color: #64748b;">Quarantines stock, deducts retailer inventory, and creates credit note.</p>
+        </div>
+        <button onclick="closeRetailReturnModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form id="retail-return-form" onsubmit="handleRetailReturnSubmit(event)">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Select Retail Partner *</label>
+          <select id="rreturn-retailer-select" class="form-control" required style="font-weight: 600;">
+            <!-- Populated by admin.js -->
+          </select>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Product SKU *</label>
+            <select id="rreturn-sku" class="form-control" required>
+              <option value="PLAIN-200">PLAIN-200 — Classic Plain Roasted Makhana</option>
+              <option value="SALTED-200">SALTED-200 — Lightly Salted Roasted Makhana</option>
+              <option value="PERIPERI-200">PERIPERI-200 — Fiery Peri-Peri Roasted Makhana</option>
+              <option value="COMBO-600">COMBO-600 — The Trio Discovery Combo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Quantity *</label>
+            <input type="number" id="rreturn-qty" class="form-control" value="1" min="1" required>
+          </div>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Return Reason *</label>
+            <select id="rreturn-reason" class="form-control" required>
+              <option value="DAMAGED">⚠️ Damaged in Store / Transit</option>
+              <option value="EXPIRY">⏳ Near Expiry / Expired</option>
+              <option value="UNSOLD">📦 Unsold Stock Return</option>
+              <option value="WRONG_PRODUCT">❌ Wrong SKU Delivered</option>
+              <option value="QUALITY_ISSUE">🧪 Quality Discrepancy</option>
+              <option value="OTHER">Other Reason</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Physical Condition</label>
+            <select id="rreturn-condition" class="form-control">
+              <option value="SEALED">Sealed & Intact</option>
+              <option value="DAMAGED_CARTON">Damaged Outer Seal/Jar</option>
+              <option value="OPENED">Opened Container</option>
+              <option value="CRUSHED">Crushed Content</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Batch Number (If Visible)</label>
+            <input type="text" id="rreturn-batch" class="form-control" placeholder="e.g. B2608-01">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Credit Note Value (₹)</label>
+            <input type="number" id="rreturn-credit-val" class="form-control" placeholder="Auto calculated if left blank">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Return Inspection Notes</label>
+          <textarea id="rreturn-notes" class="form-control" rows="2" placeholder="Describe package condition and store feedback..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeRetailReturnModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Confirm Return to Quarantine</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 12: RECONCILE PHYSICAL STOCK MODAL -->
+  <div id="retail-reconcile-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700;">🔍 Reconcile Physical Retail Stock</h3>
+          <p style="font-size: 0.8rem; color: #64748b;">Audits physical store count against system count with immutable delta logging.</p>
+        </div>
+        <button onclick="closeRetailReconcileModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form id="retail-reconcile-form" onsubmit="handleRetailReconcileSubmit(event)">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Select Retail Partner *</label>
+          <select id="rrecon-retailer-select" class="form-control" required style="font-weight: 600;" onchange="updateReconcileSystemStock()">
+            <!-- Populated by admin.js -->
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Select Product SKU *</label>
+          <select id="rrecon-sku" class="form-control" required onchange="updateReconcileSystemStock()">
+            <option value="PLAIN-200">PLAIN-200 — Classic Plain Roasted Makhana</option>
+            <option value="SALTED-200">SALTED-200 — Lightly Salted Roasted Makhana</option>
+            <option value="PERIPERI-200">PERIPERI-200 — Fiery Peri-Peri Roasted Makhana</option>
+            <option value="COMBO-600">COMBO-600 — The Trio Discovery Combo</option>
+          </select>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Current System Stock:</div>
+            <strong style="font-size: 1.2rem; color: #0f172a;" id="rrecon-current-system-stock">0 units</strong>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: #64748b;">Discrepancy Delta:</div>
+            <strong style="font-size: 1.2rem; color: #2563eb;" id="rrecon-delta-val">0</strong>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Actual Physical Count in Store *</label>
+          <input type="number" id="rrecon-physical-count" class="form-control" placeholder="Count jars physically present" required min="0" oninput="calculateReconcileDelta()">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Reason for Discrepancy *</label>
+          <select id="rrecon-reason" class="form-control" required>
+            <option value="Sold but not reported">Sold by retailer (unreported sale)</option>
+            <option value="Damaged">Damaged / broken jar written off</option>
+            <option value="Missing">Missing / shrinkage during display</option>
+            <option value="Data entry error">Previous data entry error</option>
+            <option value="Sample given">Promotional tasting sample provided</option>
+            <option value="Other">Other verified audit adjustment</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Auditor Notes *</label>
+          <input type="text" id="rrecon-notes" class="form-control" placeholder="e.g. Physical store visit by auditor Keshav" required>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeRetailReconcileModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Commit Stock Reconciliation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 13: SCHEDULE FOLLOW-UP MODAL -->
+  <div id="retail-followup-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700;">📅 Schedule Retail Follow-up</h3>
+          <p style="font-size: 0.8rem; color: #64748b;">Set reminders for payment collections, stock checks, and reorder reminders.</p>
+        </div>
+        <button onclick="closeRetailFollowupModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <form id="retail-followup-form" onsubmit="handleRetailFollowupSubmit(event)">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Select Retail Partner *</label>
+          <select id="rfol-retailer-select" class="form-control" required style="font-weight: 600;">
+            <!-- Populated by admin.js -->
+          </select>
+        </div>
+
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Due Date *</label>
+            <input type="date" id="rfol-date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Reason *</label>
+            <select id="rfol-reason" class="form-control" required>
+              <option value="Call for reorder">Call for reorder</option>
+              <option value="Payment follow-up">Payment follow-up</option>
+              <option value="Stock check">Physical stock check</option>
+              <option value="New SKU introduction">New SKU introduction</option>
+              <option value="Contract renewal">Contract renewal</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Assigned Person</label>
+          <input type="text" id="rfol-assignee" class="form-control" value="Keshav Gandhi">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Follow-up Notes / Objective</label>
+          <textarea id="rfol-notes" class="form-control" rows="2" placeholder="e.g. Call store owner to collect pending invoice payment..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeRetailFollowupModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-accent">Save Follow-up Task</button>
         </div>
       </form>
     </div>

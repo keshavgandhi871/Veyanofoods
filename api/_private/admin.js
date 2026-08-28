@@ -556,4 +556,213 @@ router.get('/system/health', (req, res) => {
   });
 });
 
+// ── RETAIL NETWORK MODULE ENDPOINTS (SERVERLESS MIRROR) ───────────────────────
+let retailService = null;
+try {
+  retailService = require('../../server/services/retailNetworkService');
+} catch (e) {
+  console.warn('Retail service require warning:', e.message);
+}
+
+// 1. Dashboard KPIs
+router.get('/retail/dashboard', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const kpis = retailService.getRetailDashboardKPIs();
+    res.json({ success: true, data: kpis });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch retail dashboard KPIs', detail: err.message });
+  }
+});
+
+// 2. Retailer Directory (Search, Filter, Sort)
+router.get('/retail/retailers', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const retailers = retailService.getAllRetailers(req.query);
+    res.json({ success: true, data: retailers, total: retailers.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch retailers', detail: err.message });
+  }
+});
+
+// 3. Retailer 360 Profile
+router.get('/retail/retailers/:id', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const profile = retailService.getRetailerProfile(req.params.id);
+    res.json({ success: true, data: profile });
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+// 4. Create Retailer
+router.post('/retail/retailers', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const retailer = retailService.createRetailer(req.body, actor);
+    res.status(201).json({ success: true, message: 'Retailer created successfully.', data: retailer });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 5. Update Retailer
+router.put('/retail/retailers/:id', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const updated = retailService.updateRetailer(req.params.id, req.body, actor);
+    res.json({ success: true, message: 'Retailer updated successfully.', data: updated });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 6. Archive / Soft Delete Retailer
+router.delete('/retail/retailers/:id', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const result = retailService.archiveRetailer(req.params.id, actor);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 7. Record Supply Order
+router.post('/retail/supply', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const result = retailService.recordSupplyOrder(req.body, actor);
+    if (result.requires_approval) {
+      return res.status(403).json(result);
+    }
+    res.status(201).json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 8. Record Payment
+router.post('/retail/payments', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'FINANCE' };
+    const result = retailService.recordPayment(req.body, actor);
+    res.status(201).json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 9. Record Return & Quarantine
+router.post('/retail/returns', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
+    const result = retailService.recordReturn(req.body, actor);
+    res.status(201).json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 10. Physical Stock Reconciliation
+router.post('/retail/reconcile', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
+    const result = retailService.reconcileStock(req.body, actor);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 11. Global Retail Stock Matrix
+router.get('/retail/stock', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const matrix = retailService.getRetailStockMatrix(req.query);
+    res.json({ success: true, data: matrix, total: matrix.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch stock matrix', detail: err.message });
+  }
+});
+
+// 12. Follow-ups
+router.get('/retail/followups', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const list = retailService.getFollowups(req.query);
+    res.json({ success: true, data: list, total: list.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch follow-ups', detail: err.message });
+  }
+});
+
+router.post('/retail/followups', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'SALES' };
+    const item = retailService.createFollowup(req.body, actor);
+    res.status(201).json({ success: true, data: item });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.patch('/retail/followups/:id/complete', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'SALES' };
+    const item = retailService.completeFollowup(req.params.id, req.body?.notes, actor);
+    res.json({ success: true, data: item });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 13. Internal Notes
+router.post('/retail/notes', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
+    const note = retailService.addRetailerNote(req.body.retailer_id, req.body.content, actor);
+    res.status(201).json({ success: true, data: note });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 14. Statement
+router.get('/retail/statement/:id', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const statement = retailService.getRetailerStatement(req.params.id, req.query);
+    res.json({ success: true, data: statement });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 15. CSV Export
+router.get('/retail/export/:type', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const csvContent = retailService.exportRetailCSV(req.params.type, req.query, actor);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="veyano_retail_${req.params.type}_${Date.now()}.csv"`);
+    res.status(200).send(csvContent);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to export CSV', detail: err.message });
+  }
+});
+
 module.exports = router;
