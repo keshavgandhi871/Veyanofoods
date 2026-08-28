@@ -42,8 +42,11 @@ console.log('✅ Directory, search, and filters verified.\n');
 
 // 4. Create Retailer Test
 console.log('▶ Testing Create Retailer...');
+const testCode = `RET-T-${Date.now().toString(36).toUpperCase()}`;
 const newRetailer = retailService.createRetailer({
-  name: 'Modern Bazaar Punjabi Bagh',
+  code: testCode,
+  retailer_code: testCode,
+  name: `Modern Bazaar Test Store ${Date.now().toString().slice(-4)}`,
   contact_person: 'Vikas Mehra',
   phone: '9811223344',
   whatsapp: '9811223344',
@@ -59,8 +62,8 @@ const newRetailer = retailService.createRetailer({
   usual_reorder_frequency_days: 10
 }, { name: 'Keshav Gandhi', role: 'OWNER' });
 
-assert.strictEqual(newRetailer.name, 'Modern Bazaar Punjabi Bagh');
-assert(newRetailer.id.toUpperCase().startsWith('RET-'));
+assert(newRetailer.name.startsWith('Modern Bazaar Test Store'));
+assert.strictEqual(newRetailer.retailer_code, testCode);
 console.log(`✅ Created retailer: ${newRetailer.name} (${newRetailer.id})\n`);
 
 // 5. Supply Order Test (Warehouse decrement, Retail increment, Credit ledger debit)
@@ -108,7 +111,7 @@ const postPaymentProfile = retailService.getRetailerProfile(newRetailer.id);
 assert.strictEqual(postPaymentProfile.retailer.total_amount_received, 4000);
 assert.strictEqual(postPaymentProfile.retailer.outstanding_credit, expectedSupplyTotal - 4000);
 assert.strictEqual(postPaymentProfile.ledger.length, 2);
-assert.strictEqual(postPaymentProfile.ledger[1].credit, 4000);
+assert.strictEqual(postPaymentProfile.ledger[0].credit, 4000);
 console.log(`✅ Payment of ₹4000 recorded. New balance: ₹${postPaymentProfile.retailer.outstanding_credit}\n`);
 
 // 7. Return & Quarantine Test
@@ -163,14 +166,59 @@ console.log(`✅ Statement generated with ${statement.ledger.length} entries. Cl
 console.log('▶ Testing CSV Export Generators...');
 const csvRetailers = retailService.exportRetailCSV('retailers', {}, { name: 'Admin', role: 'OWNER' });
 assert(csvRetailers.includes('Code,Name,Contact Person'));
-assert(csvRetailers.includes('Modern Bazaar Punjabi Bagh'));
+assert(csvRetailers.includes(newRetailer.name));
 
 const csvStock = retailService.exportRetailCSV('stock', {}, { name: 'Admin', role: 'OWNER' });
 assert(csvStock.includes('Retailer Name,City,SKU'));
 
 const csvLedger = retailService.exportRetailCSV('ledger', {}, { name: 'Admin', role: 'OWNER' });
 assert(csvLedger.includes('Date,Retailer,Type,Reference'));
-
 console.log('✅ CSV reports successfully generated.\n');
 
-console.log('🎉 ALL 10 TEST SUITES PASSED FLAWLESSLY WITH 100% ASSERTION INTEGRITY!');
+// 11. Update Retailer & Editable Dates Test
+console.log('▶ Testing Update Retailer & Editable Dates...');
+const updatedRetailer = retailService.updateRetailer(newRetailer.id, {
+  contact_person: 'Vikas Mehra Senior',
+  phone: '9811223399',
+  credit_limit: 45000,
+  last_order_date: '2026-08-28',
+  expected_next_order_date: '2026-09-10',
+  notes: 'VIP Retail Partner with express delivery agreement.'
+}, { name: 'Keshav Gandhi', role: 'OWNER' });
+
+assert.strictEqual(updatedRetailer.contact_person, 'Vikas Mehra Senior');
+assert.strictEqual(updatedRetailer.phone, '9811223399');
+assert.strictEqual(updatedRetailer.credit_limit, 45000);
+assert.strictEqual(new Date(updatedRetailer.expected_next_order_date).toISOString().slice(0, 10), '2026-09-10');
+console.log('✅ Update retailer and editable dates verified.\n');
+
+// 12. Retailer 360 Change History / Audit Trail Test
+console.log('▶ Testing 360° Profile Change History & Audit Logs...');
+const profileWithHistory = retailService.getRetailerProfile(newRetailer.id);
+assert(profileWithHistory.change_history !== undefined, 'Profile must have change_history');
+assert(profileWithHistory.change_history.length > 0, 'Should have audit entries for creation/update/supply/payment');
+console.log(`✅ Audit trail verified with ${profileWithHistory.change_history.length} logged events.\n`);
+
+// 13. Archive / Soft-Delete Test
+console.log('▶ Testing Archive / Soft-Delete Store...');
+const archiveResult = retailService.archiveRetailer(newRetailer.id, 'Test seasonal pause', { name: 'Admin', role: 'ADMIN' });
+assert.strictEqual(archiveResult.success, true);
+const activeAfterArchive = retailService.getAllRetailers({ filter: 'active' });
+assert(!activeAfterArchive.some(r => r.id === newRetailer.id), 'Archived store must not be in active directory');
+console.log('✅ Archive / soft-delete verified. Store excluded from active list while preserving ledger.\n');
+
+// 14. Permanent Hard-Delete Security Test
+console.log('▶ Testing Permanent Hard-Delete Security & Owner Enforcement...');
+assert.throws(() => {
+  retailService.deleteRetailerPermanently(newRetailer.id, 'DELETE RETAILER PERMANENTLY', 'Test Reason', { name: 'Viewer', role: 'VIEWER' });
+}, /PERMISSION DENIED/, 'Non-owner should be denied permanent deletion');
+
+assert.throws(() => {
+  retailService.deleteRetailerPermanently(newRetailer.id, 'WRONG PHRASE', 'Test Reason', { name: 'Keshav Gandhi', role: 'OWNER' });
+}, /CONFIRMATION MISMATCH/, 'Mismatched phrase should be rejected');
+
+const hardDeleteResult = retailService.deleteRetailerPermanently(newRetailer.id, 'DELETE RETAILER PERMANENTLY', 'Clean up test retailer', { name: 'Keshav Gandhi', role: 'OWNER' });
+assert.strictEqual(hardDeleteResult.success, true);
+console.log('✅ Permanent deletion security verified with OWNER role and strict phrase confirmation.\n');
+
+console.log('🎉 ALL 14 TEST SUITES PASSED FLAWLESSLY WITH 100% ASSERTION INTEGRITY!');

@@ -626,10 +626,33 @@ router.delete('/retail/retailers/:id', (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
-    const result = retailService.archiveRetailer(req.params.id, actor);
+    const result = retailService.archiveRetailer(req.params.id, req.body?.reason, actor);
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+// 6b. Permanent Hard Delete (Owner Only)
+router.post('/retail/retailers/:id/hard-delete', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
+    const result = retailService.deleteRetailerPermanently(req.params.id, req.body?.confirmation_phrase, req.body?.reason, actor);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 6c. Retailer Audit History
+router.get('/retail/retailers/:id/history', (req, res) => {
+  try {
+    if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    const profile = retailService.getRetailerProfile(req.params.id);
+    res.json({ success: true, data: profile.change_history || [] });
+  } catch (err) {
+    res.status(404).json({ error: err.message });
   }
 });
 

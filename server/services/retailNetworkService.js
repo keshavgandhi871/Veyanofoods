@@ -2,10 +2,17 @@
  * server/services/retailNetworkService.js — Enterprise Retail Network & Stock Ledger Engine
  * Complete offline distribution management: Retailer 360, Product-Level Stock Ledger,
  * Double-Entry Credit Ledger, Quarantined Returns, Reorder Forecasting, and CSV Exports.
+ * Backed by Supabase with persistent disk-backed storage fallback.
  */
 
-const { logAuditEvent } = require('./auditLogger');
+const fs = require('fs');
+const path = require('path');
+const supabase = require('../config/supabase');
+const { logAuditEvent, getAuditLogs, getAuditLogsSync } = require('./auditLogger');
 const { recordInventoryMovement } = require('./inventoryService');
+
+// ── Persistent Storage Path ──────────────────────────────────────────────────
+const LOCAL_RETAIL_DATA_FILE = path.join(__dirname, '../../scratch/retail_network_data.json');
 
 // ── In-Memory Persistence Layer with Full Schema Integrity ────────────────────
 let RETAILERS = [];
@@ -25,6 +32,57 @@ const PRODUCT_CATALOG = {
   'PERIPERI-200': { sku: 'PERIPERI-200', name: 'Fiery Peri-Peri Roasted Makhana', price: 399, mrp: 399, costPrice: 200 },
   'COMBO-600': { sku: 'COMBO-600', name: 'The Trio Discovery Combo (600g)', price: 999, mrp: 1197, costPrice: 520 }
 };
+
+// ── Load & Save Persistent Retail Data ───────────────────────────────────────
+function savePersistentRetailData() {
+  try {
+    const dir = path.dirname(LOCAL_RETAIL_DATA_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+    const payload = {
+      retailers: RETAILERS,
+      inventory: RETAILER_INVENTORY,
+      movements: INVENTORY_MOVEMENTS,
+      orders: SUPPLY_ORDERS,
+      ledger: FINANCIAL_LEDGER,
+      returns: RETURNS,
+      followups: FOLLOWUPS,
+      notes: NOTES,
+      documents: DOCUMENTS,
+      updated_at: new Date().toISOString()
+    };
+    fs.writeFileSync(LOCAL_RETAIL_DATA_FILE, JSON.stringify(payload, null, 2), 'utf8');
+  } catch (err) {
+    console.warn('⚠️ Could not write persistent retail data file:', err.message);
+  }
+}
+
+function loadPersistentRetailData() {
+  try {
+    if (fs.existsSync(LOCAL_RETAIL_DATA_FILE)) {
+      const raw = fs.readFileSync(LOCAL_RETAIL_DATA_FILE, 'utf8');
+      const data = JSON.parse(raw || '{}');
+      if (data.retailers && Array.isArray(data.retailers)) {
+        RETAILERS = data.retailers;
+        RETAILER_INVENTORY = data.inventory || [];
+        INVENTORY_MOVEMENTS = data.movements || [];
+        SUPPLY_ORDERS = data.orders || [];
+        FINANCIAL_LEDGER = data.ledger || [];
+        RETURNS = data.returns || [];
+        FOLLOWUPS = data.followups || [];
+        NOTES = data.notes || [];
+        DOCUMENTS = data.documents || [];
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ Could not load local retail file, initializing default store:', e.message);
+  }
+
+  // Initialize initial dataset if empty
+  seedInitialRetailNetwork();
+  savePersistentRetailData();
+}
 
 // ── Seed Initial Live Retail Network Dataset ──────────────────────────────────
 function seedInitialRetailNetwork() {
@@ -150,18 +208,18 @@ function seedInitialRetailNetwork() {
       city: 'Noida',
       state: 'Uttar Pradesh',
       pincode: '201301',
-      landmark: 'Near Metro Gate 2',
-      gps_coordinates: '28.5708, 77.3271',
+      landmark: 'Near Wave Mall Metro Exit',
+      gps_coordinates: '28.5708, 77.3261',
       status: 'ACTIVE',
-      assigned_salesperson: 'Sales Lead',
+      assigned_salesperson: 'Keshav Gandhi',
       payment_terms: '7_DAYS',
       credit_limit: 15000,
       current_outstanding: 11970,
-      reorder_frequency_days: 20,
+      reorder_frequency_days: 7,
       preferred_contact_method: 'WHATSAPP',
-      notes: 'Follow-up strictly needed for payment overdues.',
+      notes: 'Health conscious buyers. Frequent reorders of 200g snack jars.',
       last_order_date: new Date(now - 22 * dayMs).toISOString(),
-      expected_next_order_date: new Date(now - 2 * dayMs).toISOString(),
+      expected_next_order_date: new Date(now - 15 * dayMs).toISOString(),
       created_at: new Date(now - 30 * dayMs).toISOString(),
       updated_at: new Date(now - 22 * dayMs).toISOString(),
       deleted_at: null,
@@ -171,22 +229,22 @@ function seedInitialRetailNetwork() {
       id: 'RET-2026-005',
       retailer_code: 'RET-005',
       name: 'FitFuel Crossfit Cafe & Kiosk',
-      contact_person: 'Karan Malhotra',
-      phone: '9910223344',
-      whatsapp: '9910223344',
-      email: 'karan@fitfuelkiosk.com',
+      contact_person: 'Karan Chadha',
+      phone: '9818844332',
+      whatsapp: '9818844332',
+      email: 'cafe@fitfuel.fit',
       gstin: '',
       retailer_type: 'Gym/Fitness',
       channel_type: 'RETAILER',
-      address: 'Inner Circle, F-Block, Connaught Place',
-      area: 'Connaught Place',
+      address: 'Plot 4, Community Centre, Saket District Centre',
+      area: 'Saket',
       city: 'New Delhi',
       state: 'Delhi',
-      pincode: '110001',
-      landmark: 'Inside FitZone Arena',
-      gps_coordinates: '28.6315, 77.2167',
+      pincode: '110017',
+      landmark: 'Opposite Select Citywalk Gate 2',
+      gps_coordinates: '28.5284, 77.2192',
       status: 'ACTIVE',
-      assigned_salesperson: 'Keshav Gandhi',
+      assigned_salesperson: 'Sales Rep',
       payment_terms: 'IMMEDIATE',
       credit_limit: 10000,
       current_outstanding: 0,
@@ -251,11 +309,9 @@ function seedInitialRetailNetwork() {
       amount_paid: 0,
       amount_outstanding: 9576,
       items: [
-        { sku: 'PLAIN-200', product_name: 'Classic Plain Roasted Makhana', quantity: 8, unit_price: 399, total_price: 3192 },
-        { sku: 'SALTED-200', product_name: 'Lightly Salted Roasted Makhana', quantity: 8, unit_price: 399, total_price: 3192 },
-        { sku: 'PERIPERI-200', product_name: 'Fiery Peri-Peri Roasted Makhana', quantity: 8, unit_price: 399, total_price: 3192 }
+        { sku: 'PLAIN-200', product_name: 'Classic Plain Roasted Makhana', quantity: 10, unit_price: 399, total_price: 3990 },
+        { sku: 'PERIPERI-200', product_name: 'Fiery Peri-Peri Roasted Makhana', quantity: 14, unit_price: 399, total_price: 5586 }
       ],
-      notes: 'Standard bimonthly replenishment batch.',
       created_by: 'Keshav Gandhi',
       created_at: new Date(now - 10 * dayMs).toISOString()
     },
@@ -279,7 +335,6 @@ function seedInitialRetailNetwork() {
         { sku: 'SALTED-200', product_name: 'Lightly Salted Roasted Makhana', quantity: 15, unit_price: 399, total_price: 5985 },
         { sku: 'PERIPERI-200', product_name: 'Fiery Peri-Peri Roasted Makhana', quantity: 16, unit_price: 399, total_price: 6384 }
       ],
-      notes: 'Supermarket aisle restocking.',
       created_by: 'Keshav Gandhi',
       created_at: new Date(now - 14 * dayMs).toISOString()
     },
@@ -288,24 +343,22 @@ function seedInitialRetailNetwork() {
       order_number: 'RSO-003',
       retailer_id: 'RET-2026-003',
       retailer_name: 'Le Marche Artisanal Market',
-      order_date: new Date(now - 6 * dayMs).toISOString(),
-      total_units: 35,
-      subtotal_amount: 13965,
+      order_date: new Date(now - 20 * dayMs).toISOString(),
+      total_units: 40,
+      subtotal_amount: 15960,
       discount_amount: 0,
-      total_amount: 13965,
+      total_amount: 15960,
       payment_status: 'PAID',
       payment_terms: '15_DAYS',
-      due_date: new Date(now + 9 * dayMs).toISOString(),
-      amount_paid: 13965,
+      due_date: new Date(now - 5 * dayMs).toISOString(),
+      amount_paid: 15960,
       amount_outstanding: 0,
       items: [
-        { sku: 'PLAIN-200', product_name: 'Classic Plain Roasted Makhana', quantity: 15, unit_price: 399, total_price: 5985 },
-        { sku: 'SALTED-200', product_name: 'Lightly Salted Roasted Makhana', quantity: 10, unit_price: 399, total_price: 3990 },
-        { sku: 'PERIPERI-200', product_name: 'Fiery Peri-Peri Roasted Makhana', quantity: 10, unit_price: 399, total_price: 3990 }
+        { sku: 'PLAIN-200', product_name: 'Classic Plain Roasted Makhana', quantity: 20, unit_price: 399, total_price: 7980 },
+        { sku: 'SALTED-200', product_name: 'Lightly Salted Roasted Makhana', quantity: 20, unit_price: 399, total_price: 7980 }
       ],
-      notes: 'Paid via IMPS transfer on delivery confirmation.',
       created_by: 'Operations Lead',
-      created_at: new Date(now - 6 * dayMs).toISOString()
+      created_at: new Date(now - 20 * dayMs).toISOString()
     },
     {
       id: 'RSO-2026-004',
@@ -327,8 +380,7 @@ function seedInitialRetailNetwork() {
         { sku: 'SALTED-200', product_name: 'Lightly Salted Roasted Makhana', quantity: 10, unit_price: 399, total_price: 3990 },
         { sku: 'PERIPERI-200', product_name: 'Fiery Peri-Peri Roasted Makhana', quantity: 10, unit_price: 399, total_price: 3990 }
       ],
-      notes: 'Payment overdue by 15 days.',
-      created_by: 'Sales Lead',
+      created_by: 'Keshav Gandhi',
       created_at: new Date(now - 22 * dayMs).toISOString()
     },
     {
@@ -337,26 +389,25 @@ function seedInitialRetailNetwork() {
       retailer_id: 'RET-2026-005',
       retailer_name: 'FitFuel Crossfit Cafe & Kiosk',
       order_date: new Date(now - 8 * dayMs).toISOString(),
-      total_units: 20,
-      subtotal_amount: 7980,
+      total_units: 15,
+      subtotal_amount: 5985,
       discount_amount: 0,
-      total_amount: 7980,
+      total_amount: 5985,
       payment_status: 'PAID',
       payment_terms: 'IMMEDIATE',
       due_date: new Date(now - 8 * dayMs).toISOString(),
-      amount_paid: 7980,
+      amount_paid: 5985,
       amount_outstanding: 0,
       items: [
         { sku: 'PLAIN-200', product_name: 'Classic Plain Roasted Makhana', quantity: 10, unit_price: 399, total_price: 3990 },
-        { sku: 'SALTED-200', product_name: 'Lightly Salted Roasted Makhana', quantity: 10, unit_price: 399, total_price: 3990 }
+        { sku: 'PERIPERI-200', product_name: 'Fiery Peri-Peri Roasted Makhana', quantity: 5, unit_price: 399, total_price: 1995 }
       ],
-      notes: 'Paid immediately via UPI scanner on drop-off.',
-      created_by: 'Keshav Gandhi',
+      created_by: 'Sales Rep',
       created_at: new Date(now - 8 * dayMs).toISOString()
     }
   ];
 
-  // 4. Financial Ledger (Double Entry Log)
+  // 4. Financial Ledger (Double-entry balance records)
   FINANCIAL_LEDGER = [
     {
       id: 'RFL-1',
@@ -370,7 +421,7 @@ function seedInitialRetailNetwork() {
       payment_method: null,
       payment_ref: null,
       recorded_by: 'Keshav Gandhi',
-      notes: 'Supply order RSO-001 invoice',
+      notes: 'Supply Batch RSO-001 (24 units)',
       created_at: new Date(now - 10 * dayMs).toISOString()
     },
     {
@@ -385,7 +436,7 @@ function seedInitialRetailNetwork() {
       payment_method: null,
       payment_ref: null,
       recorded_by: 'Keshav Gandhi',
-      notes: 'Supply order RSO-002 invoice',
+      notes: 'Supply Batch RSO-002 (46 units)',
       created_at: new Date(now - 14 * dayMs).toISOString()
     },
     {
@@ -394,29 +445,29 @@ function seedInitialRetailNetwork() {
       retailer_name: 'Le Marche Artisanal Market',
       transaction_type: 'INVOICE',
       reference_id: 'RSO-2026-003',
-      debit_amount: 13965,
+      debit_amount: 15960,
       credit_amount: 0,
-      running_balance: 13965,
+      running_balance: 15960,
       payment_method: null,
       payment_ref: null,
       recorded_by: 'Operations Lead',
-      notes: 'Supply order RSO-003 invoice',
-      created_at: new Date(now - 6 * dayMs).toISOString()
+      notes: 'Supply Batch RSO-003',
+      created_at: new Date(now - 20 * dayMs).toISOString()
     },
     {
       id: 'RFL-4',
       retailer_id: 'RET-2026-003',
       retailer_name: 'Le Marche Artisanal Market',
       transaction_type: 'PAYMENT',
-      reference_id: 'PAY-2026-0801',
+      reference_id: 'PAY-LM-001',
       debit_amount: 0,
-      credit_amount: 13965,
+      credit_amount: 15960,
       running_balance: 0,
-      payment_method: 'BANK_TRANSFER',
-      payment_ref: 'HDFC-IMPS-893049102',
-      recorded_by: 'Finance Operator',
-      notes: 'Full invoice settlement for RSO-003',
-      created_at: new Date(now - 5 * dayMs).toISOString()
+      payment_method: 'NEFT',
+      payment_ref: 'HDFC-NEFT-998822',
+      recorded_by: 'Finance Lead',
+      notes: 'Payment for invoice RSO-003 cleared in full',
+      created_at: new Date(now - 7 * dayMs).toISOString()
     },
     {
       id: 'RFL-5',
@@ -429,8 +480,8 @@ function seedInitialRetailNetwork() {
       running_balance: 11970,
       payment_method: null,
       payment_ref: null,
-      recorded_by: 'Sales Lead',
-      notes: 'Supply order RSO-004 invoice (Overdue)',
+      recorded_by: 'Keshav Gandhi',
+      notes: 'Supply Batch RSO-004',
       created_at: new Date(now - 22 * dayMs).toISOString()
     },
     {
@@ -439,13 +490,13 @@ function seedInitialRetailNetwork() {
       retailer_name: 'FitFuel Crossfit Cafe & Kiosk',
       transaction_type: 'INVOICE',
       reference_id: 'RSO-2026-005',
-      debit_amount: 7980,
+      debit_amount: 5985,
       credit_amount: 0,
-      running_balance: 7980,
+      running_balance: 5985,
       payment_method: null,
       payment_ref: null,
-      recorded_by: 'Keshav Gandhi',
-      notes: 'Supply order RSO-005 invoice',
+      recorded_by: 'Sales Rep',
+      notes: 'Supply Batch RSO-005',
       created_at: new Date(now - 8 * dayMs).toISOString()
     },
     {
@@ -453,14 +504,14 @@ function seedInitialRetailNetwork() {
       retailer_id: 'RET-2026-005',
       retailer_name: 'FitFuel Crossfit Cafe & Kiosk',
       transaction_type: 'PAYMENT',
-      reference_id: 'PAY-2026-0802',
+      reference_id: 'PAY-FF-001',
       debit_amount: 0,
-      credit_amount: 7980,
+      credit_amount: 5985,
       running_balance: 0,
       payment_method: 'UPI',
-      payment_ref: 'UPI-ICICI-920194827',
-      recorded_by: 'Keshav Gandhi',
-      notes: 'Immediate payment at drop-off',
+      payment_ref: 'UPI-RAZOR-443311',
+      recorded_by: 'Sales Rep',
+      notes: 'Instant UPI settlement on delivery',
       created_at: new Date(now - 8 * dayMs).toISOString()
     }
   ];
@@ -472,15 +523,15 @@ function seedInitialRetailNetwork() {
       retailer_id: 'RET-2026-001',
       sku: 'PLAIN-200',
       movement_type: 'SUPPLIED',
-      quantity_delta: 8,
-      before_quantity: 4,
+      quantity_delta: 10,
+      before_quantity: 2,
       after_quantity: 12,
       unit_price: 399,
       reference_id: 'RSO-2026-001',
-      reason: 'Bi-weekly replenishment supply',
+      reason: 'Regular weekly consignment restock',
       actor_name: 'Keshav Gandhi',
       actor_role: 'OWNER',
-      notes: 'Delivery completed successfully',
+      notes: 'Delivered via company courier dispatch',
       created_at: new Date(now - 10 * dayMs).toISOString()
     },
     {
@@ -493,10 +544,10 @@ function seedInitialRetailNetwork() {
       after_quantity: 14,
       unit_price: 399,
       reference_id: 'RET-RET-001',
-      reason: 'Outer seal dented during shelf display',
-      actor_name: 'Operations Lead',
+      reason: 'Cracked lid seal on customer display shelf',
+      actor_name: 'Raghav Mehra (Store Rep)',
       actor_role: 'OPERATIONS',
-      notes: 'Quarantined at central depot',
+      notes: 'Quarantined at central unit for QC',
       created_at: new Date(now - 3 * dayMs).toISOString()
     },
     {
@@ -559,40 +610,46 @@ function seedInitialRetailNetwork() {
   // 7. Follow-ups
   FOLLOWUPS = [
     {
-      id: 'FOL-1',
+      id: 'RFOL-1',
       retailer_id: 'RET-2026-004',
       retailer_name: 'PureBites Wellness Hub',
-      due_date: new Date(now).toISOString(),
+      retailer_phone: '9810998877',
+      retailer_city: 'Noida',
       reason: 'Payment follow-up',
-      assigned_person: 'Sales Lead',
-      status: 'PENDING',
-      notes: 'Invoice RSO-004 is 15 days overdue. Call Amitabh Sen regarding payment release.',
+      due_date: new Date(now - 1 * dayMs).toISOString().slice(0, 10),
+      assigned_to: 'Keshav Gandhi',
+      notes: 'Payment for invoice RSO-004 is 15 days overdue. Call Amitabh Sen directly.',
+      completed: false,
       completed_at: null,
-      created_at: new Date(now - 2 * dayMs).toISOString()
+      created_at: new Date(now - 5 * dayMs).toISOString()
     },
     {
-      id: 'FOL-2',
+      id: 'RFOL-2',
       retailer_id: 'RET-2026-002',
       retailer_name: 'Modern Superstore — Vasant Vihar',
-      due_date: new Date(now + 1 * dayMs).toISOString(),
+      retailer_phone: '9871122334',
+      retailer_city: 'New Delhi',
       reason: 'Call for reorder',
-      assigned_person: 'Keshav Gandhi',
-      status: 'PENDING',
-      notes: 'Estimated reorder window due. Check if peri-peri stock is below 15 jars.',
-      completed_at: null,
-      created_at: new Date(now - 1 * dayMs).toISOString()
-    },
-    {
-      id: 'FOL-3',
-      retailer_id: 'RET-2026-005',
-      retailer_name: 'FitFuel Crossfit Cafe & Kiosk',
-      due_date: new Date(now + 5 * dayMs).toISOString(),
-      reason: 'New SKU introduction',
-      assigned_person: 'Keshav Gandhi',
-      status: 'PENDING',
-      notes: 'Introduce upcoming Trail Sampler & Combo 3-pack for crossfit athletes.',
+      due_date: new Date(now).toISOString().slice(0, 10),
+      assigned_to: 'Keshav Gandhi',
+      notes: 'Stock down to 60 units. Expected weekly sales ~40 units. Pitch Trio Combo replenishment.',
+      completed: false,
       completed_at: null,
       created_at: new Date(now - 3 * dayMs).toISOString()
+    },
+    {
+      id: 'RFOL-3',
+      retailer_id: 'RET-2026-001',
+      retailer_name: "Nature's Soul Gourmet",
+      retailer_phone: '9811234567',
+      retailer_city: 'New Delhi',
+      reason: 'Stock check',
+      due_date: new Date(now + 4 * dayMs).toISOString().slice(0, 10),
+      assigned_to: 'Operations Lead',
+      notes: 'Store visit by rep to audit shelf facing and verify physical counts.',
+      completed: false,
+      completed_at: null,
+      created_at: new Date(now - 2 * dayMs).toISOString()
     }
   ];
 
@@ -619,8 +676,8 @@ function seedInitialRetailNetwork() {
   ];
 }
 
-// Auto-seed on require
-seedInitialRetailNetwork();
+// Initialize persistent state
+loadPersistentRetailData();
 
 // ── Helper: Calculate Dynamic Retailer Health & Stats ──────────────────────────
 function calculateRetailerStats(retailer) {
@@ -661,36 +718,42 @@ function calculateRetailerStats(retailer) {
     return false;
   });
 
-  const daysSinceLastOrder = retailer.last_order_date ? Math.floor((now - new Date(retailer.last_order_date).getTime()) / dayMs) : 999;
-  const isReorderOverdue = retailer.reorder_frequency_days ? daysSinceLastOrder > (retailer.reorder_frequency_days + 3) : false;
-
-  if (hasOverduePayment || (retailer.credit_limit && retailer.current_outstanding > retailer.credit_limit)) {
+  if (hasOverduePayment) {
     healthScore = 'RED';
-    if (hasOverduePayment) healthReasons.push('Payment overdue beyond credit terms');
-    if (retailer.current_outstanding > retailer.credit_limit) healthReasons.push('Credit limit exceeded');
-  } else if (isReorderOverdue || currentStockUnits <= 10) {
-    healthScore = 'YELLOW';
-    if (isReorderOverdue) healthReasons.push(`Reorder delayed (${daysSinceLastOrder} days since last order)`);
-    if (currentStockUnits <= 10) healthReasons.push('Low inventory at retail store');
-  } else {
-    healthScore = 'GREEN';
-    healthReasons.push('Healthy regular orders & payments within terms');
+    healthReasons.push('Invoice payment overdue beyond agreed terms');
   }
 
-  // Estimated next reorder
-  let expectedReorderDate = retailer.expected_next_order_date;
-  if (!expectedReorderDate && retailer.last_order_date && retailer.reorder_frequency_days) {
-    expectedReorderDate = new Date(new Date(retailer.last_order_date).getTime() + retailer.reorder_frequency_days * dayMs).toISOString();
+  if (retailer.current_outstanding > (retailer.credit_limit || 20000)) {
+    healthScore = 'RED';
+    healthReasons.push(`Outstanding balance (₹${retailer.current_outstanding}) exceeds credit limit (₹${retailer.credit_limit})`);
   }
 
-  const isReorderDue = expectedReorderDate ? (new Date(expectedReorderDate).getTime() <= (now + 2 * dayMs)) : false;
+  if (currentStockUnits === 0 && retailer.status === 'ACTIVE') {
+    if (healthScore !== 'RED') healthScore = 'YELLOW';
+    healthReasons.push('Zero stock on store shelf');
+  } else if (currentStockUnits > 0 && currentStockUnits <= 15) {
+    if (healthScore !== 'RED') healthScore = 'YELLOW';
+    healthReasons.push(`Low stock warning (${currentStockUnits} units remaining)`);
+  }
+
+  // Calculate days since last order
+  const lastOrderTime = retailer.last_order_date ? new Date(retailer.last_order_date).getTime() : 0;
+  const daysSinceLastOrder = lastOrderTime > 0 ? Math.floor((now - lastOrderTime) / dayMs) : null;
+  const reorderFreq = retailer.reorder_frequency_days || 14;
+  const isReorderDue = daysSinceLastOrder !== null && daysSinceLastOrder >= reorderFreq;
+
+  if (isReorderDue) {
+    healthReasons.push(`Reorder cycle due (${daysSinceLastOrder} days since last order)`);
+  }
+
+  const expectedReorderDate = retailer.expected_next_order_date || (lastOrderTime > 0 ? new Date(lastOrderTime + reorderFreq * dayMs).toISOString() : null);
 
   return {
-    totalOrders,
-    totalUnitsSupplied,
     currentStockUnits,
     currentStockValue,
+    totalUnitsSupplied,
     totalSoldUnits,
+    totalOrders,
     totalSuppliedValue,
     totalAmountPaid,
     totalReturnsValue,
@@ -706,8 +769,8 @@ function calculateRetailerStats(retailer) {
 
 // ── 1. Get Dashboard Dynamic KPIs ─────────────────────────────────────────────
 function getRetailDashboardKPIs() {
-  const activeRetailers = RETAILERS.filter(r => !r.deleted_at);
-  const totalRetailers = activeRetailers.length;
+  const activeRetailers = RETAILERS.filter(r => !r.deleted_at && r.status !== 'ARCHIVED');
+  const totalRetailers = RETAILERS.filter(r => !r.deleted_at).length;
   const activeCount = activeRetailers.filter(r => r.status === 'ACTIVE').length;
 
   let retailersWithStock = 0;
@@ -728,16 +791,15 @@ function getRetailDashboardKPIs() {
   });
 
   const totalAmountReceived = FINANCIAL_LEDGER
-    .filter(l => l.transaction_type === 'PAYMENT')
-    .reduce((sum, l) => sum + (l.credit_amount || 0), 0);
+    .filter(l => l.transaction_type === 'PAYMENT' || l.entry_type === 'PAYMENT')
+    .reduce((sum, l) => sum + (l.credit_amount || l.credit || 0), 0);
 
   const totalReturnsUnits = RETURNS.reduce((sum, r) => sum + (r.quantity || 0), 0);
-  const totalReturnsValue = RETURNS.reduce((sum, r) => sum + (r.total_credit_value || 0), 0);
+  const totalReturnsValue = RETURNS.reduce((sum, r) => sum + (r.total_credit_value || r.credit_amount || 0), 0);
 
   const totalGoodsSuppliedValue = SUPPLY_ORDERS.reduce((sum, o) => sum + (o.total_amount || 0), 0);
   const totalGoodsSuppliedUnits = SUPPLY_ORDERS.reduce((sum, o) => sum + (o.total_units || 0), 0);
 
-  // Accurately defined Capital Tied Up:
   // Capital Tied Up = Outstanding Credit + Value of Current Stock Held by Retailers
   const capitalTiedUp = totalCreditOutstanding + totalStockValue;
 
@@ -786,9 +848,11 @@ function getAllRetailers({ search = '', filter = 'all', flag = '', status = '', 
       (r.name && r.name.toLowerCase().includes(q)) ||
       (r.contact_person && r.contact_person.toLowerCase().includes(q)) ||
       (r.phone && r.phone.includes(q)) ||
+      (r.whatsapp && r.whatsapp.includes(q)) ||
       (r.city && r.city.toLowerCase().includes(q)) ||
       (r.area && r.area.toLowerCase().includes(q)) ||
-      (r.retailer_code && r.retailer_code.toLowerCase().includes(q))
+      (r.retailer_code && r.retailer_code.toLowerCase().includes(q)) ||
+      (r.code && r.code.toLowerCase().includes(q))
     );
   }
 
@@ -819,26 +883,31 @@ function getAllRetailers({ search = '', filter = 'all', flag = '', status = '', 
   // Filter Pills
   const activeFilter = (filter !== 'all' ? filter : '') || flag || status || 'all';
   if (activeFilter === 'active' || activeFilter === 'ACTIVE') enriched = enriched.filter(r => r.status === 'ACTIVE');
-  else if (activeFilter === 'inactive' || activeFilter === 'INACTIVE') enriched = enriched.filter(r => r.status === 'INACTIVE' || r.status === 'ON_HOLD');
+  else if (activeFilter === 'inactive' || activeFilter === 'INACTIVE') enriched = enriched.filter(r => r.status === 'INACTIVE' || r.status === 'ON_HOLD' || r.status === 'ARCHIVED');
   else if (activeFilter === 'has_stock') enriched = enriched.filter(r => r.stats.currentStockUnits > 0);
   else if (activeFilter === 'low_stock') enriched = enriched.filter(r => r.stats.currentStockUnits > 0 && r.stats.currentStockUnits <= 15);
   else if (activeFilter === 'credit_outstanding') enriched = enriched.filter(r => (r.current_outstanding || 0) > 0);
-  else if (activeFilter === 'payment_due') enriched = enriched.filter(r => r.stats.healthScore === 'RED' || (r.current_outstanding || 0) > 0);
-  else if (activeFilter === 'reorder_due') enriched = enriched.filter(r => r.stats.isReorderDue);
+  else if (activeFilter === 'payment_due') enriched = enriched.filter(r => r.stats.healthScore === 'RED' || (r.current_outstanding || 0) > (r.credit_limit || 0));
+  else if (activeFilter === 'reorder_due') enriched = enriched.filter(r => r.stats.isReorderDue || r.stats.currentStockUnits === 0);
 
-  // Sort
-  if (sort === 'name_asc') enriched.sort((a, b) => a.name.localeCompare(b.name));
-  else if (sort === 'name_desc') enriched.sort((a, b) => b.name.localeCompare(a.name));
-  else if (sort === 'stock_high') enriched.sort((a, b) => b.stats.currentStockValue - a.stats.currentStockValue);
+  // Sorting
+  if (sort === 'name_asc') enriched.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  else if (sort === 'name_desc') enriched.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+  else if (sort === 'newest') enriched.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  else if (sort === 'oldest') enriched.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+  else if (sort === 'stock_high') enriched.sort((a, b) => (b.stats?.currentStockValue || 0) - (a.stats?.currentStockValue || 0));
+  else if (sort === 'stock_low') enriched.sort((a, b) => (a.stats?.currentStockValue || 0) - (b.stats?.currentStockValue || 0));
   else if (sort === 'outstanding_high') enriched.sort((a, b) => (b.current_outstanding || 0) - (a.current_outstanding || 0));
+  else if (sort === 'outstanding_low') enriched.sort((a, b) => (a.current_outstanding || 0) - (b.current_outstanding || 0));
   else if (sort === 'last_order') enriched.sort((a, b) => new Date(b.last_order_date || 0) - new Date(a.last_order_date || 0));
+  else if (sort === 'next_reorder') enriched.sort((a, b) => new Date(a.expected_next_order_date || '9999') - new Date(b.expected_next_order_date || '9999'));
 
   return enriched;
 }
 
 // ── 3. Get Retailer Profile 360° ──────────────────────────────────────────────
 function getRetailerProfile(id) {
-  const retailer = RETAILERS.find(r => r.id === id || r.retailer_code === id);
+  const retailer = RETAILERS.find(r => r.id === id || r.retailer_code === id || r.code === id);
   if (!retailer || retailer.deleted_at) {
     throw new Error(`Retailer ${id} not found or has been archived.`);
   }
@@ -868,6 +937,15 @@ function getRetailerProfile(id) {
     debit: l.debit_amount !== undefined ? l.debit_amount : l.debit || 0,
     credit: l.credit_amount !== undefined ? l.credit_amount : l.credit || 0
   }));
+
+  // Fetch change history / audit trail for this retailer
+  let changeHistory = [];
+  try {
+    const allAudit = getAuditLogsSync ? getAuditLogsSync({}) : [];
+    changeHistory = (allAudit || []).filter(a => a.entity_id === retailer.id || (a.entity_name && a.entity_name.includes(retailer.name)));
+  } catch (e) {
+    changeHistory = [];
+  }
 
   return {
     retailer: {
@@ -899,6 +977,8 @@ function getRetailerProfile(id) {
     followups,
     notes,
     documents,
+    change_history: changeHistory,
+    history: changeHistory,
     health: {
       color: (stats.healthScore || 'GREEN').toLowerCase(),
       label: stats.healthScore || 'HEALTHY',
@@ -914,12 +994,21 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
   }
 
   const nextNum = RETAILERS.length + 1;
-  const retailer_code = data.retailer_code || `RET-${String(nextNum).padStart(3, '0')}`;
+  const retailer_code = data.retailer_code || data.code || `RET-${String(nextNum).padStart(3, '0')}`;
   const id = `RET-2026-${String(nextNum).padStart(3, '0')}`;
+
+  // Check duplicate code
+  const existingWithCode = RETAILERS.find(r => !r.deleted_at && (r.retailer_code === retailer_code || r.code === retailer_code));
+  if (existingWithCode) {
+    throw new Error(`Retailer code '${retailer_code}' is already in use by store '${existingWithCode.name}'.`);
+  }
+
+  const nowStr = data.created_at ? new Date(data.created_at).toISOString() : new Date().toISOString();
 
   const newRetailer = {
     id,
     retailer_code,
+    code: retailer_code,
     name: data.name.trim(),
     contact_person: data.contact_person.trim(),
     phone: data.phone.trim(),
@@ -938,15 +1027,16 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
     status: data.status || 'ACTIVE',
     assigned_salesperson: data.assigned_salesperson || actor.name,
     payment_terms: data.payment_terms || '15_DAYS',
-    credit_limit: parseInt(data.credit_limit, 10) || 20000,
+    credit_limit: parseFloat(data.credit_limit) || 20000,
     current_outstanding: 0,
-    reorder_frequency_days: parseInt(data.reorder_frequency_days, 10) || 14,
+    reorder_frequency_days: parseInt(data.reorder_frequency_days || data.usual_reorder_frequency_days, 10) || 14,
+    usual_reorder_frequency_days: parseInt(data.reorder_frequency_days || data.usual_reorder_frequency_days, 10) || 14,
     preferred_contact_method: data.preferred_contact_method || 'WHATSAPP',
     notes: data.notes || '',
-    last_order_date: null,
-    expected_next_order_date: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    last_order_date: data.last_order_date ? new Date(data.last_order_date).toISOString() : null,
+    expected_next_order_date: data.expected_next_order_date ? new Date(data.expected_next_order_date).toISOString() : null,
+    created_at: nowStr,
+    updated_at: nowStr,
     deleted_at: null,
     deleted_by: null
   };
@@ -956,7 +1046,7 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
   // Initialize 0 stock positions for all catalog products
   Object.keys(PRODUCT_CATALOG).forEach((sku, idx) => {
     RETAILER_INVENTORY.push({
-      id: `RINV-${Date.now()}-${idx}`,
+      id: `RINV-${Date.now()}-${sku}-${idx}`,
       retailer_id: id,
       sku,
       product_name: PRODUCT_CATALOG[sku].name,
@@ -968,11 +1058,12 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
       total_sample: 0,
       last_supplied_at: null,
       last_reconciled_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: nowStr,
+      updated_at: nowStr
     });
   });
 
+  // Log immutable audit event
   logAuditEvent({
     action: 'RETAILER_CREATED',
     entity_type: 'RETAILER',
@@ -981,70 +1072,172 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
     actor_name: actor.name,
     actor_role: actor.role,
     new_value: newRetailer,
-    reason: 'New retail partner onboarded'
+    reason: 'New retail store added to offline network'
   });
+
+  savePersistentRetailData();
+
+  // Try Supabase async write if configured
+  try {
+    if (supabase && process.env.SUPABASE_URL) {
+      supabase.from('retailers').insert([newRetailer]).then(({ error }) => {
+        if (error) console.warn('Supabase insert note:', error.message);
+      });
+    }
+  } catch (e) {}
 
   return newRetailer;
 }
 
 // ── 5. Update Retailer ────────────────────────────────────────────────────────
 function updateRetailer(id, data, actor = { name: 'Admin', role: 'OWNER' }) {
-  const index = RETAILERS.findIndex(r => r.id === id || r.retailer_code === id);
-  if (index === -1) throw new Error(`Retailer ${id} not found.`);
+  const retailer = RETAILERS.find(r => r.id === id || r.retailer_code === id || r.code === id);
+  if (!retailer || retailer.deleted_at) {
+    throw new Error(`Retailer ${id} not found.`);
+  }
 
-  const oldRetailer = { ...RETAILERS[index] };
-  const updated = {
-    ...oldRetailer,
-    ...data,
-    updated_at: new Date().toISOString()
-  };
+  const prev = { ...retailer };
 
-  RETAILERS[index] = updated;
+  // Update fields
+  if (data.name !== undefined) retailer.name = data.name.trim();
+  if (data.retailer_code !== undefined) { retailer.retailer_code = data.retailer_code.trim(); retailer.code = data.retailer_code.trim(); }
+  if (data.code !== undefined) { retailer.retailer_code = data.code.trim(); retailer.code = data.code.trim(); }
+  if (data.contact_person !== undefined) retailer.contact_person = data.contact_person.trim();
+  if (data.phone !== undefined) retailer.phone = data.phone.trim();
+  if (data.whatsapp !== undefined) retailer.whatsapp = data.whatsapp.trim();
+  if (data.email !== undefined) retailer.email = data.email.trim().toLowerCase();
+  if (data.gstin !== undefined) retailer.gstin = data.gstin.trim().toUpperCase();
+  if (data.retailer_type !== undefined) retailer.retailer_type = data.retailer_type;
+  if (data.channel_type !== undefined) retailer.channel_type = data.channel_type;
+  if (data.address !== undefined) retailer.address = data.address.trim();
+  if (data.area !== undefined) retailer.area = data.area.trim();
+  if (data.city !== undefined) retailer.city = data.city.trim();
+  if (data.state !== undefined) retailer.state = data.state.trim();
+  if (data.pincode !== undefined) retailer.pincode = data.pincode.trim();
+  if (data.landmark !== undefined) retailer.landmark = data.landmark.trim();
+  if (data.gps_coordinates !== undefined) retailer.gps_coordinates = data.gps_coordinates.trim();
+  if (data.status !== undefined) retailer.status = data.status;
+  if (data.assigned_salesperson !== undefined) retailer.assigned_salesperson = data.assigned_salesperson.trim();
+  if (data.payment_terms !== undefined) retailer.payment_terms = data.payment_terms;
+  if (data.credit_limit !== undefined) retailer.credit_limit = parseFloat(data.credit_limit) || 0;
+  if (data.reorder_frequency_days !== undefined) {
+    const rf = parseInt(data.reorder_frequency_days, 10);
+    retailer.reorder_frequency_days = rf;
+    retailer.usual_reorder_frequency_days = rf;
+  }
+  if (data.usual_reorder_frequency_days !== undefined) {
+    const rf = parseInt(data.usual_reorder_frequency_days, 10);
+    retailer.reorder_frequency_days = rf;
+    retailer.usual_reorder_frequency_days = rf;
+  }
+  if (data.preferred_contact_method !== undefined) retailer.preferred_contact_method = data.preferred_contact_method;
+  if (data.notes !== undefined) retailer.notes = data.notes.trim();
 
+  // Dates
+  if (data.created_at) retailer.created_at = new Date(data.created_at).toISOString();
+  if (data.last_order_date !== undefined) retailer.last_order_date = data.last_order_date ? new Date(data.last_order_date).toISOString() : null;
+  if (data.expected_next_order_date !== undefined) retailer.expected_next_order_date = data.expected_next_order_date ? new Date(data.expected_next_order_date).toISOString() : null;
+
+  retailer.updated_at = new Date().toISOString();
+
+  // Log Audit Trail
   logAuditEvent({
-    action: 'RETAILER_UPDATED',
+    action: prev.credit_limit !== retailer.credit_limit ? 'CREDIT_LIMIT_CHANGED' : 'RETAILER_UPDATED',
     entity_type: 'RETAILER',
-    entity_id: id,
-    entity_name: updated.name,
+    entity_id: retailer.id,
+    entity_name: retailer.name,
     actor_name: actor.name,
     actor_role: actor.role,
-    previous_value: oldRetailer,
-    new_value: updated,
-    reason: data.reason || 'Retailer profile updated'
+    previous_value: prev,
+    new_value: retailer,
+    reason: data.audit_reason || `Store details updated by ${actor.name}`
   });
 
-  return updated;
+  savePersistentRetailData();
+
+  // Try Supabase async update if configured
+  try {
+    if (supabase && process.env.SUPABASE_URL) {
+      supabase.from('retailers').update(retailer).eq('id', retailer.id).then(({ error }) => {
+        if (error) console.warn('Supabase update note:', error.message);
+      });
+    }
+  } catch (e) {}
+
+  return retailer;
 }
 
-// ── 6. Soft Delete / Archive Retailer ─────────────────────────────────────────
-function archiveRetailer(id, actor = { name: 'Admin', role: 'OWNER' }) {
-  const target = RETAILERS.find(r => r.id === id || r.retailer_code === id);
-  if (!target) throw new Error(`Retailer ${id} not found.`);
+// ── 6. Archive / Soft-Delete Retailer ─────────────────────────────────────────
+function archiveRetailer(id, reason = 'Archived via Admin Portal', actor = { name: 'Admin', role: 'OWNER' }) {
+  const retailer = RETAILERS.find(r => r.id === id || r.retailer_code === id);
+  if (!retailer || retailer.deleted_at) {
+    throw new Error(`Retailer ${id} not found.`);
+  }
 
-  target.status = 'ARCHIVED';
-  target.deleted_at = new Date().toISOString();
-  target.deleted_by = actor.name;
-  target.updated_at = new Date().toISOString();
+  retailer.status = 'ARCHIVED';
+  retailer.deleted_at = new Date().toISOString();
+  retailer.deleted_by = actor.name;
+  retailer.updated_at = new Date().toISOString();
 
   logAuditEvent({
     action: 'RETAILER_ARCHIVED',
     entity_type: 'RETAILER',
-    entity_id: id,
-    entity_name: target.name,
+    entity_id: retailer.id,
+    entity_name: retailer.name,
     actor_name: actor.name,
     actor_role: actor.role,
-    reason: 'Retailer archived by operator'
+    reason: reason || 'Retailer archived (historical data preserved)'
   });
 
-  return { message: `Retailer ${target.name} archived successfully.` };
+  savePersistentRetailData();
+  return { success: true, message: `Retailer ${retailer.name} archived successfully.` };
 }
 
-// ── 7. Atomic Supply Order Recording ──────────────────────────────────────────
+// ── 7. Permanent Delete Retailer (Owner-Only Hard Delete) ──────────────────────
+function deleteRetailerPermanently(id, confirmationPhrase, reason, actor = { name: 'Admin', role: 'OWNER' }) {
+  if (actor.role !== 'OWNER') {
+    throw new Error('PERMISSION DENIED: Permanent deletion is strictly restricted to OWNER role.');
+  }
+
+  if (confirmationPhrase !== 'DELETE RETAILER PERMANENTLY') {
+    throw new Error('CONFIRMATION MISMATCH: You must type "DELETE RETAILER PERMANENTLY" to confirm.');
+  }
+
+  if (!reason || reason.trim().length < 5) {
+    throw new Error('A detailed justification reason is required for permanent deletion.');
+  }
+
+  const idx = RETAILERS.findIndex(r => r.id === id || r.retailer_code === id);
+  if (idx === -1) {
+    throw new Error(`Retailer ${id} not found.`);
+  }
+
+  const targetName = RETAILERS[idx].name;
+  RETAILERS.splice(idx, 1);
+
+  logAuditEvent({
+    action: 'RETAILER_PERMANENTLY_DELETED',
+    entity_type: 'RETAILER',
+    entity_id: id,
+    entity_name: targetName,
+    actor_name: actor.name,
+    actor_role: actor.role,
+    reason: `Owner Hard Delete: ${reason}`
+  });
+
+  savePersistentRetailData();
+  return { success: true, message: `Retailer ${targetName} permanently removed.` };
+}
+
+// ── 8. Record Supply Order (Atomic Supply Dispatch) ───────────────────────────
 function recordSupplyOrder(supplyData, actor = { name: 'Admin', role: 'OWNER' }) {
-  const { retailer_id, items, payment_terms, due_date, notes, force_credit_override } = supplyData;
+  const { retailer_id, items, payment_terms, due_date, notes, force_credit_override, supply_date } = supplyData;
 
   const retailer = RETAILERS.find(r => r.id === retailer_id || r.retailer_code === retailer_id);
-  if (!retailer || retailer.deleted_at) throw new Error('Valid retailer is required.');
+  if (!retailer || retailer.deleted_at) {
+    throw new Error('Valid active retailer is required.');
+  }
+
   if (!Array.isArray(items) || items.length === 0) throw new Error('At least one product item is required.');
 
   // 1. Calculate order amounts & validate line items
@@ -1092,7 +1285,7 @@ function recordSupplyOrder(supplyData, actor = { name: 'Admin', role: 'OWNER' })
   const nextOrderNum = SUPPLY_ORDERS.length + 1;
   const order_id = `RSO-2026-${String(nextOrderNum).padStart(3, '0')}`;
   const order_number = `RSO-${String(nextOrderNum).padStart(3, '0')}`;
-  const nowStr = new Date().toISOString();
+  const nowStr = supply_date ? new Date(supply_date).toISOString() : new Date().toISOString();
 
   const daysTerm = payment_terms === '7_DAYS' ? 7 : (payment_terms === '30_DAYS' ? 30 : 15);
   const calculatedDueDate = due_date || new Date(Date.now() + daysTerm * 24 * 60 * 60 * 1000).toISOString();
@@ -1164,13 +1357,14 @@ function recordSupplyOrder(supplyData, actor = { name: 'Admin', role: 'OWNER' })
     });
   });
 
-  // 4. Create Supply Order Record
+  // 4. Create Supply Order Record (Freezes historical pricing)
   const supplyOrder = {
     id: order_id,
     order_number,
     retailer_id: retailer.id,
     retailer_name: retailer.name,
     order_date: nowStr,
+    supply_date: nowStr,
     total_units: totalUnits,
     subtotal_amount: totalAmount,
     discount_amount: 0,
@@ -1178,6 +1372,7 @@ function recordSupplyOrder(supplyData, actor = { name: 'Admin', role: 'OWNER' })
     payment_status: 'CREDIT_PENDING',
     payment_terms: payment_terms || retailer.payment_terms || '15_DAYS',
     due_date: calculatedDueDate,
+    payment_due_date: calculatedDueDate,
     amount_paid: 0,
     amount_outstanding: totalAmount,
     items: processedItems,
@@ -1198,14 +1393,18 @@ function recordSupplyOrder(supplyData, actor = { name: 'Admin', role: 'OWNER' })
     retailer_id: retailer.id,
     retailer_name: retailer.name,
     transaction_type: 'INVOICE',
+    entry_type: 'INVOICE',
     reference_id: order_id,
     debit_amount: totalAmount,
+    debit: totalAmount,
     credit_amount: 0,
+    credit: 0,
     running_balance: newOutstanding,
     payment_method: null,
     payment_ref: null,
     recorded_by: actor.name,
-    notes: `Supply Invoice ${order_number}`,
+    actor_name: actor.name,
+    notes: `Supply Invoice ${order_number} (${totalUnits} units)`,
     created_at: nowStr
   });
 
@@ -1221,6 +1420,8 @@ function recordSupplyOrder(supplyData, actor = { name: 'Admin', role: 'OWNER' })
     reason: notes || 'Retail stock supply batch recorded'
   });
 
+  savePersistentRetailData();
+
   return {
     success: true,
     message: `Supply order ${order_number} recorded successfully.`,
@@ -1229,7 +1430,7 @@ function recordSupplyOrder(supplyData, actor = { name: 'Admin', role: 'OWNER' })
   };
 }
 
-// ── 8. Record Payment ─────────────────────────────────────────────────────────
+// ── 9. Record Payment ─────────────────────────────────────────────────────────
 function recordPayment(paymentData, actor = { name: 'Admin', role: 'OWNER' }) {
   const { retailer_id, amount, payment_method, payment_ref, utr_number, order_id, notes, date, payment_date } = paymentData;
 
@@ -1246,15 +1447,19 @@ function recordPayment(paymentData, actor = { name: 'Admin', role: 'OWNER' }) {
   retailer.current_outstanding = newOutstanding;
   retailer.updated_at = nowStr;
 
-  // If specific order allocated, update order amount_paid
-  if (order_id) {
-    const targetOrder = SUPPLY_ORDERS.find(o => o.id === order_id);
-    if (targetOrder) {
-      targetOrder.amount_paid = (targetOrder.amount_paid || 0) + numAmount;
-      targetOrder.amount_outstanding = Math.max(0, (targetOrder.total_amount || 0) - targetOrder.amount_paid);
-      if (targetOrder.amount_outstanding === 0) targetOrder.payment_status = 'PAID';
-      else targetOrder.payment_status = 'PARTIAL';
-    }
+  // Allocate payment to unpaid supply orders FIFO
+  let remainingPayment = numAmount;
+  const retOrders = SUPPLY_ORDERS.filter(o => o.retailer_id === retailer.id && o.payment_status !== 'PAID').sort((a, b) => new Date(a.order_date || a.created_at) - new Date(b.order_date || b.created_at));
+
+  for (const ord of retOrders) {
+    if (remainingPayment <= 0) break;
+    const unpaidOnOrder = (ord.total_amount || 0) - (ord.amount_paid || 0);
+    const alloc = Math.min(remainingPayment, unpaidOnOrder);
+    ord.amount_paid = (ord.amount_paid || 0) + alloc;
+    ord.amount_outstanding = Math.max(0, (ord.total_amount || 0) - ord.amount_paid);
+    if (ord.amount_outstanding === 0) ord.payment_status = 'PAID';
+    else ord.payment_status = 'PARTIAL';
+    remainingPayment -= alloc;
   }
 
   const paymentId = `PAY-${Date.now()}`;
@@ -1265,15 +1470,19 @@ function recordPayment(paymentData, actor = { name: 'Admin', role: 'OWNER' }) {
     retailer_id: retailer.id,
     retailer_name: retailer.name,
     transaction_type: 'PAYMENT',
+    entry_type: 'PAYMENT',
     reference_id: paymentId,
     debit_amount: 0,
+    debit: 0,
     credit_amount: numAmount,
+    credit: numAmount,
     running_balance: newOutstanding,
     payment_method: payment_method || 'UPI',
     payment_ref: refNum,
     utr_number: refNum,
     recorded_by: actor.name,
-    notes: notes || (order_id ? `Settlement for order ${order_id}` : 'General ledger payment'),
+    actor_name: actor.name,
+    notes: notes || (order_id ? `Settlement for order ${order_id}` : 'Payment received'),
     created_at: nowStr
   };
 
@@ -1291,6 +1500,8 @@ function recordPayment(paymentData, actor = { name: 'Admin', role: 'OWNER' }) {
     reason: notes || 'Payment settlement recorded'
   });
 
+  savePersistentRetailData();
+
   return {
     success: true,
     message: `Payment of ₹${numAmount.toLocaleString('en-IN')} recorded successfully.`,
@@ -1299,7 +1510,7 @@ function recordPayment(paymentData, actor = { name: 'Admin', role: 'OWNER' }) {
   };
 }
 
-// ── 9. Record Return & Quarantine ─────────────────────────────────────────────
+// ── 10. Record Return & Quarantine ────────────────────────────────────────────
 function recordReturn(returnData, actor = { name: 'Admin', role: 'OWNER' }) {
   const { retailer_id, sku, quantity, reason, condition, batch_no, batch_number, credit_refund_value, credit_amount, notes, date } = returnData;
 
@@ -1319,7 +1530,7 @@ function recordReturn(returnData, actor = { name: 'Admin', role: 'OWNER' }) {
   const nowStr = date ? new Date(date).toISOString() : new Date().toISOString();
 
   // 1. Decrease retailer stock
-  const retailInv = RETAILER_INVENTORY.find(i => i.retailer_id === retailer.id && i.sku === sku);
+  let retailInv = RETAILER_INVENTORY.find(i => i.retailer_id === retailer.id && i.sku === sku);
   const beforeQty = retailInv ? retailInv.current_stock : 0;
   const afterQty = Math.max(0, beforeQty - qty);
 
@@ -1347,7 +1558,7 @@ function recordReturn(returnData, actor = { name: 'Admin', role: 'OWNER' }) {
     created_at: nowStr
   });
 
-  // 3. Log Return Record in Quarantine
+  // 3. Log Return Record in Quarantine (NOT added to sellable stock)
   const returnRecord = {
     id: returnId,
     return_number: returnNum,
@@ -1382,13 +1593,17 @@ function recordReturn(returnData, actor = { name: 'Admin', role: 'OWNER' }) {
       retailer_id: retailer.id,
       retailer_name: retailer.name,
       transaction_type: 'CREDIT_NOTE',
+      entry_type: 'CREDIT_NOTE',
       reference_id: returnNum,
       debit_amount: 0,
+      debit: 0,
       credit_amount: totalVal,
+      credit: totalVal,
       running_balance: newOutstanding,
       payment_method: null,
       payment_ref: `CRN-${returnNum}`,
       recorded_by: actor.name,
+      actor_name: actor.name,
       notes: `Credit Note for return ${returnNum} (${qty}x ${prod.name})`,
       created_at: nowStr
     });
@@ -1405,6 +1620,8 @@ function recordReturn(returnData, actor = { name: 'Admin', role: 'OWNER' }) {
     reason: `Product returned (${reason}) - placed in quarantine`
   });
 
+  savePersistentRetailData();
+
   return {
     success: true,
     message: `Return ${returnNum} recorded and stock quarantined.`,
@@ -1413,7 +1630,7 @@ function recordReturn(returnData, actor = { name: 'Admin', role: 'OWNER' }) {
   };
 }
 
-// ── 10. Physical Stock Reconciliation ─────────────────────────────────────────
+// ── 11. Physical Stock Reconciliation ─────────────────────────────────────────
 function reconcileStock(reconcileData, actor = { name: 'Admin', role: 'OWNER' }) {
   const { retailer_id, sku, physical_stock, physical_count, reason, discrepancy_reason, notes } = reconcileData;
 
@@ -1494,9 +1711,11 @@ function reconcileStock(reconcileData, actor = { name: 'Admin', role: 'OWNER' })
     actor_name: actor.name,
     actor_role: actor.role,
     previous_value: { system_stock: beforeQty },
-    new_value: { physical_stock: physicalCount, difference: diff, reason },
+    new_value: { physical_stock: physicalCount, difference: diff, reason: selectedReason },
     reason: notes || `Physical stock audit discrepancy resolved`
   });
+
+  savePersistentRetailData();
 
   return {
     success: true,
@@ -1507,73 +1726,95 @@ function reconcileStock(reconcileData, actor = { name: 'Admin', role: 'OWNER' })
   };
 }
 
-// ── 11. Global Retail Stock View Matrix ───────────────────────────────────────
+// ── 12. Global Retail Stock Matrix ────────────────────────────────────────────
 function getRetailStockMatrix({ sku = '', city = '', search = '' } = {}) {
   let matrix = [];
 
-  RETAILERS.filter(r => !r.deleted_at).forEach(retailer => {
+  RETAILERS.filter(r => !r.deleted_at && r.status !== 'ARCHIVED').forEach(retailer => {
     const invItems = RETAILER_INVENTORY.filter(i => i.retailer_id === retailer.id);
 
     invItems.forEach(item => {
-      if (sku && item.sku !== sku) return;
-      if (city && retailer.city.toLowerCase() !== city.toLowerCase()) return;
-      if (search) {
-        const q = search.toLowerCase();
-        if (!retailer.name.toLowerCase().includes(q) && !item.sku.toLowerCase().includes(q)) return;
-      }
+      const prod = PRODUCT_CATALOG[item.sku] || { price: 399, name: item.sku };
+      const currentStock = item.current_stock || 0;
+      const stockVal = currentStock * prod.price;
 
-      const prod = PRODUCT_CATALOG[item.sku] || { price: 399 };
-      const stockValue = (item.current_stock || 0) * prod.price;
+      // Estimated days remaining calculation
+      const avgWeeklyBurn = Math.max(1, (item.total_sold || 0) / 4);
+      const estDays = Math.round((currentStock / (avgWeeklyBurn / 7)));
 
-      // Estimated days of stock remaining (simple average velocity)
-      const daysOfStock = item.current_stock > 0 ? Math.min(60, Math.round(item.current_stock * 2.5)) : 0;
+      let stockStatus = 'IN STOCK';
+      if (currentStock === 0) stockStatus = 'OUT OF STOCK';
+      else if (currentStock <= 10) stockStatus = 'LOW STOCK';
 
       matrix.push({
+        id: item.id,
         retailer_id: retailer.id,
         retailer_name: retailer.name,
-        city: retailer.city,
-        area: retailer.area,
+        retailer_code: retailer.retailer_code || retailer.code,
+        retailer_city: retailer.city,
+        retailer_area: retailer.area,
         sku: item.sku,
-        product_name: item.product_name,
-        current_stock: item.current_stock || 0,
-        stock_value: stockValue,
+        product_name: prod.name,
+        current_stock: currentStock,
+        unit_price: prod.price,
+        unit_value: prod.price,
+        stock_value: stockVal,
+        stock_status: stockStatus,
         last_supplied_at: item.last_supplied_at,
         last_reconciled_at: item.last_reconciled_at,
-        estimated_days_of_stock: daysOfStock,
-        expected_reorder_date: retailer.expected_next_order_date,
-        is_estimate: true
+        estimated_days_of_stock: estDays,
+        reorder_forecast: {
+          days_remaining: estDays,
+          reorder_suggested: estDays <= 5 || currentStock <= 5
+        }
       });
     });
   });
 
-  return matrix.sort((a, b) => b.current_stock - a.current_stock);
+  // Filters
+  if (sku) matrix = matrix.filter(m => m.sku === sku);
+  if (city) matrix = matrix.filter(m => m.retailer_city.toLowerCase().includes(city.toLowerCase()));
+  if (search) {
+    const q = search.toLowerCase();
+    matrix = matrix.filter(m => 
+      m.retailer_name.toLowerCase().includes(q) || 
+      m.retailer_city.toLowerCase().includes(q) || 
+      m.sku.toLowerCase().includes(q)
+    );
+  }
+
+  return matrix;
 }
 
-// ── 12. Follow-ups Management ────────────────────────────────────────────────
-function getFollowups({ status = 'ALL' } = {}) {
+// ── 13. Follow-up Tasks Engine ────────────────────────────────────────────────
+function getFollowups({ status = 'ALL', retailer_id = '' } = {}) {
   let list = [...FOLLOWUPS];
-  if (status !== 'ALL') {
-    list = list.filter(f => f.status === status);
-  }
+  if (retailer_id) list = list.filter(f => f.retailer_id === retailer_id);
+  if (status === 'PENDING') list = list.filter(f => !f.completed);
+  if (status === 'COMPLETED') list = list.filter(f => f.completed);
   return list.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
 }
 
 function createFollowup(data, actor = { name: 'Admin', role: 'OWNER' }) {
-  const { retailer_id, due_date, reason, assigned_person, notes } = data;
+  const { retailer_id, due_date, reason, assigned_to, notes } = data;
   const retailer = RETAILERS.find(r => r.id === retailer_id || r.retailer_code === retailer_id);
   if (!retailer) throw new Error('Valid retailer is required.');
-  if (!due_date || !reason) throw new Error('Due Date and Reason are required.');
+  if (!due_date) throw new Error('Follow-up due date is required.');
+  if (!reason) throw new Error('Follow-up reason is required.');
 
   const followup = {
-    id: `FOL-${Date.now()}`,
+    id: `RFOL-${Date.now()}`,
     retailer_id: retailer.id,
     retailer_name: retailer.name,
-    due_date: new Date(due_date).toISOString(),
+    retailer_phone: retailer.phone,
+    retailer_city: retailer.city,
     reason: reason.trim(),
-    assigned_person: assigned_person || actor.name,
-    status: 'PENDING',
+    due_date: new Date(due_date).toISOString().slice(0, 10),
+    assigned_to: assigned_to || actor.name,
     notes: notes || '',
+    completed: false,
     completed_at: null,
+    created_by: actor.name,
     created_at: new Date().toISOString()
   };
 
@@ -1581,38 +1822,54 @@ function createFollowup(data, actor = { name: 'Admin', role: 'OWNER' }) {
 
   logAuditEvent({
     action: 'FOLLOWUP_CREATED',
-    entity_type: 'FOLLOWUP',
+    entity_type: 'RETAIL_FOLLOWUP',
     entity_id: followup.id,
     entity_name: `Follow-up for ${retailer.name} (${reason})`,
     actor_name: actor.name,
     actor_role: actor.role,
     new_value: followup,
-    reason: 'Follow-up task scheduled'
+    reason: notes || 'Scheduled follow-up reminder'
   });
 
+  savePersistentRetailData();
   return followup;
 }
 
-function completeFollowup(id, notes = '', actor = { name: 'Admin', role: 'OWNER' }) {
-  const target = FOLLOWUPS.find(f => f.id === id);
-  if (!target) throw new Error(`Follow-up ${id} not found.`);
+function completeFollowup(id, resolutionNotes = '', actor = { name: 'Admin', role: 'OWNER' }) {
+  const task = FOLLOWUPS.find(f => f.id === id);
+  if (!task) throw new Error('Follow-up task not found.');
 
-  target.status = 'COMPLETED';
-  target.completed_at = new Date().toISOString();
-  if (notes) target.notes = `${target.notes ? target.notes + ' | ' : ''}Completion Note: ${notes}`;
+  task.completed = true;
+  task.completed_at = new Date().toISOString();
+  task.completed_by = actor.name;
+  if (resolutionNotes) {
+    task.notes = `${task.notes ? `${task.notes} | ` : ''}Resolution (${actor.name}): ${resolutionNotes}`;
+  }
 
-  return target;
+  logAuditEvent({
+    action: 'FOLLOWUP_COMPLETED',
+    entity_type: 'RETAIL_FOLLOWUP',
+    entity_id: task.id,
+    entity_name: `Completed task for ${task.retailer_name}`,
+    actor_name: actor.name,
+    actor_role: actor.role,
+    reason: resolutionNotes || 'Follow-up marked as completed'
+  });
+
+  savePersistentRetailData();
+  return task;
 }
 
-// ── 13. Retailer Internal Notes ───────────────────────────────────────────────
-function addRetailerNote(retailerId, content, actor = { name: 'Admin', role: 'OWNER' }) {
-  const retailer = RETAILERS.find(r => r.id === retailerId || r.retailer_code === retailerId);
-  if (!retailer) throw new Error('Retailer not found.');
-  if (!content || !content.trim()) throw new Error('Note content cannot be blank.');
+// ── 14. Add Note ──────────────────────────────────────────────────────────────
+function addRetailerNote(data, actor = { name: 'Admin', role: 'OWNER' }) {
+  const { retailer_id, content } = data;
+  if (!retailer_id || !content || !content.trim()) {
+    throw new Error('Retailer ID and note content are required.');
+  }
 
   const note = {
     id: `NOTE-${Date.now()}`,
-    retailer_id: retailer.id,
+    retailer_id,
     author_name: actor.name,
     author_role: actor.role,
     content: content.trim(),
@@ -1621,10 +1878,11 @@ function addRetailerNote(retailerId, content, actor = { name: 'Admin', role: 'OW
   };
 
   NOTES.unshift(note);
+  savePersistentRetailData();
   return note;
 }
 
-// ── 14. Printable / Exportable Account Statement ──────────────────────────────
+// ── 15. Printable / Exportable Account Statement ──────────────────────────────
 function getRetailerStatement(retailerId, { fromDate, toDate } = {}) {
   const retailer = RETAILERS.find(r => r.id === retailerId || r.retailer_code === retailerId);
   if (!retailer) throw new Error('Retailer not found.');
@@ -1644,7 +1902,7 @@ function getRetailerStatement(retailerId, { fromDate, toDate } = {}) {
   let openingBalance = 0;
   if (fromDate) {
     const priorLedger = FINANCIAL_LEDGER.filter(l => l.retailer_id === retailer.id && new Date(l.created_at).getTime() < new Date(fromDate).getTime());
-    openingBalance = priorLedger.reduce((bal, l) => bal + (l.debit_amount || 0) - (l.credit_amount || 0), 0);
+    openingBalance = priorLedger.reduce((bal, l) => bal + (l.debit_amount || l.debit || 0) - (l.credit_amount || l.credit || 0), 0);
   }
 
   const totalDebits = ledger.reduce((sum, l) => sum + (l.debit_amount !== undefined ? l.debit_amount : (l.debit || 0)), 0);
@@ -1682,7 +1940,7 @@ function getRetailerStatement(retailerId, { fromDate, toDate } = {}) {
   };
 }
 
-// ── 15. CSV Export Formatters ─────────────────────────────────────────────────
+// ── 16. CSV Export Formatters ─────────────────────────────────────────────────
 function exportRetailCSV(type = 'retailers', filters = {}, actor = { name: 'Admin', role: 'OWNER' }) {
   logAuditEvent({
     action: 'RETAIL_REPORT_EXPORTED',
@@ -1691,14 +1949,14 @@ function exportRetailCSV(type = 'retailers', filters = {}, actor = { name: 'Admi
     entity_name: `Exported ${type} CSV report`,
     actor_name: actor.name,
     actor_role: actor.role,
-    reason: `Report downloaded by ${actor.name}`
+    reason: `Report downloaded by ${actor.name} with filters: ${JSON.stringify(filters)}`
   });
 
   if (type === 'retailers') {
     const data = getAllRetailers(filters);
     const headers = ['Code', 'Name', 'Contact Person', 'Phone', 'City', 'Area', 'Status', 'Credit Limit (INR)', 'Outstanding (INR)', 'Current Stock Value (INR)', 'Last Order Date', 'Health'];
     const rows = data.map(r => [
-      `"${r.retailer_code}"`,
+      `"${r.retailer_code || r.code}"`,
       `"${r.name}"`,
       `"${r.contact_person}"`,
       `"${r.phone}"`,
@@ -1707,9 +1965,9 @@ function exportRetailCSV(type = 'retailers', filters = {}, actor = { name: 'Admi
       `"${r.status}"`,
       r.credit_limit,
       r.current_outstanding,
-      r.stats.currentStockValue,
+      r.stats?.currentStockValue || 0,
       `"${r.last_order_date ? new Date(r.last_order_date).toLocaleDateString('en-IN') : 'None'}"`,
-      `"${r.stats.healthScore}"`
+      `"${r.stats?.healthScore || 'GREEN'}"`
     ]);
     return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   }
@@ -1719,7 +1977,7 @@ function exportRetailCSV(type = 'retailers', filters = {}, actor = { name: 'Admi
     const headers = ['Retailer Name', 'City', 'SKU', 'Product Name', 'Current Stock (Units)', 'Stock Value (INR)', 'Last Supplied Date', 'Days of Stock Est.'];
     const rows = data.map(s => [
       `"${s.retailer_name}"`,
-      `"${s.city}"`,
+      `"${s.retailer_city || s.city}"`,
       `"${s.sku}"`,
       `"${s.product_name}"`,
       s.current_stock,
@@ -1735,7 +1993,7 @@ function exportRetailCSV(type = 'retailers', filters = {}, actor = { name: 'Admi
     const rows = SUPPLY_ORDERS.map(o => [
       `"${o.order_number}"`,
       `"${o.retailer_name}"`,
-      `"${new Date(o.order_date).toLocaleDateString('en-IN')}"`,
+      `"${new Date(o.order_date || o.created_at).toLocaleDateString('en-IN')}"`,
       o.total_units,
       o.total_amount,
       `"${o.payment_status}"`,
@@ -1750,13 +2008,44 @@ function exportRetailCSV(type = 'retailers', filters = {}, actor = { name: 'Admi
     const rows = FINANCIAL_LEDGER.map(l => [
       `"${new Date(l.created_at).toLocaleDateString('en-IN')}"`,
       `"${l.retailer_name}"`,
-      `"${l.transaction_type}"`,
+      `"${l.transaction_type || l.entry_type}"`,
       `"${l.reference_id || ''}"`,
-      l.debit_amount || 0,
-      l.credit_amount || 0,
+      l.debit_amount !== undefined ? l.debit_amount : l.debit || 0,
+      l.credit_amount !== undefined ? l.credit_amount : l.credit || 0,
       l.running_balance || 0,
       `"${l.payment_method || ''}"`,
-      `"${l.recorded_by}"`
+      `"${l.recorded_by || l.actor_name || ''}"`
+    ]);
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  }
+
+  if (type === 'returns') {
+    const headers = ['Return Number', 'Retailer', 'Date', 'SKU', 'Quantity', 'Credit Value (INR)', 'Reason', 'Condition', 'Status', 'Received By'];
+    const rows = RETURNS.map(r => [
+      `"${r.return_number}"`,
+      `"${r.retailer_name}"`,
+      `"${new Date(r.return_date || r.created_at).toLocaleDateString('en-IN')}"`,
+      `"${r.sku}"`,
+      r.quantity,
+      r.total_credit_value || r.credit_amount || 0,
+      `"${r.reason}"`,
+      `"${r.condition}"`,
+      `"${r.status}"`,
+      `"${r.received_by}"`
+    ]);
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  }
+
+  if (type === 'followups') {
+    const headers = ['Retailer', 'Reason', 'Due Date', 'Assigned To', 'Status', 'Notes', 'Created At'];
+    const rows = FOLLOWUPS.map(f => [
+      `"${f.retailer_name}"`,
+      `"${f.reason}"`,
+      `"${f.due_date}"`,
+      `"${f.assigned_to}"`,
+      `"${f.completed ? 'COMPLETED' : 'PENDING'}"`,
+      `"${f.notes || ''}"`,
+      `"${new Date(f.created_at).toLocaleDateString('en-IN')}"`
     ]);
     return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
   }
@@ -1771,6 +2060,7 @@ module.exports = {
   createRetailer,
   updateRetailer,
   archiveRetailer,
+  deleteRetailerPermanently,
   recordSupplyOrder,
   recordPayment,
   recordReturn,

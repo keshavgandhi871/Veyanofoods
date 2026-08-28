@@ -1782,6 +1782,33 @@ function renderRetailProfileDrawer(data) {
       </div>
     `;
   }
+
+  // 8. Change History / Audit Trail
+  const histBody = document.getElementById('rprof-history-table-body');
+  if (histBody) {
+    const historyLogs = data.change_history || data.history || [];
+    if (historyLogs.length === 0) {
+      histBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b; padding:1.5rem;">No historical changes logged yet for this retailer.</td></tr>`;
+    } else {
+      histBody.innerHTML = historyLogs.map(h => {
+        let diffHtml = '—';
+        if (h.previous_value || h.new_value) {
+          try {
+            diffHtml = `<pre style="font-size:0.72rem; max-width:280px; overflow-x:auto; margin:0; white-space:pre-wrap; background:#f1f5f9; padding:0.35rem; border-radius:4px;">${escapeHtml(JSON.stringify(h.new_value || h.previous_value, null, 1))}</pre>`;
+          } catch(e) {}
+        }
+        return `
+          <tr>
+            <td style="font-size:0.78rem; color:#64748b;">${new Date(h.timestamp || h.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+            <td><span class="role-badge-pill">${escapeHtml(h.action || 'UPDATE')}</span></td>
+            <td style="font-size:0.8rem; font-weight:600;">${escapeHtml(h.actor_name || 'Admin')} <span style="font-size:0.7rem; color:#64748b;">(${escapeHtml(h.actor_role || '')})</span></td>
+            <td>${diffHtml}</td>
+            <td style="font-size:0.78rem; color:#475569;">${escapeHtml(h.reason || '—')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
 }
 
 async function handleAddProfileNote() {
@@ -2313,6 +2340,8 @@ function openRetailerModal(retailerId = null) {
 
   const title = document.getElementById('retailer-modal-title');
   const idInput = document.getElementById('ret-form-id');
+  const archiveBtn = document.getElementById('ret-form-archive-btn');
+  const deleteBtn = document.getElementById('ret-form-delete-btn');
 
   if (retailerId) {
     title.innerText = '✏️ Edit Retail Partner Master Profile';
@@ -2321,7 +2350,7 @@ function openRetailerModal(retailerId = null) {
     const r = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId);
     if (r) {
       document.getElementById('ret-form-name').value = r.name || '';
-      document.getElementById('ret-form-code').value = r.code || '';
+      document.getElementById('ret-form-code').value = r.code || r.retailer_code || '';
       document.getElementById('ret-form-contact').value = r.contact_person || '';
       document.getElementById('ret-form-phone').value = r.phone || '';
       document.getElementById('ret-form-whatsapp').value = r.whatsapp || '';
@@ -2338,15 +2367,42 @@ function openRetailerModal(retailerId = null) {
       document.getElementById('ret-form-status').value = r.status || 'ACTIVE';
       document.getElementById('ret-form-terms').value = r.payment_terms || '15_DAYS';
       document.getElementById('ret-form-limit').value = r.credit_limit || 20000;
-      document.getElementById('ret-form-frequency').value = r.usual_reorder_frequency_days || 14;
+      document.getElementById('ret-form-frequency').value = r.reorder_frequency_days || r.usual_reorder_frequency_days || 14;
       document.getElementById('ret-form-pref-contact').value = r.preferred_contact_method || 'WHATSAPP';
       document.getElementById('ret-form-salesperson').value = r.assigned_salesperson || 'Keshav Gandhi';
       document.getElementById('ret-form-notes').value = r.notes || '';
+
+      // Editable Dates
+      if (document.getElementById('ret-form-created-at')) {
+        document.getElementById('ret-form-created-at').value = r.created_at ? r.created_at.slice(0, 10) : '';
+      }
+      if (document.getElementById('ret-form-last-order')) {
+        document.getElementById('ret-form-last-order').value = r.last_order_date ? r.last_order_date.slice(0, 10) : '';
+      }
+      if (document.getElementById('ret-form-next-order')) {
+        const nextOrd = r.expected_next_order_date || r.next_expected_order_date;
+        document.getElementById('ret-form-next-order').value = nextOrd ? nextOrd.slice(0, 10) : '';
+      }
+
+      // Action buttons
+      if (archiveBtn) archiveBtn.style.display = 'inline-block';
+      if (deleteBtn) deleteBtn.style.display = ADMIN_STATE.role === 'OWNER' ? 'inline-block' : 'none';
     }
   } else {
     title.innerText = '+ Add New Retail Partner';
     idInput.value = '';
     document.getElementById('ret-form-code').value = `RET-00${ADMIN_STATE.retailers.length + 1}`;
+    if (document.getElementById('ret-form-created-at')) {
+      document.getElementById('ret-form-created-at').value = new Date().toISOString().slice(0, 10);
+    }
+    if (document.getElementById('ret-form-last-order')) {
+      document.getElementById('ret-form-last-order').value = '';
+    }
+    if (document.getElementById('ret-form-next-order')) {
+      document.getElementById('ret-form-next-order').value = '';
+    }
+    if (archiveBtn) archiveBtn.style.display = 'none';
+    if (deleteBtn) deleteBtn.style.display = 'none';
   }
 
   modal.classList.add('open');
@@ -2360,9 +2416,14 @@ async function handleRetailerFormSubmit(e) {
   e.preventDefault();
 
   const id = document.getElementById('ret-form-id').value;
+  const createdAtVal = document.getElementById('ret-form-created-at')?.value;
+  const lastOrderVal = document.getElementById('ret-form-last-order')?.value;
+  const nextOrderVal = document.getElementById('ret-form-next-order')?.value;
+
   const payload = {
     name: document.getElementById('ret-form-name').value.trim(),
     code: document.getElementById('ret-form-code').value.trim(),
+    retailer_code: document.getElementById('ret-form-code').value.trim(),
     contact_person: document.getElementById('ret-form-contact').value.trim(),
     phone: document.getElementById('ret-form-phone').value.trim(),
     whatsapp: document.getElementById('ret-form-whatsapp').value.trim(),
@@ -2380,9 +2441,13 @@ async function handleRetailerFormSubmit(e) {
     payment_terms: document.getElementById('ret-form-terms').value,
     credit_limit: parseFloat(document.getElementById('ret-form-limit').value || 0),
     usual_reorder_frequency_days: parseInt(document.getElementById('ret-form-frequency').value || 14, 10),
+    reorder_frequency_days: parseInt(document.getElementById('ret-form-frequency').value || 14, 10),
     preferred_contact_method: document.getElementById('ret-form-pref-contact').value,
     assigned_salesperson: document.getElementById('ret-form-salesperson').value.trim(),
-    notes: document.getElementById('ret-form-notes').value.trim()
+    notes: document.getElementById('ret-form-notes').value.trim(),
+    created_at: createdAtVal || undefined,
+    last_order_date: lastOrderVal || null,
+    expected_next_order_date: nextOrderVal || null
   };
 
   try {
@@ -2402,6 +2467,90 @@ async function handleRetailerFormSubmit(e) {
     if (!res.ok) throw new Error(resJson.error || 'Failed to save retailer');
 
     alert(`✅ Retailer ${payload.name} saved successfully!`);
+    closeRetailerModal();
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// ── Archive Current Retailer ──────────────────────────────────────────────────
+async function handleArchiveCurrentRetailer() {
+  const id = document.getElementById('ret-form-id')?.value;
+  const name = document.getElementById('ret-form-name')?.value;
+  if (!id) return;
+
+  const reason = prompt(`Are you sure you want to ARCHIVE "${name}"?\nAll past invoices and ledger records will be preserved.\nEnter archive reason (optional):`, 'Store temporarily inactive');
+  if (reason === null) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({ reason: reason || 'Archived via Admin Portal' })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to archive retailer');
+
+    alert(`📦 Retailer ${name} archived successfully.`);
+    closeRetailerModal();
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// ── Permanent Hard Delete Modal (Owner Only) ──────────────────────────────────
+function openHardDeleteModal() {
+  const retId = document.getElementById('ret-form-id')?.value;
+  if (!retId) return;
+
+  const modal = document.getElementById('retail-hard-delete-modal');
+  if (!modal) return;
+
+  document.getElementById('hard-delete-ret-id').value = retId;
+  document.getElementById('hard-delete-form').reset();
+  modal.classList.add('open');
+}
+
+function closeHardDeleteModal() {
+  document.getElementById('retail-hard-delete-modal')?.classList.remove('open');
+}
+
+async function handleHardDeleteSubmit(e) {
+  e.preventDefault();
+
+  const id = document.getElementById('hard-delete-ret-id').value;
+  const reason = document.getElementById('hard-delete-reason').value.trim();
+  const phrase = document.getElementById('hard-delete-confirm-phrase').value.trim();
+
+  if (phrase !== 'DELETE RETAILER PERMANENTLY') {
+    alert('❌ Confirmation phrase mismatch. You must type "DELETE RETAILER PERMANENTLY".');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${id}/hard-delete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify({
+        confirmation_phrase: phrase,
+        reason
+      })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to permanently delete store');
+
+    alert('🗑️ Retailer permanently removed from database.');
+    closeHardDeleteModal();
     closeRetailerModal();
     refreshDashboardData();
   } catch (err) {

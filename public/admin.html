@@ -1540,14 +1540,32 @@
           </div>
         </div>
 
-        <div class="form-group" style="margin-bottom: 1.5rem;">
-          <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Internal Notes / Customer Preferences</label>
-          <textarea id="ret-form-notes" class="form-control" rows="2" placeholder="Owner preferences, delivery timings, favorite SKUs..."></textarea>
+        <!-- Section 4: Lifecycle & Editable Dates -->
+        <h4 style="font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem; border-left: 3px solid #0f172a; padding-left: 0.5rem;">4. LIFECYCLE & EDITABLE DATES</h4>
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Partner Onboarding Date</label>
+            <input type="date" id="ret-form-created-at" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Last Order Date</label>
+            <input type="date" id="ret-form-last-order" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Expected Next Reorder Date</label>
+            <input type="date" id="ret-form-next-order" class="form-control">
+          </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-          <button type="button" onclick="closeRetailerModal()" class="btn btn-sm btn-outline">Cancel</button>
-          <button type="submit" class="btn btn-sm btn-accent">Save Retail Partner</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" id="ret-form-archive-btn" onclick="handleArchiveCurrentRetailer()" class="btn btn-sm btn-outline" style="display: none; color: #dc2626; border-color: #fecaca; background: #fff1f2;">📦 Archive Store</button>
+            <button type="button" id="ret-form-delete-btn" onclick="openHardDeleteModal()" class="btn btn-sm" style="display: none; color: #fff; background: #dc2626; border: none;">🗑️ Permanent Delete</button>
+          </div>
+          <div style="display: flex; gap: 0.75rem;">
+            <button type="button" onclick="closeRetailerModal()" class="btn btn-sm btn-outline">Cancel</button>
+            <button type="submit" class="btn btn-sm btn-accent">Save Retail Partner</button>
+          </div>
         </div>
       </form>
     </div>
@@ -1616,6 +1634,7 @@
         <button class="sub-nav-btn" onclick="switchProfileTab('pview-returns', this)">🔄 Returns</button>
         <button class="sub-nav-btn" onclick="switchProfileTab('pview-notes', this)">📝 Notes & Follow-ups</button>
         <button class="sub-nav-btn" onclick="switchProfileTab('pview-statement', this)">📄 Account Statement</button>
+        <button class="sub-nav-btn" onclick="switchProfileTab('pview-history', this)">📜 Change History</button>
       </div>
 
       <!-- PVIEW 1: Product Stock Breakdown -->
@@ -1742,6 +1761,28 @@
         <div id="rprof-statement-container" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem;">
           <!-- Populated by admin.js -->
         </div>
+      </div>
+
+      <!-- PVIEW 8: Change History / Audit Trail -->
+      <div id="pview-history" class="profile-subtab-pane" style="display: none;">
+        <div style="margin-bottom: 1rem;">
+          <h4 style="font-size: 1rem; font-weight: 700;">Immutable Change History & Audit Trail</h4>
+          <p style="font-size: 0.8rem; color: #64748b;">All updates, credit limit changes, supplies, payments, and returns for this retail store.</p>
+        </div>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>Actor</th>
+              <th>Details & Diff</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="rprof-history-table-body">
+            <!-- Populated by admin.js -->
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -2099,6 +2140,39 @@
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
           <button type="button" onclick="closeRetailFollowupModal()" class="btn btn-sm btn-outline">Cancel</button>
           <button type="submit" class="btn btn-sm btn-accent">Save Follow-up Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 14: PERMANENT HARD DELETE MODAL (OWNER ONLY) -->
+  <div id="retail-hard-delete-modal" class="admin-modal">
+    <div class="admin-modal-content" style="max-width: 520px; border-top: 4px solid #dc2626;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #dc2626;">⚠️ Permanent Store Deletion (Owner Only)</h3>
+        <button onclick="closeHardDeleteModal()" style="background:none; border:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+      </div>
+
+      <div style="background: #fff1f2; border: 1px solid #fecdd3; padding: 0.85rem; border-radius: var(--radius-md); font-size: 0.82rem; color: #991b1b; margin-bottom: 1.25rem; line-height: 1.45;">
+        <strong>CRITICAL WARNING:</strong> This action cannot be undone. Permanent deletion removes the store completely. If this store has financial/stock history, consider using <strong>Archive Store</strong> instead.
+      </div>
+
+      <form id="hard-delete-form" onsubmit="handleHardDeleteSubmit(event)">
+        <input type="hidden" id="hard-delete-ret-id">
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 700;">Mandatory Justification Reason *</label>
+          <input type="text" id="hard-delete-reason" class="form-control" placeholder="e.g. Duplicate store entry created by mistake" required minlength="5">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" style="font-size: 0.82rem; font-weight: 700;">Type "DELETE RETAILER PERMANENTLY" to confirm *</label>
+          <input type="text" id="hard-delete-confirm-phrase" class="form-control" placeholder="DELETE RETAILER PERMANENTLY" required style="font-family: monospace; font-weight: 700; letter-spacing: 0.5px;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" onclick="closeHardDeleteModal()" class="btn btn-sm btn-outline">Cancel</button>
+          <button type="submit" class="btn btn-sm" style="background: #dc2626; color: #fff; border: none; font-weight: 700;">Permanently Delete Store</button>
         </div>
       </form>
     </div>

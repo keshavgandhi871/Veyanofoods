@@ -32,24 +32,24 @@ ensureLocalFile();
 /**
  * Log an immutable administrative action
  */
-async function logAuditEvent({
-  actorUserId = null,
-  actorName = 'System / Admin',
-  actorEmail = 'admin@veyano.in',
-  actorRole = 'OWNER',
-  action,
-  entityType,
-  entityId = null,
-  entityName = null,
-  previousValue = null,
-  newValue = null,
-  reason = null,
-  ipAddress = null,
-  userAgent = null,
-  sessionId = null
-}) {
+async function logAuditEvent(params = {}) {
   const timestamp = new Date().toISOString();
   const eventId = `EVT-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+  const actorUserId = params.actorUserId || params.actor_user_id || null;
+  const actorName = params.actorName || params.actor_name || 'System / Admin';
+  const actorEmail = params.actorEmail || params.actor_email || 'admin@veyano.in';
+  const actorRole = params.actorRole || params.actor_role || 'OWNER';
+  const action = params.action || 'UPDATE';
+  const entityType = params.entityType || params.entity_type || 'GENERAL';
+  const entityId = params.entityId || params.entity_id || null;
+  const entityName = params.entityName || params.entity_name || null;
+  const previousValue = params.previousValue || params.previous_value || null;
+  const newValue = params.newValue || params.new_value || null;
+  const reason = params.reason || 'Routine operational update';
+  const ipAddress = params.ipAddress || params.ip_address || null;
+  const userAgent = params.userAgent || params.user_agent || null;
+  const sessionId = params.sessionId || params.session_id || null;
 
   const entry = {
     id: eventId,
@@ -65,7 +65,7 @@ async function logAuditEvent({
     entity_name: entityName,
     previous_value: previousValue,
     new_value: newValue,
-    reason: reason || 'Routine operational update',
+    reason,
     ip_address: ipAddress,
     user_agent: userAgent,
     session_id: sessionId
@@ -141,7 +141,18 @@ async function getAuditLogs({ limit = 50, offset = 0, entityType, actorEmail, ac
   return { data: paginated, total: results.length };
 }
 
+/**
+ * Synchronous local getter for audit logs
+ */
+function getAuditLogsSync({ entityType, entityId, limit = 100 } = {}) {
+  let list = inMemoryAuditLogs;
+  if (entityType) list = list.filter(l => l.entity_type === entityType);
+  if (entityId) list = list.filter(l => l.entity_id === entityId || (l.entity_name && l.entity_name.includes(entityId)));
+  return list.slice(0, limit);
+}
+
 module.exports = {
   logAuditEvent,
-  getAuditLogs
+  getAuditLogs,
+  getAuditLogsSync
 };
