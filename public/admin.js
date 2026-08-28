@@ -1317,30 +1317,120 @@ function renderRetailersTable() {
   }).join('');
 }
 
+// ── Universal Toast Notification Engine ───────────────────────────────────────
+function showToast(message, type = 'success', duration = 3500) {
+  const container = document.getElementById('admin-toast-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  const bgColor = type === 'error' ? '#dc2626' : (type === 'warn' ? '#d97706' : '#059669');
+  const icon = type === 'error' ? '❌' : (type === 'warn' ? '⚠️' : '✅');
+
+  toast.style.cssText = `
+    background: ${bgColor};
+    color: #ffffff;
+    padding: 0.85rem 1.25rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.25);
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    pointer-events: auto;
+    max-width: 380px;
+    word-break: break-word;
+    transition: all 0.3s ease;
+  `;
+  toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+// ── Universal Custom Confirmation Dialog ──────────────────────────────────────
+function showConfirmDialog({ title = 'Confirm Deletion', message = 'Are you sure?', confirmText = 'Delete', confirmColor = '#dc2626', icon = '🗑️' }) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('action-confirm-modal');
+    const titleEl = document.getElementById('confirm-modal-title');
+    const msgEl = document.getElementById('confirm-modal-message');
+    const iconEl = document.getElementById('confirm-modal-icon');
+    const okBtn = document.getElementById('confirm-modal-ok-btn');
+    const cancelBtn = document.getElementById('confirm-modal-cancel-btn');
+
+    if (!modal) {
+      resolve(true);
+      return;
+    }
+
+    if (titleEl) titleEl.innerText = title;
+    if (msgEl) msgEl.innerText = message;
+    if (iconEl) iconEl.innerText = icon;
+    if (okBtn) {
+      okBtn.innerText = confirmText;
+      okBtn.style.background = confirmColor;
+    }
+
+    modal.classList.add('open');
+
+    const cleanup = () => {
+      modal.classList.remove('open');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+    };
+
+    const onOk = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const onCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+
 async function promptDeleteRetailer(retailerId) {
   const r = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId || item.code === retailerId || item.retailer_code === retailerId);
   const name = r ? r.name : retailerId;
 
-  if (!confirm(`Are you sure you want to permanently delete store "${name}"?`)) {
-    return;
-  }
+  const confirmed = await showConfirmDialog({
+    title: `Delete "${name}"?`,
+    message: `Are you sure you want to permanently remove "${name}" from the retail network? All associated stock positions and ledger records will be deleted.`,
+    confirmText: 'Yes, Delete Permanently',
+    confirmColor: '#dc2626',
+    icon: '🗑️'
+  });
+
+  if (!confirmed) return;
+
+  // Immediately remove from UI state
+  ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(item => item.id !== retailerId && item.code !== retailerId && item.retailer_code !== retailerId);
+  filterRetailersTable();
+  populateRetailerDropdowns();
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}/hard-delete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
-      body: JSON.stringify({ confirmation_phrase: 'DELETE RETAILER PERMANENTLY', reason: 'Admin deletion' })
+      body: JSON.stringify({ confirmation_phrase: 'DELETE RETAILER PERMANENTLY', reason: 'Admin UI Delete' })
     });
     const resJson = await res.json();
     if (!res.ok) throw new Error(resJson.error || 'Failed to delete permanently');
 
-    ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(item => item.id !== retailerId && item.code !== retailerId && item.retailer_code !== retailerId);
-    filterRetailersTable();
-    populateRetailerDropdowns();
-    alert(`🗑️ Store "${name}" permanently deleted.`);
+    showToast(`Store "${name}" deleted permanently.`);
     refreshDashboardData();
   } catch (err) {
-    alert(`❌ ${err.message}`);
+    showToast(err.message, 'error');
+    fetchRetailers();
   }
 }
 
@@ -2767,11 +2857,11 @@ async function handleRetailerFormSubmit(e) {
     filterRetailersTable();
     populateRetailerDropdowns();
 
-    alert(`✅ Retail Partner "${payload.name}" saved successfully!`);
+    showToast(`Retail Partner "${payload.name}" saved successfully!`);
     closeRetailerModal();
     refreshDashboardData();
   } catch (err) {
-    alert(`❌ ${err.message}`);
+    showToast(err.message, 'error');
   }
 }
 
@@ -2781,8 +2871,14 @@ async function handleArchiveCurrentRetailer() {
   const name = document.getElementById('ret-form-name')?.value;
   if (!id) return;
 
-  const reason = prompt(`Are you sure you want to ARCHIVE "${name}"?\nAll past invoices and ledger records will be preserved.\nEnter archive reason (optional):`, 'Store temporarily inactive');
-  if (reason === null) return;
+  const confirmed = await showConfirmDialog({
+    title: `Archive "${name}"?`,
+    message: `Are you sure you want to archive "${name}"? Historical orders and ledger entries will be preserved.`,
+    confirmText: 'Yes, Archive Store',
+    confirmColor: '#d97706',
+    icon: '📦'
+  });
+  if (!confirmed) return;
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${id}`, {
@@ -2791,7 +2887,7 @@ async function handleArchiveCurrentRetailer() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${ADMIN_STATE.token}`
       },
-      body: JSON.stringify({ reason: reason || 'Archived via Admin Portal' })
+      body: JSON.stringify({ reason: 'Archived via Admin Portal' })
     });
 
     const resJson = await res.json();
@@ -2801,11 +2897,11 @@ async function handleArchiveCurrentRetailer() {
     filterRetailersTable();
     populateRetailerDropdowns();
 
-    alert(`📦 Retailer ${name} archived successfully.`);
+    showToast(`Retailer ${name} archived successfully.`);
     closeRetailerModal();
     refreshDashboardData();
   } catch (err) {
-    alert(`❌ ${err.message}`);
+    showToast(err.message, 'error');
   }
 }
 
@@ -2831,12 +2927,6 @@ async function handleHardDeleteSubmit(e) {
 
   const id = document.getElementById('hard-delete-ret-id').value;
   const reason = document.getElementById('hard-delete-reason')?.value.trim() || 'Store removed by owner';
-  const phrase = (document.getElementById('hard-delete-confirm-phrase')?.value || '').trim();
-
-  if (phrase.toUpperCase() !== 'DELETE RETAILER PERMANENTLY') {
-    alert('❌ Confirmation phrase mismatch. You must type "DELETE RETAILER PERMANENTLY".');
-    return;
-  }
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${id}/hard-delete`, {
@@ -2858,12 +2948,12 @@ async function handleHardDeleteSubmit(e) {
     filterRetailersTable();
     populateRetailerDropdowns();
 
-    alert('🗑️ Retailer permanently removed from database.');
+    showToast('Retailer permanently removed from database.');
     closeHardDeleteModal();
     closeRetailerModal();
     refreshDashboardData();
   } catch (err) {
-    alert(`❌ ${err.message}`);
+    showToast(err.message, 'error');
   }
 }
 
@@ -2898,7 +2988,7 @@ async function downloadRetailCSV(type) {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   } catch (err) {
-    alert(`❌ ${err.message}`);
+    showToast(err.message, 'error');
   }
 }
 
@@ -2953,11 +3043,18 @@ async function executeUniversalDelete(e) {
   const reason = document.getElementById('univ-delete-reason')?.value.trim() || 'Deleted via Universal Delete Hub';
 
   if (!id) {
-    alert('⚠️ Please select a valid item to delete.');
+    showToast('Please select a valid item to delete.', 'warn');
     return;
   }
 
-  if (!confirm(`Are you sure you want to delete the selected ${type}?`)) return;
+  const confirmed = await showConfirmDialog({
+    title: `Delete selected ${type}?`,
+    message: `Are you sure you want to delete this ${type}? This action cannot be undone.`,
+    confirmText: 'Confirm Delete',
+    confirmColor: '#dc2626',
+    icon: '🗑️'
+  });
+  if (!confirmed) return;
 
   try {
     if (type === 'retailer') {
@@ -2969,7 +3066,7 @@ async function executeUniversalDelete(e) {
         });
         const resJson = await res.json();
         if (!res.ok) throw new Error(resJson.error || 'Failed to archive retailer');
-        alert('📦 Store archived successfully.');
+        showToast('Store archived successfully.');
       } else {
         const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${id}/hard-delete`, {
           method: 'POST',
@@ -2978,10 +3075,11 @@ async function executeUniversalDelete(e) {
         });
         const resJson = await res.json();
         if (!res.ok) throw new Error(resJson.error || 'Failed to delete retailer permanently');
-        alert('🗑️ Store permanently removed from database.');
+        showToast('Store permanently removed from database.');
       }
-      ADMIN_STATE.retailers = ADMIN_STATE.retailers.filter(r => r.id !== id);
+      ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(r => r.id !== id && r.code !== id && r.retailer_code !== id);
       filterRetailersTable();
+      populateRetailerDropdowns();
     } else if (type === 'order') {
       const res = await fetch(`${API_BASE}/api/admin/orders/${id}`, {
         method: 'DELETE',
@@ -2993,7 +3091,7 @@ async function executeUniversalDelete(e) {
       ADMIN_STATE.orders = ADMIN_STATE.orders.filter(o => o.id !== id);
       ADMIN_STATE.filteredOrders = ADMIN_STATE.filteredOrders.filter(o => o.id !== id);
       renderOrdersTable();
-      alert(`🗑️ Order ${id} deleted successfully.`);
+      showToast(`Order ${id} deleted successfully.`);
     } else if (type === 'customer') {
       const res = await fetch(`${API_BASE}/api/admin/customers/${id}`, {
         method: 'DELETE',
@@ -3005,13 +3103,13 @@ async function executeUniversalDelete(e) {
       ADMIN_STATE.customers = ADMIN_STATE.customers.filter(c => c.id !== id && c.email !== id);
       ADMIN_STATE.filteredCustomers = ADMIN_STATE.filteredCustomers.filter(c => c.id !== id && c.email !== id);
       renderCustomersTable();
-      alert(`🗑️ Customer profile deleted successfully.`);
+      showToast('Customer profile deleted successfully.');
     }
 
     closeUniversalDeleteModal();
     refreshDashboardData();
   } catch (err) {
-    alert(`❌ ${err.message}`);
+    showToast(err.message, 'error');
   }
 }
 
