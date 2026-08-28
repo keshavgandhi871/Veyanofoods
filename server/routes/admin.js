@@ -782,8 +782,9 @@ router.get('/system/health', async (req, res) => {
 // ── 9. RETAIL NETWORK & INVENTORY MODULE ENDPOINTS ────────────────────────────
 
 // 9.1 Dashboard KPIs
-router.get('/retail/dashboard', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+router.get('/retail/dashboard', requirePermission(PERMISSIONS.VIEW_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const kpis = retailService.getRetailDashboardKPIs();
     res.json({ success: true, data: kpis });
   } catch (err) {
@@ -792,8 +793,9 @@ router.get('/retail/dashboard', requirePermission(PERMISSIONS.VIEW_RETAILERS), (
 });
 
 // 9.2 Retailer Directory (Search, Filter, Sort)
-router.get('/retail/retailers', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+router.get('/retail/retailers', requirePermission(PERMISSIONS.VIEW_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const retailers = retailService.getAllRetailers(req.query);
     res.json({ success: true, data: retailers, total: retailers.length });
   } catch (err) {
@@ -802,8 +804,9 @@ router.get('/retail/retailers', requirePermission(PERMISSIONS.VIEW_RETAILERS), (
 });
 
 // 9.3 Retailer 360 Profile
-router.get('/retail/retailers/:id', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+router.get('/retail/retailers/:id', requirePermission(PERMISSIONS.VIEW_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const profile = retailService.getRetailerProfile(req.params.id);
     res.json({ success: true, data: profile });
   } catch (err) {
@@ -812,10 +815,12 @@ router.get('/retail/retailers/:id', requirePermission(PERMISSIONS.VIEW_RETAILERS
 });
 
 // 9.4 Create Retailer
-router.post('/retail/retailers', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+router.post('/retail/retailers', requirePermission(PERMISSIONS.MANAGE_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const retailer = retailService.createRetailer(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, message: 'Retailer created successfully.', data: retailer });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -823,10 +828,12 @@ router.post('/retail/retailers', requirePermission(PERMISSIONS.MANAGE_RETAILERS)
 });
 
 // 9.5 Update Retailer
-router.put('/retail/retailers/:id', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+router.put('/retail/retailers/:id', requirePermission(PERMISSIONS.MANAGE_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const updated = retailService.updateRetailer(req.params.id, req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, message: 'Retailer updated successfully.', data: updated });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -834,10 +841,12 @@ router.put('/retail/retailers/:id', requirePermission(PERMISSIONS.MANAGE_RETAILE
 });
 
 // 9.6 Archive / Soft Delete Retailer
-router.delete('/retail/retailers/:id', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+router.delete('/retail/retailers/:id', requirePermission(PERMISSIONS.MANAGE_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const result = retailService.archiveRetailer(req.params.id, req.body?.reason, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -845,10 +854,12 @@ router.delete('/retail/retailers/:id', requirePermission(PERMISSIONS.MANAGE_RETA
 });
 
 // 9.6b Permanent Hard Delete (Owner Only)
-router.post('/retail/retailers/:id/hard-delete', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+router.post('/retail/retailers/:id/hard-delete', requirePermission(PERMISSIONS.MANAGE_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const result = retailService.deleteRetailerPermanently(req.params.id, req.body?.confirmation_phrase, req.body?.reason, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -856,8 +867,9 @@ router.post('/retail/retailers/:id/hard-delete', requirePermission(PERMISSIONS.M
 });
 
 // 9.6c Retailer Audit History
-router.get('/retail/retailers/:id/history', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+router.get('/retail/retailers/:id/history', requirePermission(PERMISSIONS.VIEW_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const profile = retailService.getRetailerProfile(req.params.id);
     res.json({ success: true, data: profile.change_history || [] });
   } catch (err) {
@@ -866,13 +878,15 @@ router.get('/retail/retailers/:id/history', requirePermission(PERMISSIONS.VIEW_R
 });
 
 // 9.7 Record Supply Order
-router.post('/retail/supply', requirePermission(PERMISSIONS.RECORD_RETAIL_SUPPLY), (req, res) => {
+router.post('/retail/supply', requirePermission(PERMISSIONS.RECORD_RETAIL_SUPPLY), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const result = retailService.recordSupplyOrder(req.body, actor);
     if (result.requires_approval) {
       return res.status(403).json(result);
     }
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -880,10 +894,12 @@ router.post('/retail/supply', requirePermission(PERMISSIONS.RECORD_RETAIL_SUPPLY
 });
 
 // 9.8 Record Payment
-router.post('/retail/payments', requirePermission(PERMISSIONS.RECORD_RETAIL_PAYMENT), (req, res) => {
+router.post('/retail/payments', requirePermission(PERMISSIONS.RECORD_RETAIL_PAYMENT), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'FINANCE' };
     const result = retailService.recordPayment(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -891,10 +907,12 @@ router.post('/retail/payments', requirePermission(PERMISSIONS.RECORD_RETAIL_PAYM
 });
 
 // 9.9 Record Return & Quarantine
-router.post('/retail/returns', requirePermission(PERMISSIONS.RECORD_RETAIL_RETURN), (req, res) => {
+router.post('/retail/returns', requirePermission(PERMISSIONS.RECORD_RETAIL_RETURN), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
     const result = retailService.recordReturn(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -902,10 +920,12 @@ router.post('/retail/returns', requirePermission(PERMISSIONS.RECORD_RETAIL_RETUR
 });
 
 // 9.10 Physical Stock Reconciliation
-router.post('/retail/reconcile', requirePermission(PERMISSIONS.RECONCILE_RETAIL_STOCK), (req, res) => {
+router.post('/retail/reconcile', requirePermission(PERMISSIONS.RECONCILE_RETAIL_STOCK), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
     const result = retailService.reconcileStock(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -913,8 +933,9 @@ router.post('/retail/reconcile', requirePermission(PERMISSIONS.RECONCILE_RETAIL_
 });
 
 // 9.11 Global Retail Stock Matrix
-router.get('/retail/stock', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+router.get('/retail/stock', requirePermission(PERMISSIONS.VIEW_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const matrix = retailService.getRetailStockMatrix(req.query);
     res.json({ success: true, data: matrix, total: matrix.length });
   } catch (err) {
@@ -923,8 +944,9 @@ router.get('/retail/stock', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req,
 });
 
 // 9.12 Follow-ups (Get & Create & Complete)
-router.get('/retail/followups', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+router.get('/retail/followups', requirePermission(PERMISSIONS.VIEW_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const list = retailService.getFollowups(req.query);
     res.json({ success: true, data: list, total: list.length });
   } catch (err) {
@@ -932,20 +954,24 @@ router.get('/retail/followups', requirePermission(PERMISSIONS.VIEW_RETAILERS), (
   }
 });
 
-router.post('/retail/followups', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+router.post('/retail/followups', requirePermission(PERMISSIONS.MANAGE_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'SALES' };
     const item = retailService.createFollowup(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, data: item });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-router.patch('/retail/followups/:id/complete', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+router.patch('/retail/followups/:id/complete', requirePermission(PERMISSIONS.MANAGE_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'SALES' };
     const item = retailService.completeFollowup(req.params.id, req.body?.notes, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, data: item });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -953,10 +979,12 @@ router.patch('/retail/followups/:id/complete', requirePermission(PERMISSIONS.MAN
 });
 
 // 9.13 Internal Notes
-router.post('/retail/notes', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (req, res) => {
+router.post('/retail/notes', requirePermission(PERMISSIONS.MANAGE_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
     const note = retailService.addRetailerNote(req.body.retailer_id, req.body.content, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, data: note });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -964,8 +992,9 @@ router.post('/retail/notes', requirePermission(PERMISSIONS.MANAGE_RETAILERS), (r
 });
 
 // 9.14 Statement
-router.get('/retail/statement/:id', requirePermission(PERMISSIONS.VIEW_RETAILERS), (req, res) => {
+router.get('/retail/statement/:id', requirePermission(PERMISSIONS.VIEW_RETAILERS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const statement = retailService.getRetailerStatement(req.params.id, req.query);
     res.json({ success: true, data: statement });
   } catch (err) {
@@ -974,8 +1003,9 @@ router.get('/retail/statement/:id', requirePermission(PERMISSIONS.VIEW_RETAILERS
 });
 
 // 9.15 CSV Export
-router.get('/retail/export/:type', requirePermission(PERMISSIONS.EXPORT_RETAIL_REPORTS), (req, res) => {
+router.get('/retail/export/:type', requirePermission(PERMISSIONS.EXPORT_RETAIL_REPORTS), async (req, res) => {
   try {
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const csvContent = retailService.exportRetailCSV(req.params.type, req.query, actor);
     res.setHeader('Content-Type', 'text/csv');

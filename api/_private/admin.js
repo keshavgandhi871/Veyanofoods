@@ -666,9 +666,10 @@ try {
 }
 
 // 1. Dashboard KPIs
-router.get('/retail/dashboard', (req, res) => {
+router.get('/retail/dashboard', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const kpis = retailService.getRetailDashboardKPIs();
     res.json({ success: true, data: kpis });
   } catch (err) {
@@ -677,9 +678,10 @@ router.get('/retail/dashboard', (req, res) => {
 });
 
 // 2. Retailer Directory (Search, Filter, Sort)
-router.get('/retail/retailers', (req, res) => {
+router.get('/retail/retailers', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const retailers = retailService.getAllRetailers(req.query);
     res.json({ success: true, data: retailers, total: retailers.length });
   } catch (err) {
@@ -688,9 +690,10 @@ router.get('/retail/retailers', (req, res) => {
 });
 
 // 3. Retailer 360 Profile
-router.get('/retail/retailers/:id', (req, res) => {
+router.get('/retail/retailers/:id', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const profile = retailService.getRetailerProfile(req.params.id);
     res.json({ success: true, data: profile });
   } catch (err) {
@@ -699,11 +702,13 @@ router.get('/retail/retailers/:id', (req, res) => {
 });
 
 // 4. Create Retailer
-router.post('/retail/retailers', (req, res) => {
+router.post('/retail/retailers', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const retailer = retailService.createRetailer(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, message: 'Retailer created successfully.', data: retailer });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -711,11 +716,13 @@ router.post('/retail/retailers', (req, res) => {
 });
 
 // 5. Update Retailer
-router.put('/retail/retailers/:id', (req, res) => {
+router.put('/retail/retailers/:id', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const updated = retailService.updateRetailer(req.params.id, req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, message: 'Retailer updated successfully.', data: updated });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -723,11 +730,13 @@ router.put('/retail/retailers/:id', (req, res) => {
 });
 
 // 6. Archive / Soft Delete Retailer
-router.delete('/retail/retailers/:id', (req, res) => {
+router.delete('/retail/retailers/:id', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const result = retailService.archiveRetailer(req.params.id, req.body?.reason, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -735,11 +744,13 @@ router.delete('/retail/retailers/:id', (req, res) => {
 });
 
 // 6b. Permanent Hard Delete (Owner Only)
-router.post('/retail/retailers/:id/hard-delete', (req, res) => {
+router.post('/retail/retailers/:id/hard-delete', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const result = retailService.deleteRetailerPermanently(req.params.id, req.body?.confirmation_phrase, req.body?.reason, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -747,9 +758,10 @@ router.post('/retail/retailers/:id/hard-delete', (req, res) => {
 });
 
 // 6c. Retailer Audit History
-router.get('/retail/retailers/:id/history', (req, res) => {
+router.get('/retail/retailers/:id/history', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const profile = retailService.getRetailerProfile(req.params.id);
     res.json({ success: true, data: profile.change_history || [] });
   } catch (err) {
@@ -758,14 +770,16 @@ router.get('/retail/retailers/:id/history', (req, res) => {
 });
 
 // 7. Record Supply Order
-router.post('/retail/supply', (req, res) => {
+router.post('/retail/supply', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const result = retailService.recordSupplyOrder(req.body, actor);
     if (result.requires_approval) {
       return res.status(403).json(result);
     }
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -773,11 +787,13 @@ router.post('/retail/supply', (req, res) => {
 });
 
 // 8. Record Payment
-router.post('/retail/payments', (req, res) => {
+router.post('/retail/payments', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'FINANCE' };
     const result = retailService.recordPayment(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -785,11 +801,13 @@ router.post('/retail/payments', (req, res) => {
 });
 
 // 9. Record Return & Quarantine
-router.post('/retail/returns', (req, res) => {
+router.post('/retail/returns', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
     const result = retailService.recordReturn(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -797,11 +815,13 @@ router.post('/retail/returns', (req, res) => {
 });
 
 // 10. Physical Stock Reconciliation
-router.post('/retail/reconcile', (req, res) => {
+router.post('/retail/reconcile', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
     const result = retailService.reconcileStock(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -809,9 +829,10 @@ router.post('/retail/reconcile', (req, res) => {
 });
 
 // 11. Global Retail Stock Matrix
-router.get('/retail/stock', (req, res) => {
+router.get('/retail/stock', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const matrix = retailService.getRetailStockMatrix(req.query);
     res.json({ success: true, data: matrix, total: matrix.length });
   } catch (err) {
@@ -820,9 +841,10 @@ router.get('/retail/stock', (req, res) => {
 });
 
 // 12. Follow-ups
-router.get('/retail/followups', (req, res) => {
+router.get('/retail/followups', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const list = retailService.getFollowups(req.query);
     res.json({ success: true, data: list, total: list.length });
   } catch (err) {
@@ -830,22 +852,26 @@ router.get('/retail/followups', (req, res) => {
   }
 });
 
-router.post('/retail/followups', (req, res) => {
+router.post('/retail/followups', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'SALES' };
     const item = retailService.createFollowup(req.body, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, data: item });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-router.patch('/retail/followups/:id/complete', (req, res) => {
+router.patch('/retail/followups/:id/complete', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'SALES' };
     const item = retailService.completeFollowup(req.params.id, req.body?.notes, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.json({ success: true, data: item });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -853,11 +879,13 @@ router.patch('/retail/followups/:id/complete', (req, res) => {
 });
 
 // 13. Internal Notes
-router.post('/retail/notes', (req, res) => {
+router.post('/retail/notes', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OPERATIONS' };
     const note = retailService.addRetailerNote(req.body.retailer_id, req.body.content, actor);
+    await retailService.savePersistentRetailDataAsync();
     res.status(201).json({ success: true, data: note });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -865,9 +893,10 @@ router.post('/retail/notes', (req, res) => {
 });
 
 // 14. Statement
-router.get('/retail/statement/:id', (req, res) => {
+router.get('/retail/statement/:id', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const statement = retailService.getRetailerStatement(req.params.id, req.query);
     res.json({ success: true, data: statement });
   } catch (err) {
@@ -876,9 +905,10 @@ router.get('/retail/statement/:id', (req, res) => {
 });
 
 // 15. CSV Export
-router.get('/retail/export/:type', (req, res) => {
+router.get('/retail/export/:type', async (req, res) => {
   try {
     if (!retailService) return res.status(503).json({ error: 'Retail service unavailable' });
+    await retailService.ensureDataLoaded();
     const actor = { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' };
     const csvContent = retailService.exportRetailCSV(req.params.type, req.query, actor);
     res.setHeader('Content-Type', 'text/csv');

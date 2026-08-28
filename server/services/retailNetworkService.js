@@ -33,31 +33,118 @@ const PRODUCT_CATALOG = {
   'COMBO-600': { sku: 'COMBO-600', name: 'The Trio Discovery Combo (600g)', price: 999, mrp: 1197, costPrice: 520 }
 };
 
-// ── Load & Save Persistent Retail Data ───────────────────────────────────────
+// ── Load & Save Persistent Retail Data (Hybrid Disk + Supabase Cloud Storage) ───
+let isLoadedFromSupabase = false;
+let lastSupabaseSync = 0;
+
+async function syncWithSupabaseStorage() {
+  try {
+    if (!supabase || !process.env.SUPABASE_URL) return;
+    const { data, error } = await supabase.storage.from('retail-data').download('retail_network_data.json');
+    if (data && !error) {
+      const text = await data.text();
+      const parsed = JSON.parse(text || '{}');
+      if (parsed && (Array.isArray(parsed.retailers) || parsed.is_seeded)) {
+        RETAILERS = parsed.retailers || [];
+        RETAILER_INVENTORY = parsed.inventory || [];
+        INVENTORY_MOVEMENTS = parsed.movements || [];
+        SUPPLY_ORDERS = parsed.orders || [];
+        FINANCIAL_LEDGER = parsed.ledger || [];
+        RETURNS = parsed.returns || [];
+        FOLLOWUPS = parsed.followups || [];
+        NOTES = parsed.notes || [];
+        DOCUMENTS = parsed.documents || [];
+        isLoadedFromSupabase = true;
+        lastSupabaseSync = Date.now();
+
+        // Local cache sync
+        try {
+          const dir = path.dirname(LOCAL_RETAIL_DATA_FILE);
+          if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+          const tempFile = `${LOCAL_RETAIL_DATA_FILE}.tmp`;
+          fs.writeFileSync(tempFile, text, 'utf8');
+          fs.renameSync(tempFile, LOCAL_RETAIL_DATA_FILE);
+        } catch (_) {}
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Supabase Storage sync note:', err.message);
+  }
+  return false;
+}
+
+async function ensureDataLoaded(forceRefresh = false) {
+  if (!isLoadedFromSupabase || forceRefresh || (Date.now() - lastSupabaseSync > 10000)) {
+    await syncWithSupabaseStorage();
+  }
+  if (RETAILERS.length === 0 && !fs.existsSync(LOCAL_RETAIL_DATA_FILE)) {
+    loadPersistentRetailData();
+  }
+}
+
 function savePersistentRetailData() {
+  const payload = {
+    is_seeded: true,
+    retailers: RETAILERS,
+    inventory: RETAILER_INVENTORY,
+    movements: INVENTORY_MOVEMENTS,
+    orders: SUPPLY_ORDERS,
+    ledger: FINANCIAL_LEDGER,
+    returns: RETURNS,
+    followups: FOLLOWUPS,
+    notes: NOTES,
+    documents: DOCUMENTS,
+    updated_at: new Date().toISOString()
+  };
+  const payloadStr = JSON.stringify(payload, null, 2);
+
+  // 1. Local disk write
   try {
     const dir = path.dirname(LOCAL_RETAIL_DATA_FILE);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-    const payload = {
-      is_seeded: true,
-      retailers: RETAILERS,
-      inventory: RETAILER_INVENTORY,
-      movements: INVENTORY_MOVEMENTS,
-      orders: SUPPLY_ORDERS,
-      ledger: FINANCIAL_LEDGER,
-      returns: RETURNS,
-      followups: FOLLOWUPS,
-      notes: NOTES,
-      documents: DOCUMENTS,
-      updated_at: new Date().toISOString()
-    };
     const tempFile = `${LOCAL_RETAIL_DATA_FILE}.tmp`;
-    fs.writeFileSync(tempFile, JSON.stringify(payload, null, 2), 'utf8');
+    fs.writeFileSync(tempFile, payloadStr, 'utf8');
     fs.renameSync(tempFile, LOCAL_RETAIL_DATA_FILE);
   } catch (err) {
     console.warn('⚠️ Could not write persistent retail data file:', err.message);
   }
+
+  // 2. Cloud Storage sync (for Vercel serverless persistence)
+  try {
+    if (supabase && process.env.SUPABASE_URL) {
+      supabase.storage.from('retail-data')
+        .upload('retail_network_data.json', payloadStr, { contentType: 'application/json', upsert: true })
+        .then(({ error }) => {
+          if (!error) lastSupabaseSync = Date.now();
+        })
+        .catch(() => {});
+    }
+  } catch (_) {}
+}
+
+async function savePersistentRetailDataAsync() {
+  savePersistentRetailData();
+  try {
+    if (supabase && process.env.SUPABASE_URL) {
+      const payload = {
+        is_seeded: true,
+        retailers: RETAILERS,
+        inventory: RETAILER_INVENTORY,
+        movements: INVENTORY_MOVEMENTS,
+        orders: SUPPLY_ORDERS,
+        ledger: FINANCIAL_LEDGER,
+        returns: RETURNS,
+        followups: FOLLOWUPS,
+        notes: NOTES,
+        documents: DOCUMENTS,
+        updated_at: new Date().toISOString()
+      };
+      await supabase.storage.from('retail-data')
+        .upload('retail_network_data.json', JSON.stringify(payload, null, 2), { contentType: 'application/json', upsert: true });
+      lastSupabaseSync = Date.now();
+    }
+  } catch (_) {}
 }
 
 function loadPersistentRetailData() {
@@ -2112,6 +2199,9 @@ function exportRetailCSV(type = 'retailers', filters = {}, actor = { name: 'Admi
 }
 
 module.exports = {
+  ensureDataLoaded,
+  savePersistentRetailDataAsync,
+  syncWithSupabaseStorage,
   getRetailDashboardKPIs,
   getAllRetailers,
   getRetailerProfile,
