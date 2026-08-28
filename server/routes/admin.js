@@ -158,19 +158,21 @@ function requireAdminAuth(req, res, next) {
   }
 
   if (token) {
-    return clerkClient.verifyToken(token)
-      .then(decoded => {
-        if (decoded && decoded.sub) {
-          req.admin = {
-            role: 'OWNER',
-            email: 'clerk_admin@veyano.in',
-            name: 'Clerk SSO Admin'
-          };
-          return next();
-        }
-        return res.status(403).json({ error: 'Access Denied: Invalid or expired admin token.' });
-      })
-      .catch(() => res.status(403).json({ error: 'Access Denied: Unauthorized admin access.' }));
+    if (typeof clerkClient?.verifyToken === 'function') {
+      return clerkClient.verifyToken(token)
+        .then(decoded => {
+          if (decoded && decoded.sub) {
+            req.admin = {
+              role: 'OWNER',
+              email: 'clerk_admin@veyano.in',
+              name: 'Clerk SSO Admin'
+            };
+            return next();
+          }
+          return res.status(403).json({ error: 'Access Denied: Invalid or expired admin token.' });
+        })
+        .catch(() => res.status(403).json({ error: 'Access Denied: Unauthorized admin access.' }));
+    }
   }
 
   return res.status(401).json({ error: 'Access Denied: Authentication required for this admin endpoint.' });

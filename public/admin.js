@@ -2604,6 +2604,11 @@ async function openRetailerModal(retailerId = null) {
   const archiveBtn = document.getElementById('ret-form-archive-btn');
   const deleteBtn = document.getElementById('ret-form-delete-btn');
 
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val !== undefined && val !== null ? val : '';
+  };
+
   if (retailerId) {
     if (title) title.innerText = '✏️ Edit Retail Partner Master Profile';
     if (idInput) idInput.value = retailerId;
@@ -2612,45 +2617,37 @@ async function openRetailerModal(retailerId = null) {
 
     const populateForm = (data) => {
       if (!data) return;
-      document.getElementById('ret-form-name').value = data.name || '';
-      document.getElementById('ret-form-code').value = data.code || data.retailer_code || '';
-      document.getElementById('ret-form-contact').value = data.contact_person || '';
-      document.getElementById('ret-form-phone').value = data.phone || '';
-      document.getElementById('ret-form-whatsapp').value = data.whatsapp || '';
-      document.getElementById('ret-form-email').value = data.email || '';
-      document.getElementById('ret-form-gstin').value = data.gstin || '';
-      document.getElementById('ret-form-type').value = data.retailer_type || 'Gourmet Store';
-      document.getElementById('ret-form-address').value = data.address || '';
-      document.getElementById('ret-form-area').value = data.area || '';
-      document.getElementById('ret-form-city').value = data.city || 'New Delhi';
-      document.getElementById('ret-form-state').value = data.state || 'Delhi';
-      document.getElementById('ret-form-pincode').value = data.pincode || '';
-      document.getElementById('ret-form-landmark').value = data.landmark || '';
-      document.getElementById('ret-form-gps').value = data.gps_coordinates || '';
-      document.getElementById('ret-form-status').value = data.status || 'ACTIVE';
-      document.getElementById('ret-form-terms').value = data.payment_terms || '15_DAYS';
-      document.getElementById('ret-form-limit').value = data.credit_limit || 20000;
-      document.getElementById('ret-form-frequency').value = data.reorder_frequency_days || data.usual_reorder_frequency_days || 14;
-      document.getElementById('ret-form-pref-contact').value = data.preferred_contact_method || 'WHATSAPP';
-      document.getElementById('ret-form-salesperson').value = data.assigned_salesperson || 'Keshav Gandhi';
-      document.getElementById('ret-form-notes').value = data.notes || '';
-
-      if (document.getElementById('ret-form-created-at')) {
-        document.getElementById('ret-form-created-at').value = data.created_at ? data.created_at.slice(0, 10) : '';
-      }
-      if (document.getElementById('ret-form-last-order')) {
-        document.getElementById('ret-form-last-order').value = data.last_order_date ? data.last_order_date.slice(0, 10) : '';
-      }
-      if (document.getElementById('ret-form-next-order')) {
-        const nextOrd = data.expected_next_order_date || data.next_expected_order_date;
-        document.getElementById('ret-form-next-order').value = nextOrd ? nextOrd.slice(0, 10) : '';
-      }
+      setVal('ret-form-name', data.name);
+      setVal('ret-form-code', data.code || data.retailer_code);
+      setVal('ret-form-contact', data.contact_person);
+      setVal('ret-form-phone', data.phone);
+      setVal('ret-form-whatsapp', data.whatsapp);
+      setVal('ret-form-email', data.email);
+      setVal('ret-form-gstin', data.gstin);
+      setVal('ret-form-type', data.retailer_type || 'Gourmet Store');
+      setVal('ret-form-address', data.address);
+      setVal('ret-form-area', data.area);
+      setVal('ret-form-city', data.city || 'New Delhi');
+      setVal('ret-form-state', data.state || 'Delhi');
+      setVal('ret-form-pincode', data.pincode);
+      setVal('ret-form-landmark', data.landmark);
+      setVal('ret-form-gps', data.gps_coordinates);
+      setVal('ret-form-status', data.status || 'ACTIVE');
+      setVal('ret-form-terms', data.payment_terms || '15_DAYS');
+      setVal('ret-form-limit', data.credit_limit || 20000);
+      setVal('ret-form-frequency', data.reorder_frequency_days || data.usual_reorder_frequency_days || 14);
+      setVal('ret-form-pref-contact', data.preferred_contact_method || 'WHATSAPP');
+      setVal('ret-form-salesperson', data.assigned_salesperson || 'Keshav Gandhi');
+      setVal('ret-form-notes', data.notes);
+      setVal('ret-form-created-at', data.created_at ? data.created_at.slice(0, 10) : '');
+      setVal('ret-form-last-order', data.last_order_date ? data.last_order_date.slice(0, 10) : '');
+      const nextOrd = data.expected_next_order_date || data.next_expected_order_date;
+      setVal('ret-form-next-order', nextOrd ? nextOrd.slice(0, 10) : '');
     };
 
     if (r) {
       populateForm(r);
     } else {
-      // Background fetch if not immediately in memory
       fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}`, {
         headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
       })
@@ -2668,38 +2665,31 @@ async function openRetailerModal(retailerId = null) {
     const nextCount = (ADMIN_STATE.retailers || []).length + 1;
     const autoCode = `RET-${String(nextCount).padStart(3, '0')}`;
     
-    document.getElementById('ret-form-code').value = autoCode;
-    document.getElementById('ret-form-name').value = '';
-    document.getElementById('ret-form-contact').value = '';
-    document.getElementById('ret-form-phone').value = '';
-    document.getElementById('ret-form-whatsapp').value = '';
-    document.getElementById('ret-form-email').value = '';
-    document.getElementById('ret-form-gstin').value = '';
-    document.getElementById('ret-form-type').value = 'Gourmet Store';
-    document.getElementById('ret-form-address').value = '';
-    document.getElementById('ret-form-area').value = '';
-    document.getElementById('ret-form-city').value = 'New Delhi';
-    document.getElementById('ret-form-state').value = 'Delhi';
-    document.getElementById('ret-form-pincode').value = '';
-    document.getElementById('ret-form-landmark').value = '';
-    document.getElementById('ret-form-gps').value = '';
-    document.getElementById('ret-form-status').value = 'ACTIVE';
-    document.getElementById('ret-form-terms').value = '15_DAYS';
-    document.getElementById('ret-form-limit').value = '20000';
-    document.getElementById('ret-form-frequency').value = '14';
-    document.getElementById('ret-form-pref-contact').value = 'WHATSAPP';
-    document.getElementById('ret-form-salesperson').value = 'Keshav Gandhi';
-    document.getElementById('ret-form-notes').value = '';
-
-    if (document.getElementById('ret-form-created-at')) {
-      document.getElementById('ret-form-created-at').value = new Date().toISOString().slice(0, 10);
-    }
-    if (document.getElementById('ret-form-last-order')) {
-      document.getElementById('ret-form-last-order').value = '';
-    }
-    if (document.getElementById('ret-form-next-order')) {
-      document.getElementById('ret-form-next-order').value = '';
-    }
+    setVal('ret-form-code', autoCode);
+    setVal('ret-form-name', '');
+    setVal('ret-form-contact', '');
+    setVal('ret-form-phone', '');
+    setVal('ret-form-whatsapp', '');
+    setVal('ret-form-email', '');
+    setVal('ret-form-gstin', '');
+    setVal('ret-form-type', 'Gourmet Store');
+    setVal('ret-form-address', '');
+    setVal('ret-form-area', '');
+    setVal('ret-form-city', 'New Delhi');
+    setVal('ret-form-state', 'Delhi');
+    setVal('ret-form-pincode', '');
+    setVal('ret-form-landmark', '');
+    setVal('ret-form-gps', '');
+    setVal('ret-form-status', 'ACTIVE');
+    setVal('ret-form-terms', '15_DAYS');
+    setVal('ret-form-limit', '20000');
+    setVal('ret-form-frequency', '14');
+    setVal('ret-form-pref-contact', 'WHATSAPP');
+    setVal('ret-form-salesperson', 'Keshav Gandhi');
+    setVal('ret-form-notes', '');
+    setVal('ret-form-created-at', new Date().toISOString().slice(0, 10));
+    setVal('ret-form-last-order', '');
+    setVal('ret-form-next-order', '');
 
     if (archiveBtn) archiveBtn.style.display = 'none';
     if (deleteBtn) deleteBtn.style.display = 'none';
@@ -2715,39 +2705,37 @@ function closeRetailerModal() {
 async function handleRetailerFormSubmit(e) {
   e.preventDefault();
 
-  const id = document.getElementById('ret-form-id').value;
-  const createdAtVal = document.getElementById('ret-form-created-at')?.value;
-  const lastOrderVal = document.getElementById('ret-form-last-order')?.value;
-  const nextOrderVal = document.getElementById('ret-form-next-order')?.value;
+  const id = document.getElementById('ret-form-id')?.value;
+  const getVal = (fieldId, fallback = '') => document.getElementById(fieldId)?.value?.trim() || fallback;
 
   const payload = {
-    name: document.getElementById('ret-form-name').value.trim(),
-    code: document.getElementById('ret-form-code').value.trim(),
-    retailer_code: document.getElementById('ret-form-code').value.trim(),
-    contact_person: document.getElementById('ret-form-contact').value.trim(),
-    phone: document.getElementById('ret-form-phone').value.trim(),
-    whatsapp: document.getElementById('ret-form-whatsapp').value.trim(),
-    email: document.getElementById('ret-form-email').value.trim(),
-    gstin: document.getElementById('ret-form-gstin').value.trim(),
-    retailer_type: document.getElementById('ret-form-type').value,
-    address: document.getElementById('ret-form-address').value.trim(),
-    area: document.getElementById('ret-form-area').value.trim(),
-    city: document.getElementById('ret-form-city').value.trim(),
-    state: document.getElementById('ret-form-state').value.trim(),
-    pincode: document.getElementById('ret-form-pincode').value.trim(),
-    landmark: document.getElementById('ret-form-landmark').value.trim(),
-    gps_coordinates: document.getElementById('ret-form-gps').value.trim(),
-    status: document.getElementById('ret-form-status').value,
-    payment_terms: document.getElementById('ret-form-terms').value,
-    credit_limit: parseFloat(document.getElementById('ret-form-limit').value || 0),
-    usual_reorder_frequency_days: parseInt(document.getElementById('ret-form-frequency').value || 14, 10),
-    reorder_frequency_days: parseInt(document.getElementById('ret-form-frequency').value || 14, 10),
-    preferred_contact_method: document.getElementById('ret-form-pref-contact').value,
-    assigned_salesperson: document.getElementById('ret-form-salesperson').value.trim(),
-    notes: document.getElementById('ret-form-notes').value.trim(),
-    created_at: createdAtVal || undefined,
-    last_order_date: lastOrderVal || null,
-    expected_next_order_date: nextOrderVal || null
+    name: getVal('ret-form-name'),
+    code: getVal('ret-form-code'),
+    retailer_code: getVal('ret-form-code'),
+    contact_person: getVal('ret-form-contact'),
+    phone: getVal('ret-form-phone'),
+    whatsapp: getVal('ret-form-whatsapp'),
+    email: getVal('ret-form-email'),
+    gstin: getVal('ret-form-gstin'),
+    retailer_type: document.getElementById('ret-form-type')?.value || 'Gourmet Store',
+    address: getVal('ret-form-address'),
+    area: getVal('ret-form-area'),
+    city: getVal('ret-form-city', 'New Delhi'),
+    state: getVal('ret-form-state', 'Delhi'),
+    pincode: getVal('ret-form-pincode'),
+    landmark: getVal('ret-form-landmark'),
+    gps_coordinates: getVal('ret-form-gps'),
+    status: document.getElementById('ret-form-status')?.value || 'ACTIVE',
+    payment_terms: document.getElementById('ret-form-terms')?.value || '15_DAYS',
+    credit_limit: parseFloat(document.getElementById('ret-form-limit')?.value || 20000),
+    usual_reorder_frequency_days: parseInt(document.getElementById('ret-form-frequency')?.value || 14, 10),
+    reorder_frequency_days: parseInt(document.getElementById('ret-form-frequency')?.value || 14, 10),
+    preferred_contact_method: document.getElementById('ret-form-pref-contact')?.value || 'WHATSAPP',
+    assigned_salesperson: getVal('ret-form-salesperson', 'Keshav Gandhi'),
+    notes: getVal('ret-form-notes'),
+    created_at: getVal('ret-form-created-at') || undefined,
+    last_order_date: getVal('ret-form-last-order') || null,
+    expected_next_order_date: getVal('ret-form-next-order') || null
   };
 
   try {
