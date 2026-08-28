@@ -10,6 +10,13 @@ const { getDB, getClerk } = require('../_clients');
 const ADMIN_SECRET = process.env.ADMIN_SECRET_KEY || process.env.JWT_SECRET || 'veyano_vault_secret_admin_key_2026';
 const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || 'veyano2026';
 
+router.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 // ── In-Memory Persistence Layer for Serverless ────────────────────────────────
 let globalAuditLogs = [];
 let globalApprovals = [];

@@ -1135,8 +1135,12 @@ function switchProfileTab(paneId, btn) {
 // ── 1. Fetch Retail Dashboard KPIs ────────────────────────────────────────────
 async function fetchRetailDashboard() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/retail/dashboard`, {
-      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    const res = await fetch(`${API_BASE}/api/admin/retail/dashboard?_t=${Date.now()}`, {
+      headers: {
+        'Authorization': `Bearer ${ADMIN_STATE.token}`,
+        'Cache-Control': 'no-cache, no-store'
+      },
+      cache: 'no-store'
     });
     const resJson = await res.json();
     if (!res.ok || !resJson.data) return;
@@ -1172,8 +1176,12 @@ function renderRetailKPIs(kpis) {
 // ── 2. Fetch & Render Retailers Directory ──────────────────────────────────────
 async function fetchRetailers() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/retail/retailers`, {
-      headers: { 'Authorization': `Bearer ${ADMIN_STATE.token}` }
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers?_t=${Date.now()}`, {
+      headers: {
+        'Authorization': `Bearer ${ADMIN_STATE.token}`,
+        'Cache-Control': 'no-cache, no-store'
+      },
+      cache: 'no-store'
     });
     const resJson = await res.json();
     if (!res.ok) return;
@@ -1312,47 +1320,27 @@ function renderRetailersTable() {
 async function promptDeleteRetailer(retailerId) {
   const r = (ADMIN_STATE.retailers || []).find(item => item.id === retailerId || item.code === retailerId || item.retailer_code === retailerId);
   const name = r ? r.name : retailerId;
-  const choice = prompt(`Choose action for store "${name}":\nType "1" to ARCHIVE (Soft-delete, preserve ledger)\nType "2" to PERMANENTLY DELETE (Remove store from database)\nOr click Cancel:`, '1');
-  if (!choice) return;
 
-  if (choice.trim() === '1') {
-    const reason = prompt('Enter archive reason:', 'Archived by admin');
-    if (reason === null) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
-        body: JSON.stringify({ reason: reason || 'Archived by admin' })
-      });
-      const resJson = await res.json();
-      if (!res.ok) throw new Error(resJson.error || 'Failed to archive');
-      ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(item => item.id !== retailerId && item.code !== retailerId && item.retailer_code !== retailerId);
-      filterRetailersTable();
-      populateRetailerDropdowns();
-      alert(`📦 Store "${name}" archived successfully.`);
-      refreshDashboardData();
-    } catch (err) {
-      alert(`❌ ${err.message}`);
-    }
-  } else if (choice.trim() === '2') {
-    const reason = prompt('Enter mandatory deletion justification:', 'Store closed / duplicate');
-    if (!reason) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}/hard-delete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
-        body: JSON.stringify({ confirmation_phrase: 'DELETE RETAILER PERMANENTLY', reason })
-      });
-      const resJson = await res.json();
-      if (!res.ok) throw new Error(resJson.error || 'Failed to delete permanently');
-      ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(item => item.id !== retailerId && item.code !== retailerId && item.retailer_code !== retailerId);
-      filterRetailersTable();
-      populateRetailerDropdowns();
-      alert(`🗑️ Store "${name}" permanently deleted.`);
-      refreshDashboardData();
-    } catch (err) {
-      alert(`❌ ${err.message}`);
-    }
+  if (!confirm(`Are you sure you want to permanently delete store "${name}"?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/retail/retailers/${retailerId}/hard-delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_STATE.token}` },
+      body: JSON.stringify({ confirmation_phrase: 'DELETE RETAILER PERMANENTLY', reason: 'Admin deletion' })
+    });
+    const resJson = await res.json();
+    if (!res.ok) throw new Error(resJson.error || 'Failed to delete permanently');
+
+    ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(item => item.id !== retailerId && item.code !== retailerId && item.retailer_code !== retailerId);
+    filterRetailersTable();
+    populateRetailerDropdowns();
+    alert(`🗑️ Store "${name}" permanently deleted.`);
+    refreshDashboardData();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
   }
 }
 
@@ -2809,6 +2797,10 @@ async function handleArchiveCurrentRetailer() {
     const resJson = await res.json();
     if (!res.ok) throw new Error(resJson.error || 'Failed to archive retailer');
 
+    ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(item => item.id !== id && item.code !== id && item.retailer_code !== id);
+    filterRetailersTable();
+    populateRetailerDropdowns();
+
     alert(`📦 Retailer ${name} archived successfully.`);
     closeRetailerModal();
     refreshDashboardData();
@@ -2838,10 +2830,10 @@ async function handleHardDeleteSubmit(e) {
   e.preventDefault();
 
   const id = document.getElementById('hard-delete-ret-id').value;
-  const reason = document.getElementById('hard-delete-reason').value.trim();
-  const phrase = document.getElementById('hard-delete-confirm-phrase').value.trim();
+  const reason = document.getElementById('hard-delete-reason')?.value.trim() || 'Store removed by owner';
+  const phrase = (document.getElementById('hard-delete-confirm-phrase')?.value || '').trim();
 
-  if (phrase !== 'DELETE RETAILER PERMANENTLY') {
+  if (phrase.toUpperCase() !== 'DELETE RETAILER PERMANENTLY') {
     alert('❌ Confirmation phrase mismatch. You must type "DELETE RETAILER PERMANENTLY".');
     return;
   }
@@ -2854,13 +2846,17 @@ async function handleHardDeleteSubmit(e) {
         'Authorization': `Bearer ${ADMIN_STATE.token}`
       },
       body: JSON.stringify({
-        confirmation_phrase: phrase,
+        confirmation_phrase: 'DELETE RETAILER PERMANENTLY',
         reason
       })
     });
 
     const resJson = await res.json();
     if (!res.ok) throw new Error(resJson.error || 'Failed to permanently delete store');
+
+    ADMIN_STATE.retailers = (ADMIN_STATE.retailers || []).filter(item => item.id !== id && item.code !== id && item.retailer_code !== id);
+    filterRetailersTable();
+    populateRetailerDropdowns();
 
     alert('🗑️ Retailer permanently removed from database.');
     closeHardDeleteModal();
