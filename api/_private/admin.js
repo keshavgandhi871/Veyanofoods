@@ -483,6 +483,7 @@ router.post('/bulk-delete', async (req, res) => {
           try { retailService.archiveRetailer(id, reason || 'Bulk archive', { name: req.admin?.name || 'Admin', role: req.admin?.role || 'OWNER' }); } catch (__) {}
         }
       }
+      await retailService.savePersistentRetailDataAsync();
     } else if (type === 'order') {
       for (const id of ids) {
         try {

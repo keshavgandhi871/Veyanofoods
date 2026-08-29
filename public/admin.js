@@ -1363,7 +1363,7 @@ function showConfirmDialog({ title = 'Confirm Deletion', message = 'Are you sure
     const cancelBtn = document.getElementById('confirm-modal-cancel-btn');
 
     if (!modal) {
-      resolve(true);
+      resolve(window.confirm(`${title}\n\n${message}`));
       return;
     }
 
@@ -1381,20 +1381,31 @@ function showConfirmDialog({ title = 'Confirm Deletion', message = 'Are you sure
       modal.classList.remove('open');
       okBtn.removeEventListener('click', onOk);
       cancelBtn.removeEventListener('click', onCancel);
+      modal.removeEventListener('click', onBackdrop);
     };
 
-    const onOk = () => {
+    const onOk = (e) => {
+      e.stopPropagation();
       cleanup();
       resolve(true);
     };
 
-    const onCancel = () => {
+    const onCancel = (e) => {
+      e.stopPropagation();
       cleanup();
       resolve(false);
     };
 
+    const onBackdrop = (e) => {
+      if (e.target === modal) {
+        cleanup();
+        resolve(false);
+      }
+    };
+
     okBtn.addEventListener('click', onOk);
     cancelBtn.addEventListener('click', onCancel);
+    modal.addEventListener('click', onBackdrop);
   });
 }
 
@@ -2746,10 +2757,11 @@ async function openRetailerModal(retailerId = null) {
 
     let maxNum = 0;
     (ADMIN_STATE.retailers || []).forEach(item => {
-      const match = String(item.code || item.retailer_code || item.id || '').match(/RET-(\d+)/i) || String(item.code || item.retailer_code || item.id || '').match(/RET-2026-(\d+)/i);
+      const codeStr = String(item.code || item.retailer_code || item.id || '');
+      const match = codeStr.match(/RET-20\d\d-(\d+)/i) || codeStr.match(/RET-(\d+)/i);
       if (match) {
         const n = parseInt(match[1], 10);
-        if (!isNaN(n) && n > maxNum) maxNum = n;
+        if (!isNaN(n) && n < 2000 && n > maxNum) maxNum = n;
       }
     });
     const autoCode = `RET-${String(maxNum + 1).padStart(3, '0')}`;
@@ -2797,18 +2809,30 @@ async function handleRetailerFormSubmit(e) {
   const id = document.getElementById('ret-form-id')?.value;
   const getVal = (fieldId, fallback = '') => document.getElementById(fieldId)?.value?.trim() || fallback;
 
+  const storeName = getVal('ret-form-name');
+  if (!storeName) {
+    showToast('Store Name is required.', 'warn');
+    return;
+  }
+
+  const phone = getVal('ret-form-phone');
+  if (!phone) {
+    showToast('Contact Phone is required.', 'warn');
+    return;
+  }
+
   const payload = {
-    name: getVal('ret-form-name'),
+    name: storeName,
     code: getVal('ret-form-code'),
     retailer_code: getVal('ret-form-code'),
-    contact_person: getVal('ret-form-contact'),
-    phone: getVal('ret-form-phone'),
-    whatsapp: getVal('ret-form-whatsapp'),
+    contact_person: getVal('ret-form-contact') || storeName || 'Store Manager',
+    phone: phone,
+    whatsapp: getVal('ret-form-whatsapp') || phone,
     email: getVal('ret-form-email'),
     gstin: getVal('ret-form-gstin'),
     retailer_type: document.getElementById('ret-form-type')?.value || 'Gourmet Store',
-    address: getVal('ret-form-address'),
-    area: getVal('ret-form-area'),
+    address: getVal('ret-form-address') || getVal('ret-form-city') || 'Delhi',
+    area: getVal('ret-form-area') || getVal('ret-form-city') || 'Delhi',
     city: getVal('ret-form-city', 'New Delhi'),
     state: getVal('ret-form-state', 'Delhi'),
     pincode: getVal('ret-form-pincode'),

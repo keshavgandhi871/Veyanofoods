@@ -524,6 +524,7 @@ router.post('/bulk-delete', async (req, res, next) => {
           try { retailService.archiveRetailer(id, reason || 'Bulk archive', req.admin); } catch (__) {}
         }
       }
+      await retailService.savePersistentRetailDataAsync();
     } else if (type === 'order') {
       for (const id of ids) {
         try {

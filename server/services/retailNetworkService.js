@@ -35,9 +35,22 @@ const PRODUCT_CATALOG = {
 
 // ── Load & Save Persistent Retail Data (Hybrid Disk + Supabase Cloud Storage) ───
 let isLoadedFromSupabase = false;
+let isInitialized = false;
 let lastSupabaseSync = 0;
+let localDataUpdatedAt = new Date().toISOString();
 
-async function syncWithSupabaseStorage() {
+function safeIsoDate(val, fallback = null) {
+  if (!val) return fallback;
+  try {
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return fallback;
+    return d.toISOString();
+  } catch (_) {
+    return fallback;
+  }
+}
+
+async function syncWithSupabaseStorage(force = false) {
   try {
     if (!supabase || !process.env.SUPABASE_URL) return false;
     const { data, error } = await supabase.storage.from('retail-data').download('retail_network_data.json');
@@ -45,6 +58,14 @@ async function syncWithSupabaseStorage() {
       const text = await data.text();
       const parsed = JSON.parse(text || '{}');
       if (parsed && (Array.isArray(parsed.retailers) || parsed.is_seeded)) {
+        const remoteUpdated = parsed.updated_at ? new Date(parsed.updated_at).getTime() : 0;
+        const localUpdated = localDataUpdatedAt ? new Date(localDataUpdatedAt).getTime() : 0;
+
+        // If local data is newer than remote download, never overwrite local memory with stale remote snapshot
+        if (!force && isInitialized && localUpdated > 0 && remoteUpdated > 0 && remoteUpdated < localUpdated) {
+          return false;
+        }
+
         RETAILERS = parsed.retailers || [];
         RETAILER_INVENTORY = parsed.inventory || [];
         INVENTORY_MOVEMENTS = parsed.movements || [];
@@ -55,7 +76,9 @@ async function syncWithSupabaseStorage() {
         NOTES = parsed.notes || [];
         DOCUMENTS = parsed.documents || [];
         isLoadedFromSupabase = true;
+        isInitialized = true;
         lastSupabaseSync = Date.now();
+        if (parsed.updated_at) localDataUpdatedAt = parsed.updated_at;
 
         // Local cache sync
         try {
@@ -75,15 +98,21 @@ async function syncWithSupabaseStorage() {
 }
 
 async function ensureDataLoaded(forceRefresh = false) {
-  if (!isLoadedFromSupabase || forceRefresh || (Date.now() - lastSupabaseSync > 5000)) {
-    await syncWithSupabaseStorage();
-  }
-  if (!isLoadedFromSupabase && fs.existsSync(LOCAL_RETAIL_DATA_FILE)) {
+  if (!isInitialized) {
     loadPersistentRetailData();
+    await syncWithSupabaseStorage(true);
+    isInitialized = true;
+    return;
+  }
+  if (forceRefresh) {
+    await syncWithSupabaseStorage(true);
   }
 }
 
 function savePersistentRetailData() {
+  localDataUpdatedAt = new Date().toISOString();
+  lastSupabaseSync = Date.now();
+
   const payload = {
     is_seeded: true,
     retailers: RETAILERS,
@@ -95,7 +124,7 @@ function savePersistentRetailData() {
     followups: FOLLOWUPS,
     notes: NOTES,
     documents: DOCUMENTS,
-    updated_at: new Date().toISOString()
+    updated_at: localDataUpdatedAt
   };
   const payloadStr = JSON.stringify(payload, null, 2);
 
@@ -124,6 +153,9 @@ function savePersistentRetailData() {
 }
 
 async function savePersistentRetailDataAsync() {
+  localDataUpdatedAt = new Date().toISOString();
+  lastSupabaseSync = Date.now();
+
   savePersistentRetailData();
   try {
     if (supabase && process.env.SUPABASE_URL) {
@@ -138,7 +170,7 @@ async function savePersistentRetailDataAsync() {
         followups: FOLLOWUPS,
         notes: NOTES,
         documents: DOCUMENTS,
-        updated_at: new Date().toISOString()
+        updated_at: localDataUpdatedAt
       };
       await supabase.storage.from('retail-data')
         .upload('retail_network_data.json', JSON.stringify(payload, null, 2), { contentType: 'application/json', upsert: true, cacheControl: '0' });
@@ -162,6 +194,8 @@ function loadPersistentRetailData() {
         FOLLOWUPS = data.followups || [];
         NOTES = data.notes || [];
         DOCUMENTS = data.documents || [];
+        if (data.updated_at) localDataUpdatedAt = data.updated_at;
+        isInitialized = true;
         return;
       }
     }
@@ -1097,10 +1131,10 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
   let maxNum = 0;
   RETAILERS.forEach(r => {
     const codeStr = String(r.retailer_code || r.code || r.id || '');
-    const match = codeStr.match(/RET-(\d+)/i) || codeStr.match(/RET-2026-(\d+)/i);
+    const match = codeStr.match(/RET-20\d\d-(\d+)/i) || codeStr.match(/RET-(\d+)/i);
     if (match) {
       const n = parseInt(match[1], 10);
-      if (!isNaN(n) && n > maxNum) maxNum = n;
+      if (!isNaN(n) && n < 2000 && n > maxNum) maxNum = n;
     }
   });
 
@@ -1114,7 +1148,6 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
     // If a custom code was provided, check if an active non-archived store has it
     const activeWithCode = RETAILERS.find(r => !r.deleted_at && r.status !== 'ARCHIVED' && (r.retailer_code === retailer_code || r.code === retailer_code));
     if (activeWithCode) {
-      // Auto-assign next unique code to avoid collision failure
       retailer_code = autoCode;
     }
   }
@@ -1125,7 +1158,10 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
     id = `RET-${Date.now().toString(36).toUpperCase()}-${String(nextCodeNum).padStart(3, '0')}`;
   }
 
-  const nowStr = data.created_at ? new Date(data.created_at).toISOString() : new Date().toISOString();
+  const nowIso = new Date().toISOString();
+  const createdDate = safeIsoDate(data.created_at, nowIso);
+  const lastOrderDate = safeIsoDate(data.last_order_date, null);
+  const expectedNextOrderDate = safeIsoDate(data.expected_next_order_date, null);
 
   const newRetailer = {
     id,
@@ -1155,10 +1191,10 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
     usual_reorder_frequency_days: parseInt(data.reorder_frequency_days || data.usual_reorder_frequency_days, 10) || 14,
     preferred_contact_method: data.preferred_contact_method || 'WHATSAPP',
     notes: data.notes || '',
-    last_order_date: data.last_order_date ? new Date(data.last_order_date).toISOString() : null,
-    expected_next_order_date: data.expected_next_order_date ? new Date(data.expected_next_order_date).toISOString() : null,
-    created_at: nowStr,
-    updated_at: nowStr,
+    last_order_date: lastOrderDate,
+    expected_next_order_date: expectedNextOrderDate,
+    created_at: createdDate,
+    updated_at: nowIso,
     deleted_at: null,
     deleted_by: null
   };
@@ -1180,8 +1216,8 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
       total_sample: 0,
       last_supplied_at: null,
       last_reconciled_at: null,
-      created_at: nowStr,
-      updated_at: nowStr
+      created_at: createdDate,
+      updated_at: nowIso
     });
   });
 
@@ -1199,10 +1235,46 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
 
   savePersistentRetailData();
 
+function formatRetailerForDb(r) {
+  return {
+    id: r.id,
+    retailer_code: r.retailer_code || r.code || r.id,
+    name: r.name,
+    contact_person: r.contact_person || r.name || 'Store Manager',
+    phone: r.phone || '9999999999',
+    whatsapp: r.whatsapp || r.phone || null,
+    email: r.email || null,
+    gstin: r.gstin || null,
+    retailer_type: r.retailer_type || 'Gourmet Store',
+    channel_type: r.channel_type || 'RETAILER',
+    address: r.address || 'Delhi',
+    area: r.area || 'Delhi',
+    city: r.city || 'New Delhi',
+    state: r.state || 'Delhi',
+    pincode: r.pincode || null,
+    landmark: r.landmark || null,
+    gps_coordinates: r.gps_coordinates || null,
+    status: r.status || 'ACTIVE',
+    assigned_salesperson: r.assigned_salesperson || 'Keshav Gandhi',
+    payment_terms: r.payment_terms || '15_DAYS',
+    credit_limit: parseInt(r.credit_limit, 10) || 20000,
+    current_outstanding: parseInt(r.current_outstanding, 10) || 0,
+    reorder_frequency_days: parseInt(r.reorder_frequency_days, 10) || 14,
+    preferred_contact_method: r.preferred_contact_method || 'WHATSAPP',
+    notes: r.notes || null,
+    last_order_date: r.last_order_date || null,
+    expected_next_order_date: r.expected_next_order_date || null,
+    created_at: r.created_at || new Date().toISOString(),
+    updated_at: r.updated_at || new Date().toISOString(),
+    deleted_at: r.deleted_at || null,
+    deleted_by: r.deleted_by || null
+  };
+}
+
   // Try Supabase async write if configured
   try {
     if (supabase && process.env.SUPABASE_URL) {
-      supabase.from('retailers').insert([newRetailer]).then(({ error }) => {
+      supabase.from('retailers').upsert([formatRetailerForDb(newRetailer)]).then(({ error }) => {
         if (error) console.warn('Supabase insert note:', error.message);
       });
     }
@@ -1255,10 +1327,10 @@ function updateRetailer(id, data, actor = { name: 'Admin', role: 'OWNER' }) {
   if (data.preferred_contact_method !== undefined) retailer.preferred_contact_method = data.preferred_contact_method;
   if (data.notes !== undefined) retailer.notes = data.notes.trim();
 
-  // Dates
-  if (data.created_at) retailer.created_at = new Date(data.created_at).toISOString();
-  if (data.last_order_date !== undefined) retailer.last_order_date = data.last_order_date ? new Date(data.last_order_date).toISOString() : null;
-  if (data.expected_next_order_date !== undefined) retailer.expected_next_order_date = data.expected_next_order_date ? new Date(data.expected_next_order_date).toISOString() : null;
+  // Dates (safe parse)
+  if (data.created_at) retailer.created_at = safeIsoDate(data.created_at, retailer.created_at);
+  if (data.last_order_date !== undefined) retailer.last_order_date = safeIsoDate(data.last_order_date, null);
+  if (data.expected_next_order_date !== undefined) retailer.expected_next_order_date = safeIsoDate(data.expected_next_order_date, null);
 
   retailer.updated_at = new Date().toISOString();
 
@@ -1280,7 +1352,7 @@ function updateRetailer(id, data, actor = { name: 'Admin', role: 'OWNER' }) {
   // Try Supabase async update if configured
   try {
     if (supabase && process.env.SUPABASE_URL) {
-      supabase.from('retailers').update(retailer).eq('id', retailer.id).then(({ error }) => {
+      supabase.from('retailers').upsert([formatRetailerForDb(retailer)]).then(({ error }) => {
         if (error) console.warn('Supabase update note:', error.message);
       });
     }
@@ -1312,6 +1384,21 @@ function archiveRetailer(id, reason = 'Archived via Admin Portal', actor = { nam
   });
 
   savePersistentRetailData();
+
+  // Try Supabase async soft delete if configured
+  try {
+    if (supabase && process.env.SUPABASE_URL) {
+      supabase.from('retailers').update({
+        status: 'ARCHIVED',
+        deleted_at: retailer.deleted_at,
+        deleted_by: retailer.deleted_by,
+        updated_at: retailer.updated_at
+      }).eq('id', retailer.id).then(({ error }) => {
+        if (error) console.warn('Supabase archive note:', error.message);
+      });
+    }
+  } catch (e) {}
+
   return { success: true, message: `Retailer ${retailer.name} archived successfully.` };
 }
 
