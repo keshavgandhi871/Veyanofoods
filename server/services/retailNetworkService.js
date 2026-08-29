@@ -50,6 +50,83 @@ function safeIsoDate(val, fallback = null) {
   }
 }
 
+function formatRetailerForDb(r) {
+  return {
+    id: r.id,
+    retailer_code: r.retailer_code || r.code || r.id,
+    name: r.name,
+    contact_person: r.contact_person || r.name || 'Store Manager',
+    phone: r.phone || '9999999999',
+    whatsapp: r.whatsapp || r.phone || null,
+    email: r.email || null,
+    gstin: r.gstin || null,
+    retailer_type: r.retailer_type || 'Gourmet Store',
+    channel_type: r.channel_type || 'RETAILER',
+    address: r.address || 'Delhi',
+    area: r.area || 'Delhi',
+    city: r.city || 'New Delhi',
+    state: r.state || 'Delhi',
+    pincode: r.pincode || null,
+    landmark: r.landmark || null,
+    gps_coordinates: r.gps_coordinates || null,
+    status: r.status || 'ACTIVE',
+    assigned_salesperson: r.assigned_salesperson || 'Keshav Gandhi',
+    payment_terms: r.payment_terms || '15_DAYS',
+    credit_limit: parseInt(r.credit_limit, 10) || 20000,
+    current_outstanding: parseInt(r.current_outstanding, 10) || 0,
+    reorder_frequency_days: parseInt(r.reorder_frequency_days, 10) || 14,
+    preferred_contact_method: r.preferred_contact_method || 'WHATSAPP',
+    notes: r.notes || null,
+    last_order_date: r.last_order_date || null,
+    expected_next_order_date: r.expected_next_order_date || null,
+    created_at: r.created_at || new Date().toISOString(),
+    updated_at: r.updated_at || new Date().toISOString(),
+    deleted_at: r.deleted_at || null,
+    deleted_by: r.deleted_by || null
+  };
+}
+
+async function loadDataFromSupabaseTables() {
+  if (!supabase || !process.env.SUPABASE_URL) return false;
+  try {
+    const { data: dbRetailers, error: retErr } = await supabase.from('retailers').select('*').order('created_at', { ascending: false });
+    if (retErr) {
+      return false;
+    }
+
+    if (Array.isArray(dbRetailers)) {
+      RETAILERS = dbRetailers.map(r => ({
+        ...r,
+        code: r.retailer_code || r.code || r.id,
+        retailer_code: r.retailer_code || r.code || r.id
+      }));
+
+      try {
+        const { data: dbInv } = await supabase.from('retailer_inventory').select('*');
+        if (Array.isArray(dbInv)) RETAILER_INVENTORY = dbInv;
+      } catch (_) {}
+
+      try {
+        const { data: dbOrders } = await supabase.from('retailer_supply_orders').select('*');
+        if (Array.isArray(dbOrders)) SUPPLY_ORDERS = dbOrders;
+      } catch (_) {}
+
+      try {
+        const { data: dbLedger } = await supabase.from('retailer_financial_ledger').select('*');
+        if (Array.isArray(dbLedger)) FINANCIAL_LEDGER = dbLedger;
+      } catch (_) {}
+
+      isLoadedFromSupabase = true;
+      isInitialized = true;
+      lastSupabaseSync = Date.now();
+      return true;
+    }
+  } catch (err) {
+    console.warn('⚠️ Error loading from Supabase tables:', err.message);
+  }
+  return false;
+}
+
 async function syncWithSupabaseStorage(force = false) {
   try {
     if (!supabase || !process.env.SUPABASE_URL) return false;
@@ -98,14 +175,17 @@ async function syncWithSupabaseStorage(force = false) {
 }
 
 async function ensureDataLoaded(forceRefresh = false) {
-  if (!isInitialized) {
-    loadPersistentRetailData();
-    await syncWithSupabaseStorage(true);
-    isInitialized = true;
+  // 1. First priority: Load live from Supabase PostgreSQL tables
+  const loadedFromDb = await loadDataFromSupabaseTables();
+  if (loadedFromDb) {
     return;
   }
-  if (forceRefresh) {
-    await syncWithSupabaseStorage(true);
+
+  // 2. Fallback: Local disk cache / Supabase Storage
+  if (!isInitialized || forceRefresh) {
+    loadPersistentRetailData();
+    await syncWithSupabaseStorage(forceRefresh);
+    isInitialized = true;
   }
 }
 
@@ -655,42 +735,6 @@ function createRetailer(data, actor = { name: 'Admin', role: 'OWNER' }) {
   });
 
   savePersistentRetailData();
-
-function formatRetailerForDb(r) {
-  return {
-    id: r.id,
-    retailer_code: r.retailer_code || r.code || r.id,
-    name: r.name,
-    contact_person: r.contact_person || r.name || 'Store Manager',
-    phone: r.phone || '9999999999',
-    whatsapp: r.whatsapp || r.phone || null,
-    email: r.email || null,
-    gstin: r.gstin || null,
-    retailer_type: r.retailer_type || 'Gourmet Store',
-    channel_type: r.channel_type || 'RETAILER',
-    address: r.address || 'Delhi',
-    area: r.area || 'Delhi',
-    city: r.city || 'New Delhi',
-    state: r.state || 'Delhi',
-    pincode: r.pincode || null,
-    landmark: r.landmark || null,
-    gps_coordinates: r.gps_coordinates || null,
-    status: r.status || 'ACTIVE',
-    assigned_salesperson: r.assigned_salesperson || 'Keshav Gandhi',
-    payment_terms: r.payment_terms || '15_DAYS',
-    credit_limit: parseInt(r.credit_limit, 10) || 20000,
-    current_outstanding: parseInt(r.current_outstanding, 10) || 0,
-    reorder_frequency_days: parseInt(r.reorder_frequency_days, 10) || 14,
-    preferred_contact_method: r.preferred_contact_method || 'WHATSAPP',
-    notes: r.notes || null,
-    last_order_date: r.last_order_date || null,
-    expected_next_order_date: r.expected_next_order_date || null,
-    created_at: r.created_at || new Date().toISOString(),
-    updated_at: r.updated_at || new Date().toISOString(),
-    deleted_at: r.deleted_at || null,
-    deleted_by: r.deleted_by || null
-  };
-}
 
   // Try Supabase async write if configured
   try {
