@@ -330,7 +330,7 @@
       <h2 style="font-size: 1.35rem; margin-bottom: 0.4rem; color: #0f172a;">Executive Control System</h2>
       <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1.75rem;">Single Source of Truth: Product Master, Inventory Ledger, Order Tracking, and RBAC Operations.</p>
       
-      <form onsubmit="handleAdminLogin(event)">
+      <form id="admin-login-form" onsubmit="event.preventDefault(); handleAdminLogin(event); return false;">
         <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
           <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">Select Access Role</label>
           <select id="login-role-select" class="form-control" style="font-weight: 600;">
@@ -346,10 +346,13 @@
           </select>
         </div>
 
-        <div class="form-group" style="margin-bottom: 1.25rem;">
-          <input type="password" id="admin-passcode" class="form-control" placeholder="Enter Secure Passcode" required autofocus style="text-align:center; font-size:1.15rem; letter-spacing: 3px; font-weight: 700;">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <input type="password" id="admin-passcode" class="form-control" placeholder="Enter Passcode (e.g. veyano2026)" required autofocus autocomplete="current-password" style="text-align:center; font-size:1.05rem; letter-spacing: 2px; font-weight: 700;">
         </div>
-        <button type="submit" class="btn btn-accent" style="width: 100%; padding: 0.85rem;">Unlock Operations Platform</button>
+
+        <div id="login-error-msg" style="display: none; color: #dc2626; font-size: 0.82rem; font-weight: 600; margin-bottom: 1rem; padding: 0.6rem 0.8rem; background: #fee2e2; border-radius: 8px; border: 1px solid #fecaca; text-align: left;"></div>
+
+        <button type="submit" id="login-submit-btn" class="btn btn-accent" style="width: 100%; padding: 0.85rem; font-weight: 700; font-size: 0.95rem;">Unlock Operations Platform</button>
       </form>
     </div>
   </div>

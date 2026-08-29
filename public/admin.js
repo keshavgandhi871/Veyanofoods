@@ -3,7 +3,28 @@
  * Full RBAC enforcement, dynamic product master sync, inventory ledger, and audit explorer.
  */
 
-const API_BASE = window.location.origin.includes('localhost') ? 'http://localhost:3001' : '';
+const API_BASE = (() => {
+  if (typeof window === 'undefined') return 'http://localhost:3001';
+  const origin = window.location.origin || '';
+  const hostname = window.location.hostname || '';
+  const protocol = window.location.protocol || '';
+
+  // When running locally via localhost, 127.0.0.1, Live Server (e.g. 5500), or file://
+  if (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.') ||
+    protocol === 'file:' ||
+    origin.includes(':5500') ||
+    origin.includes(':3000') ||
+    origin.includes(':8080')
+  ) {
+    return 'http://localhost:3001';
+  }
+  // Production serverless API
+  return '';
+})();
 
 let ADMIN_STATE = {
   token: localStorage.getItem('veyano_admin_token') || null,
@@ -31,6 +52,14 @@ let ADMIN_STATE = {
 document.addEventListener('DOMContentLoaded', () => {
   initTabNavigation();
   checkAuthAndLoad();
+
+  const loginForm = document.getElementById('admin-login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleAdminLogin(e);
+    });
+  }
 });
 
 // ── Tab Switching ─────────────────────────────────────────────────────────────
@@ -57,9 +86,33 @@ function switchTab(tabId) {
 
 // ── Auth Handling ─────────────────────────────────────────────────────────────
 async function handleAdminLogin(e) {
-  e.preventDefault();
-  const passcode = document.getElementById('admin-passcode').value.trim();
-  const role = document.getElementById('login-role-select').value;
+  if (e && e.preventDefault) e.preventDefault();
+
+  const passInput = document.getElementById('admin-passcode');
+  const errorBox = document.getElementById('login-error-msg');
+  const submitBtn = document.getElementById('login-submit-btn') || document.querySelector('#admin-login-form button[type="submit"]');
+
+  const passcode = (passInput ? passInput.value : '').trim();
+  const role = document.getElementById('login-role-select')?.value || 'OWNER';
+
+  if (errorBox) {
+    errorBox.style.display = 'none';
+    errorBox.innerText = '';
+  }
+
+  if (!passcode) {
+    if (errorBox) {
+      errorBox.innerText = 'Please enter your admin passcode.';
+      errorBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const originalBtnText = submitBtn ? submitBtn.innerText : 'Unlock Operations Platform';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Verifying Passcode...';
+  }
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/auth/login`, {
@@ -69,7 +122,7 @@ async function handleAdminLogin(e) {
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Authentication failed');
+    if (!res.ok) throw new Error(data.error || 'Authentication failed. Please check passcode.');
 
     ADMIN_STATE.token = data.token;
     ADMIN_STATE.role = data.role;
@@ -79,11 +132,28 @@ async function handleAdminLogin(e) {
     localStorage.setItem('veyano_admin_role', data.role);
     localStorage.setItem('veyano_admin_name', data.name);
 
-    document.getElementById('admin-auth-gate').style.display = 'none';
+    const gate = document.getElementById('admin-auth-gate');
+    if (gate) gate.style.display = 'none';
+
     updateRoleBadge();
+    showToast(`Welcome back, ${data.name}! Operations Center Unlocked.`);
     refreshDashboardData();
   } catch (err) {
-    alert(`❌ ${err.message}`);
+    if (errorBox) {
+      errorBox.innerText = `❌ ${err.message}`;
+      errorBox.style.display = 'block';
+    } else {
+      alert(`❌ ${err.message}`);
+    }
+    if (passInput) {
+      passInput.focus();
+      passInput.select();
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = originalBtnText;
+    }
   }
 }
 
