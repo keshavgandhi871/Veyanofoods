@@ -28,26 +28,31 @@ CREATE TABLE IF NOT EXISTS products (
 -- 3. Orders Table
 CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_number TEXT UNIQUE NOT NULL,
-  source TEXT DEFAULT 'website',
-  status TEXT DEFAULT 'pending',
-  payment_method TEXT NOT NULL,
-  payment_status TEXT DEFAULT 'pending',
-  customer_name TEXT NOT NULL,
-  customer_email TEXT,
-  customer_phone TEXT NOT NULL,
-  shipping_address TEXT NOT NULL,
-  shipping_pincode TEXT NOT NULL,
-  shipping_city TEXT,
-  shipping_state TEXT,
-  subtotal_amount INTEGER NOT NULL,
-  shipping_fee INTEGER DEFAULT 0,
-  gst_amount INTEGER DEFAULT 0,
-  total_amount INTEGER NOT NULL,
-  is_cod BOOLEAN DEFAULT false,
+  order_number TEXT UNIQUE,
+  user_id TEXT, -- Links to Clerk or customer user id
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  subtotal NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  shipping_fee NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  cod_fee NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  total_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  payment_method TEXT NOT NULL CHECK (payment_method IN ('prepaid', 'cod')),
+  payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed')),
+  order_status TEXT NOT NULL DEFAULT 'new' CHECK (order_status IN ('new', 'processing', 'shipped', 'delivered', 'cancelled')),
+  shipping_address JSONB NOT NULL DEFAULT '{}'::jsonb,
   razorpay_order_id TEXT,
-  user_id TEXT, -- Optional: links to Clerk user id
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+  razorpay_payment_id TEXT,
+  
+  -- Compatibility / tracking fields
+  source TEXT DEFAULT 'website',
+  customer_name TEXT,
+  customer_email TEXT,
+  customer_phone TEXT,
+  status TEXT DEFAULT 'pending',
+  is_cod BOOLEAN DEFAULT false,
+  subtotal_amount NUMERIC(10, 2),
+  gst_amount NUMERIC(10, 2) DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 4. Order Items Table

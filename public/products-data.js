@@ -241,7 +241,7 @@ const DEFAULT_PRODUCTS = [
       "./assets/real_food_makhana.webp"
     ],
     hoverImage: "./assets/combo_hover.webp",
-    ingredients: "Pack includes 3 individual jars/pouches: 1 x Classic Plain (200g), 1 x Lightly Salted (200g), 1 x Fiery Peri-Peri (200g). See individual packs for full ingredient breakdowns.",
+    ingredients: "Pack includes 3 individual standing pouches: 1 x Classic Plain (200g), 1 x Lightly Salted (200g), 1 x Fiery Peri-Peri (200g). See individual packs for full ingredient breakdowns.",
     nutrition: {
       serving_size: "30g",
       servings_per_pack: "20 Servings Total",
@@ -280,7 +280,7 @@ const DEFAULT_PRODUCTS = [
     storage_instructions: "Store in airtight containers in a cool, dry place.",
     taste_profile: "Experience all 3 signatures: pure earthy crunch, subtle pink salt, and zesty peri-peri.",
     why_you_will_like_it: [
-      "Maximum value bundle — saves ₹298 compared to buying 3 individual jars",
+      "Maximum value bundle — saves ₹298 compared to buying 3 individual standing pouches",
       "Instantly unlocks FREE Pan-India Shipping at checkout",
       "Great variety for household members with different snacking preferences",
       "Thoughtfully packed to lock in freshness"
@@ -306,7 +306,7 @@ const DEFAULT_PRODUCTS = [
     mrp: null,             // NOT FOR SALE — no MRP until actual packaging is ready
     weight: "To be decided",
     short_description: "Trial packs are coming soon. We're working on smaller formats so you can try VEYANO before committing to a larger pack.",
-    description: "New to VEYANO? We understand that buying a 200g jar from a new brand is a leap of faith. We are working on smaller trial pack formats so you can experience our clean roasted crunch before committing to a full-sized jar. Watch this space.",
+    description: "New to VEYANO? We understand that buying a 200g standing pouch from a new brand is a leap of faith. We are working on smaller trial pack formats so you can experience our clean roasted crunch before committing to a full-sized standing pouch. Watch this space.",
     images: [
       "./assets/makhana_hero_1775492594943.webp"
     ],

@@ -7,6 +7,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Favicon & Search Engine Icons -->
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
     <link rel="stylesheet" href="styles.css">
     <style>
         body { font-family: 'Inter', sans-serif; line-height: 1.6; color: #333; background: #fff; }
@@ -23,12 +29,14 @@
 <body>
 
     <!-- Navbar Snippet (Simplified) -->
-    <nav class="nav" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid #eee;">
-        <div class="container nav-content">
-            <a href="index.html" class="logo">VEYANO</a>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="blog.html">Blog</a>
+    <nav class="nav" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid #eee; padding: 0.75rem 0;">
+        <div class="container nav-content" style="display: flex; align-items: center; justify-content: space-between;">
+            <a href="index.html" class="nav-brand">
+                <img src="assets/logo.png" alt="VEYANO Logo" width="140" height="42">
+            </a>
+            <div class="nav-links" style="display: flex; gap: 1.5rem; list-style: none;">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="blog.html" class="nav-link">Blog</a>
             </div>
         </div>
     </nav>

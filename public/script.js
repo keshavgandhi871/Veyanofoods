@@ -326,7 +326,7 @@ async function placeOrder() {
   const placeBtn = document.getElementById('place-order-btn');
   if (placeBtn) {
     placeBtn.disabled = true;
-    placeBtn.textContent = 'Processing...';
+    placeBtn.textContent = 'Processing Order...';
   }
 
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
@@ -336,7 +336,7 @@ async function placeOrder() {
       await initiateRazorpayCheckout();
     } catch (err) {
       console.error('Razorpay Error:', err);
-      showToast(err.message || 'Payment initiation failed.', 'error');
+      showToast(err.message || 'Payment initiation failed. Try Cash on Delivery or WhatsApp.', 'error');
     } finally {
       if (placeBtn) {
         placeBtn.disabled = false;
@@ -346,7 +346,7 @@ async function placeOrder() {
     return;
   }
 
-  // COD Path
+  // Cash on Delivery (COD)
   const name = document.getElementById('ship-name')?.value.trim();
   const email = document.getElementById('ship-email')?.value.trim();
   const phone = document.getElementById('ship-phone')?.value.trim();
@@ -381,27 +381,60 @@ async function placeOrder() {
       productName: i.title,
       quantity: i.quantity,
       unitPrice: i.price,
-      weight: i.weight
+      weight: i.weight,
+      image: i.image
     }))
   };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/orders`, {
+    let res = await fetch(`${API_BASE_URL}/api/checkout/cod`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(orderPayload)
     });
 
+    if (!res.ok) {
+      // Fallback to /api/orders
+      res = await fetch(`${API_BASE_URL}/api/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload)
+      });
+    }
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to place order.');
 
-    // Clear cart and show confirmation
+    // Save recent order in sessionStorage for instant success page rendering
+    const recentOrderObj = {
+      order_number: data.orderNumber || data.orderId,
+      id: data.orderId,
+      customer_name: name,
+      customer_email: email,
+      customer_phone: phone,
+      shipping_address: orderPayload.shippingAddress,
+      shipping_city: city,
+      shipping_state: state,
+      shipping_pincode: pincode,
+      payment_method: 'cod',
+      payment_status: 'pending',
+      items: orderPayload.items,
+      subtotal: data.subtotal || cart.reduce((s, i) => s + (i.price * i.quantity), 0),
+      shipping_fee: data.shippingFee ?? (cart.reduce((s, i) => s + (i.price * i.quantity), 0) >= 499 ? 0 : 50),
+      cod_fee: data.codFee ?? 79,
+      total_amount: data.totalAmount
+    };
+    try { sessionStorage.setItem('veyano_recent_order', JSON.stringify(recentOrderObj)); } catch (_) {}
+
+    // Clear cart
     cart = [];
     saveCart();
-    const orderNumEl = document.getElementById('order-number-display');
-    if (orderNumEl) orderNumEl.textContent = `Order #${data.orderNumber || data.orderId}`;
-    goToStep(3);
-    showToast('Order placed successfully! Check your email for details.');
+
+    showToast('Order confirmed! Redirecting to confirmation...');
+    setTimeout(() => {
+      window.location.href = `/order-success.html?order_id=${encodeURIComponent(data.orderId || '')}&order_number=${encodeURIComponent(data.orderNumber || '')}&is_cod=true`;
+    }, 400);
+
   } catch (err) {
     showToast(err.message || 'Could not connect to order server.', 'error');
   } finally {
@@ -427,7 +460,7 @@ async function initiateRazorpayCheckout() {
   const shippingFee = subtotal >= CONFIG.SHIPPING_THRESHOLD ? 0 : CONFIG.SHIPPING_FEE;
   const totalPaise = (subtotal + shippingFee) * 100;
 
-  // Auto-save address if checkbox is checked
+  // Auto-save address
   const saveCheckbox = document.getElementById('save-address-checkbox');
   if (!saveCheckbox || saveCheckbox.checked) {
     if (typeof window.saveAddressFromCheckout === 'function') {
@@ -436,24 +469,60 @@ async function initiateRazorpayCheckout() {
   }
 
   // 1. Fetch Razorpay config
-  const configRes = await fetch(`${API_BASE_URL}/api/payments/config`);
-  const configData = await configRes.json();
-  const keyId = configData.keyId;
+  let keyId = '';
+  try {
+    const configRes = await fetch(`${API_BASE_URL}/api/checkout/config`);
+    if (configRes.ok) {
+      const configData = await configRes.json();
+      keyId = configData.keyId;
+    }
+  } catch (_) {}
+
+  if (!keyId) {
+    try {
+      const pConfigRes = await fetch(`${API_BASE_URL}/api/payments/config`);
+      const pConfigData = await pConfigRes.json();
+      keyId = pConfigData.keyId;
+    } catch (_) {}
+  }
 
   if (!keyId) {
     throw new Error('Online payment gateway is temporarily unavailable. Please choose Cash on Delivery or Order via WhatsApp.');
   }
 
-  // 2. Create Razorpay order
-  const orderRes = await fetch(`${API_BASE_URL}/api/payments/create-order`, {
+  // 2. Create Razorpay order session
+  let orderRes = await fetch(`${API_BASE_URL}/api/checkout/create-order`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount: totalPaise, receipt: `rcpt_${Date.now()}` })
+    body: JSON.stringify({
+      amount: totalPaise,
+      receipt: `rcpt_${Date.now()}`,
+      items: cart
+    })
   });
+
+  if (!orderRes.ok) {
+    orderRes = await fetch(`${API_BASE_URL}/api/payments/create-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: totalPaise, receipt: `rcpt_${Date.now()}` })
+    });
+  }
+
   const rzpOrder = await orderRes.json();
   if (!orderRes.ok) throw new Error(rzpOrder.error || 'Failed to create payment session.');
 
   // 3. Launch Razorpay UI
+  const itemsSnapshot = cart.map(i => ({
+    id: i.id,
+    sku: i.sku || i.id.toUpperCase(),
+    productName: i.title,
+    quantity: i.quantity,
+    unitPrice: i.price,
+    weight: i.weight,
+    image: i.image
+  }));
+
   const options = {
     key: keyId,
     amount: rzpOrder.amount,
@@ -472,46 +541,63 @@ async function initiateRazorpayCheckout() {
     },
     handler: async function (response) {
       try {
-        const verifyRes = await fetch(`${API_BASE_URL}/api/payments/verify-payment`, {
+        const verifyPayload = {
+          ...response,
+          customerName: name,
+          customerEmail: email,
+          customerPhone: phone,
+          shippingAddress: fullAddress,
+          shippingCity: city,
+          shippingState: state,
+          shippingPincode: pincode,
+          items: itemsSnapshot
+        };
+
+        let verifyRes = await fetch(`${API_BASE_URL}/api/checkout/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(response)
+          body: JSON.stringify(verifyPayload)
         });
+
+        if (!verifyRes.ok) {
+          verifyRes = await fetch(`${API_BASE_URL}/api/payments/verify-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(response)
+          });
+        }
+
         const verifyData = await verifyRes.json();
 
         if (verifyData.success) {
-          // Create confirmed order in database
-          const createOrderRes = await fetch(`${API_BASE_URL}/api/orders`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              customerName: name,
-              customerEmail: email,
-              customerPhone: phone,
-              shippingAddress: fullAddress,
-              shippingCity: city,
-              shippingState: state,
-              shippingPincode: pincode,
-              paymentMethod: 'prepaid',
-              razorpayOrderId: response.razorpay_order_id,
-              items: cart.map(i => ({
-                id: i.id,
-                sku: i.sku || i.id.toUpperCase(),
-                productName: i.title,
-                quantity: i.quantity,
-                unitPrice: i.price,
-                weight: i.weight
-              }))
-            })
-          });
-          const createdOrder = await createOrderRes.json();
+          const recentOrderObj = {
+            order_number: verifyData.orderNumber || verifyData.orderId || response.razorpay_order_id,
+            id: verifyData.orderId,
+            customer_name: name,
+            customer_email: email,
+            customer_phone: phone,
+            shipping_address: fullAddress,
+            shipping_city: city,
+            shipping_state: state,
+            shipping_pincode: pincode,
+            payment_method: 'prepaid',
+            payment_status: 'paid',
+            items: itemsSnapshot,
+            subtotal,
+            shipping_fee: shippingFee,
+            cod_fee: 0,
+            total_amount: subtotal + shippingFee
+          };
+          try { sessionStorage.setItem('veyano_recent_order', JSON.stringify(recentOrderObj)); } catch (_) {}
 
           cart = [];
           saveCart();
-          const orderNumEl = document.getElementById('order-number-display');
-          if (orderNumEl) orderNumEl.textContent = `Order #${createdOrder.orderNumber || createdOrder.orderId}`;
-          goToStep(3);
-          showToast('Payment successful! Your order has been placed.');
+
+          showToast('Payment successful! Redirecting to confirmation...');
+          setTimeout(() => {
+            window.location.href = `/order-success.html?order_id=${encodeURIComponent(verifyData.orderId || '')}&order_number=${encodeURIComponent(verifyData.orderNumber || '')}&is_cod=false`;
+          }, 400);
+
         } else {
           showToast('Payment verification failed. Please contact support.', 'error');
         }
@@ -552,13 +638,14 @@ window.buildWhatsAppOrderLink = (productVariant = null) => {
 };
 
 // --- PRODUCT GRID RENDERING (DYNAMIC) ---
-window.renderProductsGrid = (containerId, filterCategory = 'all') => {
+window.renderProductsGrid = (containerId, filterCategory = 'all', searchQuery = '') => {
   const container = document.getElementById(containerId);
   if (!container) return;
 
   const catalog = window.VeyanoProducts ? window.VeyanoProducts.getAll() : (window.DEFAULT_PRODUCTS || []);
   let filtered = catalog;
 
+  // 1. Category Filtering
   if (filterCategory === 'trial-packs' || filterCategory === 'trial') {
     filtered = catalog.filter(p => p.is_trial);
   } else if (filterCategory === 'combos' || filterCategory === 'combo') {
@@ -567,6 +654,19 @@ window.renderProductsGrid = (containerId, filterCategory = 'all') => {
     filtered = catalog.filter(p => p.is_new && p.stock_status === 'in_stock');
   } else if (filterCategory && filterCategory !== 'all') {
     filtered = catalog.filter(p => p.category === filterCategory);
+  }
+
+  // 2. Search Query Filtering (Live Search)
+  if (searchQuery && searchQuery.trim().length > 0) {
+    const q = searchQuery.trim().toLowerCase();
+    filtered = filtered.filter(p => {
+      const name = (p.name || '').toLowerCase();
+      const desc = (p.short_description || p.description || '').toLowerCase();
+      const cat = (p.category || '').toLowerCase();
+      const tags = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : '';
+      const ingredients = (p.ingredients || '').toLowerCase();
+      return name.includes(q) || desc.includes(q) || cat.includes(q) || tags.includes(q) || ingredients.includes(q);
+    });
   }
 
   // For general grids: hide products with stock_status === 'hidden'
@@ -582,6 +682,14 @@ window.renderProductsGrid = (containerId, filterCategory = 'all') => {
   if (filtered.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <svg style="width: 48px; height: 48px; margin: 0 auto 1rem; fill: none; stroke: currentColor; stroke-width: 1.5;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">No products found</p>
+        <p style="font-size: 0.88rem;">Try clearing your search or picking another category.</p>
+        <button class="btn btn-sm btn-outline" style="margin-top: 1rem;" onclick="window.resetShopFilters()">View All Products</button>
+      </div>
+    `;
+    return;
+  }
         <p>No products found in this category right now. New snacks launching soon!</p>
       </div>
     `;
@@ -1203,19 +1311,55 @@ document.addEventListener('DOMContentLoaded', () => {
     r.addEventListener('change', updateCartUI);
   });
 
-  // 3. Category Filter Buttons (on Homepage / Shop)
+  // 3. Category Filter Buttons & URL Sync (on Homepage / Shop)
+  let currentCategory = 'all';
+  let currentSearchQuery = '';
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialCategoryParam = urlParams.get('category');
+  if (initialCategoryParam) {
+    currentCategory = initialCategoryParam;
+  }
+
+  // Highlight initial active category filter pill
   document.querySelectorAll('.filter-pill').forEach(pill => {
+    if (pill.dataset.category === currentCategory) {
+      pill.classList.add('active');
+    } else if (currentCategory !== 'all' && pill.dataset.category === 'all') {
+      pill.classList.remove('active');
+    }
+
     pill.addEventListener('click', (e) => {
       document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
-      const cat = pill.dataset.category || 'all';
-      window.renderProductsGrid('products-grid-container', cat);
+      currentCategory = pill.dataset.category || 'all';
+      window.renderProductsGrid('products-grid-container', currentCategory, currentSearchQuery);
     });
   });
 
+  // Wire up Live Search Input (e.g. on shop.html)
+  const searchInput = document.getElementById('shop-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      currentSearchQuery = e.target.value;
+      window.renderProductsGrid('products-grid-container', currentCategory, currentSearchQuery);
+    });
+  }
+
+  window.resetShopFilters = () => {
+    currentCategory = 'all';
+    currentSearchQuery = '';
+    if (searchInput) searchInput.value = '';
+    document.querySelectorAll('.filter-pill').forEach(p => {
+      if (p.dataset.category === 'all') p.classList.add('active');
+      else p.classList.remove('active');
+    });
+    window.renderProductsGrid('products-grid-container', 'all', '');
+  };
+
   // Render initial products grid if container exists
   if (document.getElementById('products-grid-container')) {
-    window.renderProductsGrid('products-grid-container', 'all');
+    window.renderProductsGrid('products-grid-container', currentCategory, currentSearchQuery);
   }
 
   // 4. Accessible FAQ Accordions

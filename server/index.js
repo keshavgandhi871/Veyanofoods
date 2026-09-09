@@ -21,6 +21,8 @@ const blogRoutes = require('./routes/blog');
 const paymentRoutes = require('./routes/payments');
 const productRoutes = require('./routes/products');
 const adminRoutes = require('./routes/admin');
+const checkoutRoutes = require('./routes/checkout');
+const webhookRoutes = require('./routes/webhooks');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -58,7 +60,12 @@ app.use(cors({
 }));
 
 // ── Body Parser ──────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({
+  limit: '2mb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // ── Health Check (With Supabase Diagnostic) ──────────────────────────────────
@@ -97,11 +104,14 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/checkout', checkoutRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Serve frontend static files (from the root directory)
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Clean URL Page Routes
+app.get('/order-success', (req, res) => res.sendFile(path.join(__dirname, '../public/order-success.html')));
 app.get('/shop', (req, res) => res.sendFile(path.join(__dirname, '../public/shop.html')));
 app.get('/try-veyano', (req, res) => res.sendFile(path.join(__dirname, '../public/try-veyano.html')));
 app.get('/our-story', (req, res) => res.sendFile(path.join(__dirname, '../public/our-story.html')));

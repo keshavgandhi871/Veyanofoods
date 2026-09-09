@@ -281,48 +281,5 @@
 
   <script src="products-data.js"></script>
   <script src="script.js"></script>
-  <script>
-    // Live Search Filter for Shop Page
-    document.getElementById('shop-search-input')?.addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase().trim();
-      const catalog = window.VeyanoProducts ? window.VeyanoProducts.getAll() : (window.DEFAULT_PRODUCTS || []);
-      const matched = catalog.filter(p => 
-        p.name.toLowerCase().includes(q) || 
-        p.short_description.toLowerCase().includes(q) || 
-        p.ingredients.toLowerCase().includes(q)
-      );
-      
-      const container = document.getElementById('products-grid-container');
-      if (container) {
-        if (matched.length === 0) {
-          container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-muted);">No snacks matching "${escapeHtml(q)}" found.</div>`;
-        } else {
-          // Re-render matched items
-          container.innerHTML = matched.map(product => `
-            <div class="product-card">
-              <div class="product-card-media">
-                <a href="product.html?slug=${product.slug || product.id}">
-                  <img src="${product.images[0]}" alt="${escapeHtml(product.name)}" class="product-card-img base-img" loading="lazy">
-                  <img src="${product.hoverImage || product.images[0]}" alt="${escapeHtml(product.name)}" class="product-card-img hover-img" loading="lazy">
-                </a>
-                <span class="badge-weight">${product.weight}</span>
-              </div>
-              <div class="product-card-body">
-                <h3 class="product-card-title"><a href="product.html?slug=${product.slug || product.id}">${escapeHtml(product.name)}</a></h3>
-                <p class="product-card-desc">${escapeHtml(product.short_description)}</p>
-                <div class="product-card-price-row">
-                  <span class="product-price-current">₹${product.price}</span>
-                </div>
-                <div class="product-card-actions">
-                  <button class="btn btn-sm btn-accent" onclick="window.addToCart('${product.id}')">Add to Cart</button>
-                  <a href="product.html?slug=${product.slug || product.id}" class="btn btn-sm btn-outline">Details</a>
-                </div>
-              </div>
-            </div>
-          `).join('');
-        }
-      }
-    });
-  </script>
 </body>
 </html>

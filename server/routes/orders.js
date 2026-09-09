@@ -4,11 +4,9 @@ const router = express.Router();
 const supabase = require('../config/supabase');
 const authMiddleware = require('../middleware/auth');
 const clerkClient = require('../config/clerk');
-const { applyCODLogic, isCODReadyForDispatch } = require('../services/codService');
 const { deductStock } = require('../services/fefoService');
 const { generateInvoice } = require('../services/invoiceService');
-const { sendOrderConfirmation, sendCODAdminAlert } = require('../services/emailService');
-const { sendOrderAlertToAdmin, sendOrderConfirmationToCustomer } = require('../services/whatsappService');
+const { sendAdminOrderNotification } = require('../services/notificationService');
 
 // Order number generator: VFO-YYYY-XXXXX
 async function generateOrderNumber() {
@@ -77,17 +75,42 @@ router.get('/pincode/:pin', async (req, res) => {
 });
 
 /**
- * POST /api/orders
+ * GET /api/orders/lookup/:id or /api/orders/:id — Public order confirmation lookup (by UUID or order_number)
+ */
+router.get('/lookup/:id', async (req, res) => {
+  try {
+    const identifier = req.params.id;
+    if (!identifier) return res.status(400).json({ error: 'Order ID is required.' });
+
+    let query = supabase.from('orders').select('*');
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)) {
+      query = query.eq('id', identifier);
+    } else {
+      query = query.eq('order_number', identifier);
+    }
+
+    const { data: order, error } = await query.maybeSingle();
+    if (error) throw error;
+    if (!order) return res.status(404).json({ error: 'Order not found.' });
+
+    res.json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to lookup order', detail: err.message });
+  }
+});
+
+/**
+ * POST /api/orders — Create a new order (COD or verified Prepaid)
  */
 router.post('/', async (req, res, next) => {
   try {
     const {
       source = 'website',
-      paymentMethod,
+      paymentMethod = 'cod',
       items,
       customerName, customerEmail, customerPhone,
       shippingAddress, shippingPincode, shippingCity, shippingState,
-      notes, razorpayOrderId,
+      notes, razorpayOrderId, razorpayPaymentId
     } = req.body;
 
     let userId = null;
@@ -102,46 +125,66 @@ router.post('/', async (req, res, next) => {
       }
     }
 
-    if (!paymentMethod) return res.status(400).json({ error: 'paymentMethod is required.' });
     if (!items || !items.length) return res.status(400).json({ error: 'Order must have at least one item.' });
+    if (!customerName || !customerPhone || !shippingAddress) {
+      return res.status(400).json({ error: 'Customer name, phone, and shipping address are required.' });
+    }
 
-    const subtotalAmount = items.reduce((sum, i) => sum + (i.unitPrice * i.quantity), 0);
+    const cleanItems = items.map(i => ({
+      id: i.id || i.sku,
+      sku: (i.sku || i.id || 'UNKNOWN').toUpperCase(),
+      productName: i.productName || i.title || i.name,
+      quantity: Number(i.quantity) || 1,
+      unitPrice: Number(i.unitPrice) || Number(i.price) || 0,
+      totalPrice: (Number(i.unitPrice) || Number(i.price) || 0) * (Number(i.quantity) || 1),
+      weight: i.weight || ''
+    }));
+
+    const isCOD = paymentMethod === 'cod';
+    const subtotalAmount = cleanItems.reduce((sum, i) => sum + i.totalPrice, 0);
+    const shippingFee = subtotalAmount >= 499 ? 0 : 50;
+    const codFee = isCOD ? 79 : 0;
+    const totalAmount = subtotalAmount + shippingFee + codFee;
     const gstAmount = Math.round(subtotalAmount * 0.05);
-    const discountAmount = req.body.discountAmount || 0;
 
-    let orderData = applyCODLogic({
-      source, paymentMethod,
-      subtotalAmount, gstAmount, discountAmount,
-      customerName, customerEmail, customerPhone,
-      shippingAddress, shippingPincode, shippingCity, shippingState,
-      notes, razorpayOrderId,
-    });
+    const shippingAddressObj = {
+      name: customerName,
+      phone: customerPhone,
+      email: customerEmail || '',
+      address: shippingAddress,
+      city: shippingCity || '',
+      state: shippingState || '',
+      pincode: shippingPincode || ''
+    };
 
     const orderNumber = await generateOrderNumber();
 
-    // Map to Supabase snake_case
     const supabaseOrder = {
       order_number: orderNumber,
-      source: orderData.source,
-      status: orderData.status,
-      payment_method: orderData.paymentMethod,
-      payment_status: orderData.paymentStatus,
-      customer_name: orderData.customerName,
-      customer_email: orderData.customerEmail,
-      customer_phone: orderData.customerPhone,
-      shipping_address: orderData.shippingAddress,
-      shipping_pincode: orderData.shippingPincode,
-      shipping_city: orderData.shippingCity,
-      shipping_state: orderData.shippingState,
-      subtotal_amount: orderData.subtotalAmount,
-      shipping_fee: orderData.shippingFee,
-      gst_amount: orderData.gstAmount,
-      total_amount: orderData.totalAmount,
-      is_cod: orderData.isCOD,
-      razorpay_order_id: orderData.razorpayOrderId
+      user_id: userId,
+      items: cleanItems,
+      subtotal: subtotalAmount,
+      subtotal_amount: subtotalAmount,
+      shipping_fee: shippingFee,
+      cod_fee: codFee,
+      total_amount: totalAmount,
+      payment_method: isCOD ? 'cod' : 'prepaid',
+      payment_status: isCOD ? 'pending' : (razorpayPaymentId ? 'paid' : 'pending'),
+      order_status: isCOD ? 'new' : 'processing',
+      status: isCOD ? 'pending' : 'confirmed',
+      shipping_address: shippingAddressObj,
+      razorpay_order_id: razorpayOrderId || null,
+      razorpay_payment_id: razorpayPaymentId || null,
+      customer_name: customerName,
+      customer_email: customerEmail || null,
+      customer_phone: customerPhone,
+      source,
+      is_cod: isCOD,
+      notes: notes || null,
+      gst_amount: gstAmount
     };
 
-    let { data: order, error: orderError } = await supabase
+    const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert([supabaseOrder])
       .select()
@@ -152,93 +195,32 @@ router.post('/', async (req, res, next) => {
       throw orderError;
     }
 
-    const createdItems = [];
-    for (const item of items) {
-      // Robust SKU resolution
-      const sku = (item.sku || item.id || 'UNKNOWN').toUpperCase();
-      
-      try {
-        await deductStock(sku, item.quantity);
-      } catch (e) {
-        console.warn(`[Orders] Stock deduction skipped for ${sku}: ${e.message}`);
-      }
+    // Insert order items for legacy order_items table
+    const itemInserts = cleanItems.map(item => ({
+      order_id: order.id,
+      sku: item.sku,
+      product_name: item.productName,
+      quantity: item.quantity,
+      unit_price: item.unitPrice,
+      total_price: item.totalPrice
+    }));
+    await supabase.from('order_items').insert(itemInserts).catch(e => console.warn('[Orders] order_items insert:', e.message));
 
-      const { data: orderItem, error: itemError } = await supabase
-        .from('order_items')
-        .insert([{
-          order_id: order.id,
-          sku,
-          product_name: item.productName,
-          quantity: item.quantity,
-          unit_price: item.unitPrice,
-          total_price: item.unitPrice * item.quantity
-        }])
-        .select()
-        .single();
-
-      if (itemError) console.error('Error creating order item:', itemError);
-      else createdItems.push(orderItem);
-    }
-
-    // Post-create tasks (Async)
+    // Post-create async tasks
     setImmediate(async () => {
       try {
-        if (order.payment_status === 'paid' || order.is_cod) {
-          // Map back to camelCase for invoice service if needed
-          const camelOrder = {
-             ...order,
-             orderNumber: order.order_number,
-             customerName: order.customer_name,
-             customerPhone: order.customer_phone,
-             customerEmail: order.customer_email,
-             shippingAddress: order.shipping_address,
-             shippingCity: order.shipping_city,
-             shippingState: order.shipping_state,
-             shippingPincode: order.shipping_pincode,
-             subtotalAmount: order.subtotal_amount,
-             gstAmount: order.gst_amount,
-             shippingFee: order.shipping_fee,
-             totalAmount: order.total_amount,
-             paymentMethod: order.payment_method,
-             paymentStatus: order.payment_status
-          };
-          const camelItems = createdItems.map(i => ({
-              ...i,
-              productName: i.product_name,
-              unitPrice: i.unit_price,
-              totalPrice: i.total_price
-          }));
-
-          const invoicePath = await generateInvoice(camelOrder, camelItems);
-          
-          await supabase
-            .from('orders')
-            .update({ status: order.is_cod ? 'pending' : 'confirmed' })
-            .eq('id', order.id);
-
-          if (order.customer_email) {
-            await sendOrderConfirmation(camelOrder, invoicePath);
-          }
-
-          // ── WhatsApp Notifications ──────────────────────────────────
-          try {
-            await sendOrderAlertToAdmin(camelOrder);
-            await sendOrderConfirmationToCustomer(camelOrder);
-          } catch (wsErr) {
-            console.error('[Orders] WhatsApp notifications failed:', wsErr.message);
-          }
+        for (const item of cleanItems) {
+          try { await deductStock(item.sku, item.quantity); } catch (_) {}
         }
-
-        if (order.is_cod) {
-          const camelOrder = { ...order, orderNumber: order.order_number };
-          await sendCODAdminAlert(camelOrder);
-        }
+        await generateInvoice(order, cleanItems).catch(() => {});
+        await sendAdminOrderNotification(order);
       } catch (e) {
-        console.error('[Orders] Post-create failed:', e.message);
+        console.error('[Orders] Post-create task error:', e.message);
       }
     });
 
     res.status(201).json({
+      success: true,
       message: 'Order created successfully.',
       orderId: order.id,
       orderNumber: order.order_number,
@@ -251,6 +233,7 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+// Authenticated routes
 router.use(authMiddleware);
 
 /**
@@ -261,7 +244,7 @@ router.get('/', async (req, res, next) => {
     const userId = req.user?.id;
     const userEmail = req.user?.emailAddresses?.[0]?.emailAddress?.toLowerCase();
 
-    let query = supabase.from('orders').select('*, items:order_items(*)').order('created_at', { ascending: false });
+    let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
 
     // If not global admin, only fetch current user's orders
     if (!req.user?.isAdmin) {

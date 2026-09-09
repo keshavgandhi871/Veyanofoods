@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Thank you for your order with VEYANO Foods. Your clean roasted snacks are being freshly packed in airtight standing pouches for pan-India express delivery.">
+  <meta name="robots" content="noindex, follow">
+  
+  <title>Order Confirmed | VEYANO Foods</title>
+  
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#18181b">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+  
+  <style>
+    .success-container {
+      max-width: 780px;
+      margin: 3rem auto 5rem;
+      padding: 0 1.25rem;
+    }
+    .success-card {
+      background: #ffffff;
+      border: 1px solid var(--border-subtle, #e5e7eb);
+      border-radius: var(--radius-lg, 16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+    .success-hero {
+      background: linear-gradient(135deg, #18181b 0%, #09090b 100%);
+      color: #ffffff;
+      text-align: center;
+      padding: 3.5rem 1.5rem 3rem;
+      position: relative;
+    }
+    .success-icon-wrap {
+      width: 72px;
+      height: 72px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 2px solid #22c55e;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      color: #22c55e;
+      animation: popIn 0.5s ease-out;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      80% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .success-hero h1 {
+      font-family: var(--font-heading, 'Outfit', sans-serif);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #fbbf24;
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.5px;
+    }
+    .success-hero p {
+      color: #a1a1aa;
+      font-size: 1rem;
+      margin: 0 auto;
+      max-width: 480px;
+    }
+    .order-badge-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 30px;
+      padding: 0.4rem 1.2rem;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+    }
+    .order-badge-row strong {
+      color: #ffffff;
+      font-family: monospace;
+      font-size: 1.05rem;
+    }
+    .success-body {
+      padding: 2.5rem;
+    }
+    @media (max-width: 640px) {
+      .success-body { padding: 1.5rem; }
+      .success-hero { padding: 2.5rem 1rem 2rem; }
+      .success-hero h1 { font-size: 1.75rem; }
+    }
+    .delivery-timeline-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .delivery-timeline-icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    .delivery-timeline-text h4 {
+      margin: 0 0 0.25rem;
+      color: #166534;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+    .delivery-timeline-text p {
+      margin: 0;
+      color: #15803d;
+      font-size: 0.88rem;
+    }
+    .summary-section-title {
+      font-family: var(--font-heading, 'Outfit', sans-serif);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary, #18181b);
+      margin: 0 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-subtle, #e5e7eb);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .order-item-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--border-subtle, #f3f4f6);
+    }
+    .order-item-thumb {
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #f4f4f5;
+      border: 1px solid #e4e4e7;
+    }
+    .order-item-details {
+      flex: 1;
+    }
+    .order-item-name {
+      font-weight: 600;
+      color: var(--text-primary, #18181b);
+      font-size: 0.95rem;
+    }
+    .order-item-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted, #71717a);
+      margin-top: 2px;
+    }
+    .order-item-price {
+      font-weight: 700;
+      color: var(--text-primary, #18181b);
+      font-size: 0.95rem;
+    }
+    .order-breakdown-table {
+      width: 100%;
+      margin: 1.5rem 0 2rem;
+      font-size: 0.92rem;
+    }
+    .order-breakdown-table td {
+      padding: 0.4rem 0;
+    }
+    .order-breakdown-table tr.total-row td {
+      padding-top: 0.85rem;
+      border-top: 2px solid var(--border-subtle, #e5e7eb);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-primary, #18181b);
+    }
+    .address-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 600px) {
+      .address-info-grid { grid-template-columns: 1fr; gap: 1rem; }
+    }
+    .info-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--text-muted, #71717a);
+      letter-spacing: 0.5px;
+      margin-bottom: 0.25rem;
+    }
+    .info-value {
+      font-size: 0.92rem;
+      color: var(--text-primary, #18181b);
+      line-height: 1.45;
+    }
+    .action-btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    @media (max-width: 540px) {
+      .action-btn-group { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Announcement Bar -->
+  <div class="announcement-bar">
+    <span>🚚 <strong>FREE Pan-India Delivery</strong> on orders above ₹499</span>
+    <span class="announcement-sep" style="opacity: 0.4;">|</span>
+    <span>🌿 FSSAI Lic. No. <strong>20826010000397</strong></span>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="nav-brand">
+        <img src="assets/logo.png" alt="VEYANO Logo" width="140" height="42">
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="shop.html" class="nav-link">Shop</a></li>
+          <li><a href="try-veyano.html" class="nav-link">Try VEYANO</a></li>
+          <li><a href="our-story.html" class="nav-link">Our Story</a></li>
+          <li><a href="transparency.html" class="nav-link">Transparency</a></li>
+          <li><a href="blog.html" class="nav-link">Journal</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <a href="shop.html" class="btn btn-sm btn-accent">Shop All</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="success-container">
+    <div class="success-card">
+      
+      <!-- Hero -->
+      <div class="success-hero">
+        <div class="success-icon-wrap">
+          <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h1>Order Confirmed!</h1>
+        <p>Thank you for choosing VEYANO Foods. We have received your order and are preparing your freshly roasted standing pouches for dispatch.</p>
+        <div class="order-badge-row">
+          <span>Order Reference:</span>
+          <strong id="display-order-number">VFO-ORDER</strong>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="success-body">
+        
+        <!-- Estimated Delivery -->
+        <div class="delivery-timeline-box">
+          <div class="delivery-timeline-icon">🚚</div>
+          <div class="delivery-timeline-text">
+            <h4>Estimated Delivery: 3–5 Business Days</h4>
+            <p>Dispatched in premium airtight standing pouches via express courier. A confirmation with tracking details has been sent to your email & phone.</p>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="summary-section-title">
+          <span>Ordered Items</span>
+          <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);" id="display-item-count">Items</span>
+        </div>
+        <div id="order-items-list">
+          <div style="padding: 1.5rem 0; text-align: center; color: #71717a;">Loading order details...</div>
+        </div>
+
+        <!-- Financial Breakdown -->
+        <table class="order-breakdown-table">
+          <tr>
+            <td style="color: #71717a;">Subtotal</td>
+            <td align="right" style="font-weight: 600;" id="display-subtotal">₹0</td>
+          </tr>
+          <tr>
+            <td style="color: #71717a;">Shipping Fee</td>
+            <td align="right" style="font-weight: 600; color: #16a34a;" id="display-shipping">FREE</td>
+          </tr>
+          <tr id="cod-fee-row" style="display: none;">
+            <td style="color: #71717a;">COD Handling Fee</td>
+            <td align="right" style="font-weight: 600; color: #d97706;" id="display-cod-fee">₹79</td>
+          </tr>
+          <tr class="total-row">
+            <td>Total Paid / Payable</td>
+            <td align="right" style="color: #18181b;" id="display-grand-total">₹0</td>
+          </tr>
+        </table>
+
+        <!-- Address & Payment Info Grid -->
+        <div class="address-info-grid">
+          <div>
+            <div class="info-label">📍 Shipping Address</div>
+            <div class="info-value" id="display-shipping-address">
+              Loading address...
+            </div>
+          </div>
+          <div>
+            <div class="info-label">💳 Payment Details</div>
+            <div class="info-value">
+              <div style="font-weight: 700; text-transform: uppercase;" id="display-payment-mode">Prepaid</div>
+              <div style="font-size: 0.82rem; color: #71717a; margin-top: 2px;" id="display-payment-status">Status: Paid</div>
+              <div style="font-size: 0.82rem; color: #71717a; margin-top: 4px;" id="display-customer-contact">Phone & Email</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-btn-group">
+          <a href="shop.html" class="btn btn-accent" style="text-align: center; padding: 0.85rem 1.5rem;">
+            Explore More Snacks
+          </a>
+          <a href="https://wa.me/919350598909?text=Hi%20VEYANO!%20I%20have%20a%20question%20regarding%20my%20order." 
+             id="whatsapp-help-btn" target="_blank" rel="noopener" class="btn btn-outline" style="text-align: center; padding: 0.85rem 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <span>💬 Track via WhatsApp</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="index.html" class="nav-brand" style="margin-bottom: 0.75rem;">
+          <img src="assets/logo.png" alt="VEYANO Logo" width="130" height="39" style="mix-blend-mode: screen; filter: invert(1);">
+        </a>
+        <p class="footer-tagline">"Thoughtfully Made for You"<br>Clean roasted snacks packed in airtight standing pouches.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Need Support?</h4>
+        <ul>
+          <li><a href="mailto:veyanosupport@gmail.com">veyanosupport@gmail.com</a></li>
+          <li><a href="https://wa.me/919350598909">+91 93505 98909</a></li>
+          <li style="font-size: 0.85rem; color: #71717a; margin-top: 0.5rem;">Karnal, Haryana — 132001</li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <div>&copy; 2026 VEYANO Foods. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Confetti burst on arrival
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+
+      // 2. Extract order_id / order_number from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('order_id') || urlParams.get('id') || urlParams.get('order_number');
+      const orderNumberParam = urlParams.get('order_number');
+
+      const numEl = document.getElementById('display-order-number');
+      const itemsListEl = document.getElementById('order-items-list');
+      const subtotalEl = document.getElementById('display-subtotal');
+      const shippingEl = document.getElementById('display-shipping');
+      const codRow = document.getElementById('cod-fee-row');
+      const codFeeEl = document.getElementById('display-cod-fee');
+      const grandTotalEl = document.getElementById('display-grand-total');
+      const addressEl = document.getElementById('display-shipping-address');
+      const paymentModeEl = document.getElementById('display-payment-mode');
+      const paymentStatusEl = document.getElementById('display-payment-status');
+      const contactEl = document.getElementById('display-customer-contact');
+      const itemCountEl = document.getElementById('display-item-count');
+      const waBtn = document.getElementById('whatsapp-help-btn');
+
+      if (orderNumberParam && numEl) {
+        numEl.textContent = orderNumberParam;
+      }
+
+      // Helper to render order data
+      function renderOrderDetails(order) {
+        const orderNum = order.order_number || (orderId ? (orderId.length > 12 ? `#${orderId.slice(0, 8)}` : orderId) : 'VFO-CONFIRMED');
+        if (numEl) numEl.textContent = orderNum;
+
+        // WhatsApp button update
+        if (waBtn) {
+          waBtn.href = `https://wa.me/919350598909?text=${encodeURIComponent(`Hi VEYANO! I would like an update on my order: ${orderNum}`)}`;
+        }
+
+        // Parse items
+        let items = order.items;
+        if (typeof items === 'string') {
+          try { items = JSON.parse(items); } catch (_) { items = []; }
+        }
+        if (!Array.isArray(items)) items = [];
+
+        if (itemCountEl) itemCountEl.textContent = `${items.length} ${items.length === 1 ? 'item' : 'items'}`;
+
+        if (items.length > 0) {
+          itemsListEl.innerHTML = items.map(item => {
+            const unitPrice = item.unitPrice || item.price || 0;
+            const qty = item.quantity || 1;
+            const imgSrc = item.image || './assets/plain.webp';
+            const weight = item.weight ? `${item.weight} Standing Pouch` : 'Standing Pouch';
+            return `
+              <div class="order-item-row">
+                <img src="${imgSrc}" alt="${item.productName || item.title || 'Product'}" class="order-item-thumb">
+                <div class="order-item-details">
+                  <div class="order-item-name">${item.productName || item.title || 'Roasted Makhana'}</div>
+                  <div class="order-item-meta">${weight} • Qty: ${qty}</div>
+                </div>
+                <div class="order-item-price">₹${unitPrice * qty}</div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          itemsListEl.innerHTML = `
+            <div class="order-item-row">
+              <img src="./assets/plain.webp" alt="Clean Roasted Makhana" class="order-item-thumb">
+              <div class="order-item-details">
+                <div class="order-item-name">Clean Roasted Makhana Pack</div>
+                <div class="order-item-meta">Airtight Standing Pouch</div>
+              </div>
+              <div class="order-item-price">₹${order.total_amount || 399}</div>
+            </div>
+          `;
+        }
+
+        // Numbers
+        const subtotal = order.subtotal || order.subtotal_amount || (order.total_amount ? (order.total_amount - (order.cod_fee || 0) - (order.shipping_fee || 0)) : 0);
+        const shipping = Number(order.shipping_fee) || 0;
+        const isCOD = (order.payment_method || '').toLowerCase() === 'cod' || order.is_cod;
+        const codFee = Number(order.cod_fee) || (isCOD ? 79 : 0);
+        const total = order.total_amount || (subtotal + shipping + (isCOD ? codFee : 0));
+
+        if (subtotalEl) subtotalEl.textContent = `₹${subtotal}`;
+        if (shippingEl) shippingEl.textContent = shipping === 0 ? 'FREE' : `₹${shipping}`;
+        if (isCOD && codRow) {
+          codRow.style.display = 'table-row';
+          if (codFeeEl) codFeeEl.textContent = `₹${codFee}`;
+        }
+        if (grandTotalEl) grandTotalEl.textContent = `₹${total}`;
+
+        // Address
+        let addr = order.shipping_address;
+        if (typeof addr === 'string') {
+          try { addr = JSON.parse(addr); } catch (_) {}
+        }
+        if (addr && typeof addr === 'object') {
+          addressEl.innerHTML = `
+            <strong>${addr.name || order.customer_name || 'Customer'}</strong><br>
+            ${addr.address || ''}${addr.landmark ? `, Landmark: ${addr.landmark}` : ''}<br>
+            ${addr.city || ''}, ${addr.state || ''} - <strong>${addr.pincode || ''}</strong>
+          `;
+          if (contactEl) {
+            contactEl.textContent = `Phone: ${addr.phone || order.customer_phone || 'N/A'}${addr.email ? ` | ${addr.email}` : ''}`;
+          }
+        } else if (order.customer_name || order.shipping_address) {
+          addressEl.innerHTML = `
+            <strong>${order.customer_name || 'Customer'}</strong><br>
+            ${order.shipping_address || 'Address provided at checkout'}<br>
+            ${order.shipping_city || ''} ${order.shipping_pincode ? `- ${order.shipping_pincode}` : ''}
+          `;
+          if (contactEl) {
+            contactEl.textContent = `Phone: ${order.customer_phone || 'N/A'}${order.customer_email ? ` | ${order.customer_email}` : ''}`;
+          }
+        }
+
+        // Payment status
+        if (paymentModeEl) {
+          paymentModeEl.textContent = isCOD ? 'Cash on Delivery (COD)' : 'Prepaid (Online)';
+          paymentModeEl.style.color = isCOD ? '#d97706' : '#16a34a';
+        }
+        if (paymentStatusEl) {
+          paymentStatusEl.textContent = isCOD ? 'Payment due on delivery' : 'Payment Status: Confirmed & Paid';
+        }
+      }
+
+      // Try fetching from API if orderId exists
+      if (orderId) {
+        try {
+          const res = await fetch(`/api/orders/lookup/${encodeURIComponent(orderId)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.order) {
+              renderOrderDetails(data.order);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Order lookup notice:', e);
+        }
+      }
+
+      // Fallback: check recent order in sessionStorage or render default confirmed view
+      let storedOrder = null;
+      try { storedOrder = JSON.parse(sessionStorage.getItem('veyano_recent_order')); } catch (_) {}
+      if (storedOrder) {
+        renderOrderDetails(storedOrder);
+      } else {
+        renderOrderDetails({
+          order_number: orderId || 'VFO-2026-ORDER',
+          payment_method: urlParams.get('is_cod') === 'true' ? 'cod' : 'prepaid',
+          payment_status: 'paid',
+          total_amount: urlParams.get('total') || 399,
+          items: []
+        });
+      }
+    });
+  </script>
+</body>
+</html>

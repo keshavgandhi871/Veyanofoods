@@ -111,7 +111,7 @@ const FALLBACK_ARTICLES = [
 
       <h3>Best Storage Practices</h3>
       <ul>
-        <li><strong>Airtight Glass or PET Containers:</strong> Immediately transfer open makhana into an airtight jar with a rubber gasket seal.</li>
+        <li><strong>Airtight Containers:</strong> Reseal the standing pouch zip-lock tightly or transfer opened makhana into an airtight container with a rubber gasket seal.</li>
         <li><strong>Avoid Direct Sunlight:</strong> Store away from stove heat and window sunlight.</li>
         <li><strong>Quick Re-crisping Trick:</strong> If your makhana has softened from humidity, simply dry-toss it on a warm non-stick pan on low flame for 60 seconds. It will instantly regain its shatter-crisp texture!</li>
       </ul>

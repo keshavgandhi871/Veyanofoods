@@ -777,7 +777,7 @@ async function fetchLeads() {
 
   const mockLeads = [
     { company: 'Apex Tech Cafeteria', contact: 'Rohit Sharma', email: 'rohit@apextech.in', phone: '9810029384', city: 'Gurugram', volume: '100 kg / month', notes: 'Interested in Classic Plain & Salted 200g packs' },
-    { company: 'PureBites Retailers', contact: 'Ananya Verma', email: 'ananya@purebites.com', phone: '9871102938', city: 'New Delhi', volume: '500 jars initial trial', notes: 'Requested distributor wholesale pricing' }
+    { company: 'PureBites Retailers', contact: 'Ananya Verma', email: 'ananya@purebites.com', phone: '9871102938', city: 'New Delhi', volume: '500 standing pouches initial trial', notes: 'Requested distributor wholesale pricing' }
   ];
 
   tbody.innerHTML = mockLeads.map(l => `

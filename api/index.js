@@ -30,6 +30,8 @@ const publicBlogRouter     = require('./_public/blog');
 const publicOrdersRouter   = require('./_public/orders');
 const publicPaymentsRouter = require('./_public/payments');
 const publicProductsRouter = require('./_public/products');
+const publicCheckoutRouter = require('./_public/checkout');
+const publicWebhooksRouter = require('./_public/webhooks');
 
 const app = express();
 
@@ -70,6 +72,8 @@ app.use('/api/blog', publicBlogRouter);
 app.use('/api/orders', publicOrdersRouter);
 app.use('/api/payments', publicPaymentsRouter);
 app.use('/api/products', publicProductsRouter);
+app.use('/api/checkout', publicCheckoutRouter);
+app.use('/api/webhooks', publicWebhooksRouter);
 
 // ── Mount Admin Routes ────────────────────────────────────────────────────────
 app.use('/api/admin', privateAdminRouter);

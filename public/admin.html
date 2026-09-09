@@ -2009,7 +2009,7 @@
             <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Physical Condition</label>
             <select id="rreturn-condition" class="form-control">
               <option value="SEALED">Sealed & Intact</option>
-              <option value="DAMAGED_CARTON">Damaged Outer Seal/Jar</option>
+              <option value="DAMAGED_CARTON">Damaged Outer Seal/Pouch</option>
               <option value="OPENED">Opened Container</option>
               <option value="CRUSHED">Crushed Content</option>
             </select>
@@ -2082,14 +2082,14 @@
 
         <div class="form-group" style="margin-bottom: 1rem;">
           <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Actual Physical Count in Store *</label>
-          <input type="number" id="rrecon-physical-count" class="form-control" placeholder="Count jars physically present" required min="0" oninput="calculateReconcileDelta()">
+          <input type="number" id="rrecon-physical-count" class="form-control" placeholder="Count standing pouches physically present" required min="0" oninput="calculateReconcileDelta()">
         </div>
 
         <div class="form-group" style="margin-bottom: 1rem;">
           <label class="form-label" style="font-size: 0.82rem; font-weight: 600;">Reason for Discrepancy *</label>
           <select id="rrecon-reason" class="form-control" required>
             <option value="Sold but not reported">Sold by retailer (unreported sale)</option>
-            <option value="Damaged">Damaged / broken jar written off</option>
+            <option value="Damaged">Damaged / pierced pouch written off</option>
             <option value="Missing">Missing / shrinkage during display</option>
             <option value="Data entry error">Previous data entry error</option>
             <option value="Sample given">Promotional tasting sample provided</option>

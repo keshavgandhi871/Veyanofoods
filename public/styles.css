@@ -292,8 +292,11 @@ img {
 }
 
 .nav-brand img {
-  height: 44px;
+  height: 48px;
   width: auto;
+  object-fit: contain;
+  display: block;
+  image-rendering: -webkit-optimize-contrast;
 }
 
 .nav-links {
@@ -1084,6 +1087,14 @@ img {
   color: #a1a1aa;
   padding: 5rem 0 2rem;
   border-top: 1px solid #27272a;
+}
+
+.footer .nav-brand img {
+  height: 46px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  display: block;
 }
 
 .footer-grid {
