@@ -14,6 +14,20 @@ const API_BASE_URL = (typeof window !== 'undefined' && window.API_BASE_URL !== u
     ? (window.location.port === '3001' ? '' : 'http://localhost:3001')
     : '');
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+if (typeof window !== 'undefined') {
+  window.escapeHtml = escapeHtml;
+}
+
 const FALLBACK_ARTICLES = [
   {
     id: "makhana-science",

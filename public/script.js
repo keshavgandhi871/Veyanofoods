@@ -33,6 +33,19 @@ window.API_BASE_URL = API_BASE_URL;
 let cart = JSON.parse(localStorage.getItem('veyano_cart')) || [];
 let clerk = null;
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+if (typeof window !== 'undefined') {
+  window.escapeHtml = escapeHtml;
+}
+
 // --- UTILITIES ---
 function showToast(message, type = 'success') {
   let container = document.getElementById('toast-container');
@@ -863,32 +876,136 @@ async function initClerkAuth() {
 
 function renderAuthUI() {
   const navAuthContainers = document.querySelectorAll('#nav-auth-container, .nav-auth-mount');
-  if (clerk && clerk.user) {
-    navAuthContainers.forEach(container => {
-      if (container) {
-        container.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <button onclick="window.openAddressesModal()" class="btn btn-sm btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📍 Saved Addresses</button>
-            <div class="user-button-mount"></div>
+  const isAuthenticated = !!(clerk && clerk.user);
+  const addresses = isAuthenticated ? getSavedAddresses() : [];
+  const addressCount = addresses.length;
+
+  navAuthContainers.forEach(container => {
+    if (!container) return;
+
+    if (isAuthenticated) {
+      const user = clerk.user;
+      const firstName = user.firstName || user.username || 'Friend';
+      const fullName = (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.username || 'Valued Customer'));
+      const email = user.primaryEmailAddress?.emailAddress || '';
+      const avatarLetter = (firstName.charAt(0) || 'V').toUpperCase();
+
+      container.innerHTML = `
+        <div class="nav-account-widget">
+          <div class="nav-account-trigger" onclick="window.toggleNavAccountMenu(event)" role="button" tabindex="0" aria-label="Account and Lists Menu">
+            <div class="nav-account-line1">Hello, ${escapeHtml(firstName)}</div>
+            <div class="nav-account-line2">
+              <span>Account & Lists</span>
+              <svg class="nav-account-caret" viewBox="0 0 10 6">
+                <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </div>
           </div>
-        `;
-        const mountEl = container.querySelector('.user-button-mount');
-        if (mountEl) clerk.mountUserButton(mountEl);
-      }
-    });
-  } else {
-    navAuthContainers.forEach(container => {
-      if (container) {
-        container.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <button onclick="window.openAddressesModal()" class="btn btn-sm btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📍 Saved Addresses</button>
-            <a href="login.html" class="nav-link" style="font-size: 0.9rem; font-weight:600;">Sign In</a>
+          <div class="nav-account-dropdown">
+            <div class="nav-account-dropdown-arrow"></div>
+            <div class="nav-account-user-banner">
+              <div class="nav-account-avatar">${escapeHtml(avatarLetter)}</div>
+              <div class="nav-account-user-meta">
+                <div class="nav-account-user-name">${escapeHtml(fullName)}</div>
+                <div class="nav-account-user-email">${escapeHtml(email)}</div>
+              </div>
+            </div>
+            <div class="nav-account-divider"></div>
+            <div class="nav-account-section">
+              <div class="nav-account-section-title">Your Account</div>
+              <button type="button" class="nav-account-item" onclick="window.openAddressesModal(); window.closeNavAccountMenu();">
+                <span class="nav-account-item-icon">📍</span>
+                <span>Saved Addresses</span>
+                ${addressCount > 0 ? `<span class="nav-account-badge">${addressCount}</span>` : ''}
+              </button>
+              <a href="shop.html" class="nav-account-item" onclick="window.closeNavAccountMenu();">
+                <span class="nav-account-item-icon">🍿</span>
+                <span>Discover Snacks</span>
+              </a>
+              <button type="button" class="nav-account-item" onclick="if(window.Clerk) window.Clerk.openUserProfile(); window.closeNavAccountMenu();">
+                <span class="nav-account-item-icon">⚙️</span>
+                <span>Manage Profile</span>
+              </button>
+              <div class="nav-account-divider" style="margin: 0.4rem 0;"></div>
+              <button type="button" class="nav-account-item nav-account-signout" onclick="if(window.Clerk) window.Clerk.signOut().then(() => { window.location.reload(); });">
+                <span class="nav-account-item-icon">🚪</span>
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
-        `;
-      }
-    });
-  }
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="nav-account-widget">
+          <div class="nav-account-trigger" onclick="window.toggleNavAccountMenu(event)" role="button" tabindex="0" aria-label="Sign In Menu">
+            <div class="nav-account-line1">Hello, sign in</div>
+            <div class="nav-account-line2">
+              <span>Account & Lists</span>
+              <svg class="nav-account-caret" viewBox="0 0 10 6">
+                <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </div>
+          </div>
+          <div class="nav-account-dropdown">
+            <div class="nav-account-dropdown-arrow"></div>
+            <div class="nav-account-cta-box">
+              <a href="login.html" class="btn btn-accent btn-sm nav-account-signin-btn">Sign in</a>
+              <div class="nav-account-signup-sub">
+                New customer? <a href="signup.html">Start here.</a>
+              </div>
+            </div>
+            <div class="nav-account-divider"></div>
+            <div class="nav-account-section">
+              <div class="nav-account-section-title">Your Account</div>
+              <a href="login.html?redirect=orders" class="nav-account-item" onclick="window.closeNavAccountMenu();">
+                <span class="nav-account-item-icon">📦</span>
+                <span>Your Orders</span>
+              </a>
+              <button type="button" class="nav-account-item" onclick="window.openAddressesModal(); window.closeNavAccountMenu();">
+                <span class="nav-account-item-icon">📍</span>
+                <span>Saved Addresses</span>
+              </button>
+              <a href="shop.html" class="nav-account-item" onclick="window.closeNavAccountMenu();">
+                <span class="nav-account-item-icon">🍿</span>
+                <span>Snack Recommendations</span>
+              </a>
+              <a href="bulk-orders.html" class="nav-account-item" onclick="window.closeNavAccountMenu();">
+                <span class="nav-account-item-icon">💼</span>
+                <span>Bulk & Corporate Orders</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  });
 }
+
+window.toggleNavAccountMenu = function(e) {
+  if (e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  const widget = e?.currentTarget?.closest('.nav-account-widget');
+  if (widget) {
+    const isCurrentlyOpen = widget.classList.contains('open');
+    document.querySelectorAll('.nav-account-widget.open').forEach(w => w.classList.remove('open'));
+    if (!isCurrentlyOpen) {
+      widget.classList.add('open');
+    }
+  }
+};
+
+window.closeNavAccountMenu = function() {
+  document.querySelectorAll('.nav-account-widget.open').forEach(w => w.classList.remove('open'));
+};
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.nav-account-widget')) {
+    window.closeNavAccountMenu();
+  }
+});
 
 async function syncUserWithBackend() {
   if (!clerk || !clerk.user || !clerk.session) return;
@@ -908,15 +1025,20 @@ async function syncUserWithBackend() {
   }
 }
 
-// --- SAVED ADDRESS STORAGE & PERSISTENCE ---
+// --- SAVED ADDRESS STORAGE & PERSISTENCE (STRICTLY FOR LOGGED-IN USERS) ---
 function getSavedAddresses() {
+  // STRICT RULE: If not signed in, never return any saved addresses!
+  if (!clerk || !clerk.user) {
+    return [];
+  }
   let list = [];
   try {
-    const local = JSON.parse(localStorage.getItem('veyano_saved_addresses')) || [];
+    const userKey = `veyano_saved_addresses_${clerk.user.id}`;
+    const local = JSON.parse(localStorage.getItem(userKey)) || [];
     if (Array.isArray(local)) list = local;
   } catch (e) {}
 
-  if (clerk && clerk.user && clerk.user.unsafeMetadata && Array.isArray(clerk.user.unsafeMetadata.addresses)) {
+  if (clerk.user.unsafeMetadata && Array.isArray(clerk.user.unsafeMetadata.addresses)) {
     const clerkAddresses = clerk.user.unsafeMetadata.addresses;
     clerkAddresses.forEach(ca => {
       if (!list.some(la => la.address === ca.address && la.pincode === ca.pincode)) {
@@ -928,25 +1050,28 @@ function getSavedAddresses() {
 }
 
 async function persistSavedAddresses(addresses) {
+  if (!clerk || !clerk.user) {
+    console.warn('Cannot persist address: User is not signed in.');
+    return;
+  }
   try {
-    localStorage.setItem('veyano_saved_addresses', JSON.stringify(addresses));
+    localStorage.setItem(`veyano_saved_addresses_${clerk.user.id}`, JSON.stringify(addresses));
   } catch (e) {}
 
-  if (clerk && clerk.user) {
-    try {
-      await clerk.user.update({
-        unsafeMetadata: {
-          ...(clerk.user.unsafeMetadata || {}),
-          addresses: addresses
-        }
-      });
-    } catch (err) {
-      console.warn('Clerk address metadata update notice:', err);
-    }
+  try {
+    await clerk.user.update({
+      unsafeMetadata: {
+        ...(clerk.user.unsafeMetadata || {}),
+        addresses: addresses
+      }
+    });
+  } catch (err) {
+    console.warn('Clerk address metadata update notice:', err);
   }
 
   syncCheckoutAddressSelector();
   renderModalAddressList();
+  renderAuthUI();
 }
 
 window.saveAddressFromCheckout = async function(showToastFlag = true) {
@@ -964,40 +1089,73 @@ window.saveAddressFromCheckout = async function(showToastFlag = true) {
     return false;
   }
 
-  const newAddr = {
-    id: 'addr_' + Date.now(),
-    name,
-    phone,
-    email,
-    address,
-    landmark,
-    pincode,
-    city: city || 'City',
-    state: state || 'State'
-  };
+  // Only persist to saved addresses if user is signed in
+  if (clerk && clerk.user) {
+    const newAddr = {
+      id: 'addr_' + Date.now(),
+      name,
+      phone,
+      email: email || (clerk.user.primaryEmailAddress?.emailAddress || ''),
+      address,
+      landmark,
+      pincode,
+      city: city || 'City',
+      state: state || 'State'
+    };
 
-  const current = getSavedAddresses();
-  const existingIdx = current.findIndex(a => 
-    a.address?.toLowerCase() === address.toLowerCase() && 
-    a.pincode === pincode
-  );
+    const current = getSavedAddresses();
+    const existingIdx = current.findIndex(a => 
+      a.address?.toLowerCase() === address.toLowerCase() && 
+      a.pincode === pincode
+    );
 
-  if (existingIdx >= 0) {
-    current[existingIdx] = { ...current[existingIdx], ...newAddr };
-  } else {
-    current.unshift(newAddr);
+    if (existingIdx >= 0) {
+      current[existingIdx] = { ...current[existingIdx], ...newAddr };
+    } else {
+      current.unshift(newAddr);
+    }
+
+    await persistSavedAddresses(current);
+    if (showToastFlag) showToast('Address saved to your account!');
   }
-
-  await persistSavedAddresses(current);
-  if (showToastFlag) showToast('Address saved for future orders!');
   return true;
 };
 
 function syncCheckoutAddressSelector() {
   const container = document.getElementById('checkout-saved-addresses');
-  if (!container) return;
+  const saveCheckboxWrapper = document.querySelector('.save-address-checkbox-wrapper');
+
+  // If user is not logged in:
+  if (!clerk || !clerk.user) {
+    if (container) {
+      container.style.display = 'none';
+      container.innerHTML = '';
+    }
+    if (saveCheckboxWrapper) {
+      saveCheckboxWrapper.innerHTML = `
+        <div class="save-address-signin-banner">
+          <span class="save-address-signin-icon">📍</span>
+          <span><a href="login.html" class="save-address-signin-link">Sign in</a> to save addresses & enjoy 1-click checkout.</span>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  // If user is logged in:
+  if (saveCheckboxWrapper) {
+    saveCheckboxWrapper.innerHTML = `
+      <input type="checkbox" id="save-address-checkbox" checked>
+      <label for="save-address-checkbox" style="cursor: pointer; margin: 0; flex-grow: 1;">
+        <span class="save-address-checkbox-label">Save this address to your account</span>
+        <span class="save-address-checkbox-sub">Fast 1-click checkout on your next visit</span>
+      </label>
+    `;
+  }
 
   const addresses = getSavedAddresses();
+  if (!container) return;
+
   if (addresses.length === 0) {
     container.style.display = 'none';
     container.innerHTML = '';
@@ -1024,7 +1182,7 @@ function syncCheckoutAddressSelector() {
     if (idx === 'new') {
       if (document.getElementById('ship-name')) document.getElementById('ship-name').value = '';
       if (document.getElementById('ship-phone')) document.getElementById('ship-phone').value = '';
-      if (document.getElementById('ship-email')) document.getElementById('ship-email').value = '';
+      if (document.getElementById('ship-email')) document.getElementById('ship-email').value = clerk.user.primaryEmailAddress?.emailAddress || '';
       if (document.getElementById('ship-address')) document.getElementById('ship-address').value = '';
       if (document.getElementById('ship-landmark')) document.getElementById('ship-landmark').value = '';
       if (document.getElementById('ship-city')) document.getElementById('ship-city').value = '';
@@ -1038,7 +1196,7 @@ function syncCheckoutAddressSelector() {
       const a = addresses[idx];
       if (document.getElementById('ship-name')) document.getElementById('ship-name').value = a.name || '';
       if (document.getElementById('ship-phone')) document.getElementById('ship-phone').value = a.phone || '';
-      if (document.getElementById('ship-email')) document.getElementById('ship-email').value = a.email || '';
+      if (document.getElementById('ship-email')) document.getElementById('ship-email').value = a.email || (clerk.user.primaryEmailAddress?.emailAddress || '');
       if (document.getElementById('ship-address')) document.getElementById('ship-address').value = a.address || '';
       if (document.getElementById('ship-landmark')) document.getElementById('ship-landmark').value = a.landmark || '';
       if (document.getElementById('ship-pincode')) document.getElementById('ship-pincode').value = a.pincode || '';
@@ -1058,22 +1216,41 @@ window.openAddressesModal = () => {
   let modal = document.getElementById('addresses-modal-overlay');
   if (modal) modal.remove();
 
+  // If NOT logged in, show clean sign-in requirement modal
+  if (!clerk || !clerk.user) {
+    modal = document.createElement('div');
+    modal.id = 'addresses-modal-overlay';
+    modal.className = 'cart-overlay open';
+    modal.style.zIndex = '3000';
+    modal.innerHTML = `
+      <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 440px; background: #fff; border-radius: var(--radius-lg, 16px); padding: 2rem 1.5rem; box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.15)); text-align: center; position: relative;">
+        <button onclick="document.getElementById('addresses-modal-overlay').remove()" style="position: absolute; top: 1rem; right: 1rem; background:none; border:none; font-size:1.6rem; cursor:pointer; line-height: 1; color: var(--text-muted);">&times;</button>
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--accent-light, #f5ebe0); color: var(--accent-color, #c08b5c); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; font-size: 1.6rem;">📍</div>
+        <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem; color: var(--text-primary); font-family: var(--font-heading);">Saved Addresses</h3>
+        <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.55; margin-bottom: 1.75rem;">
+          Sign in to your VEYANO account to view, add, and manage saved delivery addresses for fast 1-click checkout.
+        </p>
+        <a href="login.html" class="btn btn-accent" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 600;">Sign In to Your Account</a>
+        <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+          New to VEYANO? <a href="signup.html" style="color: var(--accent-color); font-weight: 600; text-decoration: underline;">Create an account</a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    return;
+  }
+
+  // If logged in, show address manager modal
   modal = document.createElement('div');
   modal.id = 'addresses-modal-overlay';
   modal.className = 'cart-overlay open';
   modal.style.zIndex = '3000';
   modal.innerHTML = `
-    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 520px; background: #fff; border-radius: var(--radius-lg, 12px); padding: 1.75rem; box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.1)); max-height: 88vh; overflow-y: auto;">
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 520px; background: #fff; border-radius: var(--radius-lg, 16px); padding: 1.75rem; box-shadow: var(--shadow-xl, 0 20px 25px -5px rgba(0, 0, 0, 0.15)); max-height: 88vh; overflow-y: auto; position: relative;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle, #e5e7eb); padding-bottom: 0.75rem;">
-        <h3 style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">📍 Saved Addresses</h3>
+        <h3 style="font-size: 1.25rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">📍 Saved Delivery Addresses</h3>
         <button onclick="document.getElementById('addresses-modal-overlay').remove()" style="background:none; border:none; font-size:1.6rem; cursor:pointer; line-height: 1; color: var(--text-muted);">&times;</button>
       </div>
-
-      ${(!clerk || !clerk.user) ? `
-        <div style="background: rgba(192, 139, 92, 0.08); border-left: 3px solid var(--accent-color, #c08b5c); padding: 0.6rem 0.85rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
-          💡 Addresses are securely saved on this device. <a href="login.html" style="color: var(--accent-color); font-weight: 600; text-decoration: underline;">Sign In</a> to sync across devices.
-        </div>
-      ` : ''}
 
       <div id="modal-address-list"></div>
 
@@ -1083,7 +1260,7 @@ window.openAddressesModal = () => {
         <div class="form-group"><input type="text" id="m-name" class="form-control" placeholder="Full Name *" required minlength="3"></div>
         <div class="form-row">
           <div class="form-group"><input type="tel" id="m-phone" class="form-control" placeholder="10-digit Phone *" required pattern="[6-9][0-9]{9}"></div>
-          <div class="form-group"><input type="email" id="m-email" class="form-control" placeholder="Email Address"></div>
+          <div class="form-group"><input type="email" id="m-email" class="form-control" placeholder="Email Address" value="${escapeHtml(clerk.user.primaryEmailAddress?.emailAddress || '')}"></div>
         </div>
         <div class="form-group"><textarea id="m-address" class="form-control" placeholder="House/Flat No, Building, Street Address *" rows="2" required></textarea></div>
         <div class="form-group"><input type="text" id="m-landmark" class="form-control" placeholder="Landmark (Optional)"></div>
@@ -1129,7 +1306,7 @@ window.openAddressesModal = () => {
             <option value="Other">Other</option>
           </select>
         </div>
-        <button type="submit" class="btn btn-sm btn-accent" style="width: 100%; margin-top: 0.5rem; padding: 0.75rem;">Save Address</button>
+        <button type="submit" class="btn btn-sm btn-accent" style="width: 100%; margin-top: 0.5rem; padding: 0.75rem; font-weight: 600;">Save Address to Account</button>
       </form>
     </div>
   `;
@@ -1168,7 +1345,7 @@ function renderModalAddressList() {
 
   const addresses = getSavedAddresses();
   if (addresses.length === 0) {
-    container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 1rem 0;">No saved addresses yet. Add one below!</p>';
+    container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 1.25rem 0;">No saved addresses in your account yet. Add one below!</p>';
     return;
   }
 
@@ -1182,7 +1359,7 @@ function renderModalAddressList() {
         </div>
       </div>
       <div class="addr-actions">
-        <button type="button" onclick="window.useAddressInCheckout(${i})" class="btn btn-sm btn-accent" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">Use Address</button>
+        <button type="button" onclick="window.useAddressInCheckout(${i})" class="btn btn-sm btn-accent" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">Use in Bag</button>
         <button type="button" onclick="window.deleteSavedAddress(${i})" style="background:none; border:none; color:#ef4444; font-size:0.78rem; cursor:pointer; text-decoration: underline; margin-top: 0.2rem;">Delete</button>
       </div>
     </div>
@@ -1196,7 +1373,7 @@ window.useAddressInCheckout = (index) => {
 
   if (document.getElementById('ship-name')) document.getElementById('ship-name').value = a.name || '';
   if (document.getElementById('ship-phone')) document.getElementById('ship-phone').value = a.phone || '';
-  if (document.getElementById('ship-email')) document.getElementById('ship-email').value = a.email || '';
+  if (document.getElementById('ship-email')) document.getElementById('ship-email').value = a.email || (clerk?.user?.primaryEmailAddress?.emailAddress || '');
   if (document.getElementById('ship-address')) document.getElementById('ship-address').value = a.address || '';
   if (document.getElementById('ship-landmark')) document.getElementById('ship-landmark').value = a.landmark || '';
   if (document.getElementById('ship-pincode')) document.getElementById('ship-pincode').value = a.pincode || '';
@@ -1592,15 +1769,17 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', handleStickyBarScroll, { passive: true });
   }
 
-  // 8. Initialize Pincode Autofill & Cart
+  // 8. Initialize Pincode Autofill, Cart, & Auth State
   initPincodeAutofill();
   updateCartUI();
+  renderAuthUI();
+  syncCheckoutAddressSelector();
 
   // 9. Auto-open cart if query param has ?cart=open
   if (urlParams.get('cart') === 'open' || window.location.pathname === '/cart') {
     setTimeout(() => toggleCart(true), 400);
   }
 
-  // 10. Load Clerk SDK
+  // 10. Load Clerk SDK & Listen for Auth Updates
   initClerkAuth();
 });
