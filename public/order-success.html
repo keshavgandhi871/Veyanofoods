@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Thank you for your order with VEYANO Foods. Your clean roasted snacks are being freshly packed in airtight standing pouches for pan-India express delivery.">
   <meta name="robots" content="noindex, follow">
   
@@ -241,10 +241,19 @@
           <li><a href="our-story.html" class="nav-link">Our Story</a></li>
           <li><a href="transparency.html" class="nav-link">Transparency</a></li>
           <li><a href="blog.html" class="nav-link">Journal</a></li>
+          <li><a href="bulk-orders.html" class="nav-link">Bulk Orders</a></li>
         </ul>
       </nav>
       <div class="nav-actions">
-        <a href="shop.html" class="btn btn-sm btn-accent">Shop All</a>
+        <div id="nav-auth-container"><a href="login.html" class="nav-link">Sign In</a></div>
+        <a href="shop.html" class="btn btn-sm btn-outline nav-shop-btn">Shop All</a>
+        <button class="cart-icon-btn cart-trigger-btn" aria-label="Open Cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span class="cart-badge" id="cart-count">0</span>
+        </button>
+        <button class="mobile-menu-toggle" id="mobile-nav-toggle" aria-label="Open Menu">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
       </div>
     </div>
   </header>
@@ -529,5 +538,7 @@
       }
     });
   </script>
+  <script src="products-data.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

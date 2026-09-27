@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Read our in-depth snacking guide on the VEYANO Journal. Learn about makhana science, ingredient transparency, and mindful food choices.">
   <meta name="robots" content="index, follow">
   <title>Story | VEYANO Journal</title>
@@ -32,7 +32,7 @@
   <!-- Navbar -->
   <header class="navbar">
     <div class="container nav-container">
-      <a href="index.html" class="nav-brand">
+      <a href="index.html" class="nav-brand" aria-label="VEYANO Foods">
         <img src="assets/logo.png" alt="VEYANO Logo" width="140" height="42">
       </a>
       <nav>
@@ -50,7 +50,14 @@
         <div id="nav-auth-container">
           <a href="login.html" class="nav-link" style="font-size: 0.88rem; font-weight: 600;">Sign In</a>
         </div>
-        <a href="shop.html" class="btn btn-sm btn-outline">Shop Now</a>
+        <a href="shop.html" class="btn btn-sm btn-outline nav-shop-btn">Shop Now</a>
+        <button class="cart-icon-btn cart-trigger-btn" aria-label="Open Cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span class="cart-badge" id="cart-count">0</span>
+        </button>
+        <button class="mobile-menu-toggle" id="mobile-nav-toggle" aria-label="Open Menu">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
       </div>
     </div>
   </header>
@@ -94,18 +101,12 @@
         </ul>
       </div>
       <div class="footer-col">
-        <h4>Help</h4>
+        <h4>Help & Legal</h4>
         <ul>
           <li><a href="contact.html">Contact Us</a></li>
-          <li><a href="bulk-orders.html">Bulk Orders</a></li>
-          <li><a href="https://wa.me/919350598909">WhatsApp Support</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h4>Connect</h4>
-        <ul>
-          <li><a href="https://www.instagram.com/veyanofoods" target="_blank" rel="noopener">Instagram</a></li>
-          <li><a href="mailto:veyanosupport@gmail.com">veyanosupport@gmail.com</a></li>
+          <li><a href="shipping-policy.html">Shipping Policy</a></li>
+          <li><a href="refund-policy.html">Refund Policy</a></li>
+          <li><a href="terms.html">Terms & Conditions</a></li>
         </ul>
       </div>
     </div>
@@ -118,6 +119,11 @@
     </div>
   </footer>
 
+  <a href="https://wa.me/919350598909" class="floating-whatsapp" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+    <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
+  </a>
+
+  <script src="products-data.js"></script>
   <script src="blog-logic.js"></script>
   <script src="script.js"></script>
 </body>

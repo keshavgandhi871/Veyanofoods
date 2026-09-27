@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Shop VEYANO Clean Roasted Makhana. Choose from Classic Plain (0% Oil), Lightly Salted, and Fiery Peri-Peri. Pure ingredients, zero palm oil, roasted to perfection.">
   <meta name="keywords" content="Buy Roasted Makhana, VEYANO plain makhana, peri peri fox nuts, salted makhana, healthy snacks india">
   <meta name="robots" content="index, follow">
@@ -231,18 +231,20 @@
                 <span class="faq-icon">+</span>
               </button>
               <div class="info-accordion-content">
-                <table class="transparency-table" id="detail-nutrition-table">
-                  <thead>
-                    <tr>
-                      <th>Nutrient</th>
-                      <th>Per 100g</th>
-                      <th>Per Serving (30g)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="detail-nutrition-tbody">
-                    <!-- Populated dynamically -->
-                  </tbody>
-                </table>
+                <div class="transparency-table-wrap">
+                  <table class="transparency-table" id="detail-nutrition-table">
+                    <thead>
+                      <tr>
+                        <th>Nutrient</th>
+                        <th>Per 100g</th>
+                        <th>Per Serving (30g)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="detail-nutrition-tbody">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -515,6 +517,20 @@
     </div>
   </div>
 
+  <!-- Sticky Mobile Product Buy Bar -->
+  <div class="mobile-sticky-buy-bar" id="mobile-sticky-buy-bar">
+    <div class="mobile-sticky-info">
+      <img id="sticky-product-thumb" src="./assets/plain.webp" alt="Product" class="mobile-sticky-thumb">
+      <div class="mobile-sticky-text">
+        <div class="mobile-sticky-title" id="sticky-product-title">Classic Plain Roasted Makhana</div>
+        <div class="mobile-sticky-price" id="sticky-product-price">₹399</div>
+      </div>
+    </div>
+    <div class="mobile-sticky-actions">
+      <button class="btn btn-accent" id="sticky-buy-btn" onclick="handleDetailAddToCart()">Add to Bag</button>
+    </div>
+  </div>
+
   <!-- Floating WhatsApp CTA -->
   <a href="https://wa.me/919350598909" class="floating-whatsapp" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
     <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
@@ -579,6 +595,14 @@
       document.getElementById('detail-product-price').textContent = `₹${currentProduct.price}`;
       document.getElementById('detail-product-weight').textContent = currentProduct.weight;
 
+      // Populate Sticky Bar
+      const stickyThumb = document.getElementById('sticky-product-thumb');
+      const stickyTitle = document.getElementById('sticky-product-title');
+      const stickyPrice = document.getElementById('sticky-product-price');
+      if (stickyThumb && currentProduct.images?.length > 0) stickyThumb.src = currentProduct.images[0];
+      if (stickyTitle) stickyTitle.textContent = currentProduct.name;
+      if (stickyPrice) stickyPrice.textContent = `₹${currentProduct.price}`;
+
       const mrpEl = document.getElementById('detail-product-mrp');
       if (currentProduct.mrp && currentProduct.mrp > currentProduct.price) {
         mrpEl.style.display = 'inline';
@@ -591,6 +615,7 @@
       const stockBadge = document.getElementById('detail-product-stock-badge');
       const buyArea = document.getElementById('buy-action-area');
       const buyNowBtn = document.getElementById('detail-buy-now-btn');
+      const stickyBuyBtn = document.getElementById('sticky-buy-btn');
       
       if (currentProduct.stock_status === 'coming_soon' || currentProduct.stock <= 0) {
         stockBadge.className = 'badge badge-coming-soon';
@@ -599,10 +624,12 @@
           <button class="btn btn-outline" style="width: 100%;" onclick="window.addToCart('${currentProduct.id}')">Notify Me on WhatsApp</button>
         `;
         if (buyNowBtn) buyNowBtn.style.display = 'none';
+        if (stickyBuyBtn) stickyBuyBtn.textContent = 'Coming Soon';
       } else {
         stockBadge.className = 'badge badge-featured';
         stockBadge.textContent = 'In Stock';
         if (buyNowBtn) buyNowBtn.style.display = 'block';
+        if (stickyBuyBtn) stickyBuyBtn.textContent = 'Add to Bag';
       }
 
       // Main Image & Thumbs
@@ -704,7 +731,7 @@
       // Related Products
       const relContainer = document.getElementById('related-products-grid');
       if (relContainer) {
-        const others = catalog.filter(p => p.id !== currentProduct.id).slice(0, 3);
+        const others = catalog.filter(p => p.id !== currentProduct.id).slice(0, 4);
         relContainer.innerHTML = others.map(p => `
           <div class="product-card">
             <div class="product-card-media">
@@ -718,7 +745,9 @@
               <div class="product-card-price-row">
                 <span class="product-price-current">₹${p.price}</span>
               </div>
-              <a href="product.html?slug=${p.slug || p.id}" class="btn btn-sm btn-outline">View Details</a>
+              <div class="product-card-actions">
+                <a href="product.html?slug=${p.slug || p.id}" class="btn btn-sm btn-outline">View Details</a>
+              </div>
             </div>
           </div>
         `).join('');

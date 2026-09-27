@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Refund and Cancellation Policy for VEYANO Foods. Transparent guidelines on damaged parcels, replacements, and refund processing.">
   <meta name="robots" content="index, follow">
   
@@ -20,13 +20,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 </head>
 <body>
+
+  <!-- Announcement Bar -->
+  <div class="announcement-bar">
+    <span>🚚 <strong>FREE Pan-India Delivery</strong> on orders above ₹499</span>
+    <span class="announcement-sep" style="opacity: 0.4;">|</span>
+    <span>🌿 FSSAI Lic. No. <strong>20826010000397</strong></span>
+  </div>
 
   <!-- Navbar -->
   <header class="navbar">
     <div class="container nav-container">
-      <a href="index.html" class="nav-brand">
+      <a href="index.html" class="nav-brand" aria-label="VEYANO Foods">
         <img src="assets/logo.png" alt="VEYANO Logo" width="140" height="42">
       </a>
       <nav>
@@ -41,22 +49,28 @@
         </ul>
       </nav>
       <div class="nav-actions">
-        <a href="shop.html" class="btn btn-sm btn-outline">Shop Now</a>
+        <div id="nav-auth-container"><a href="login.html" class="nav-link">Sign In</a></div>
+        <button class="cart-icon-btn cart-trigger-btn" aria-label="Open Cart">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span class="cart-badge" id="cart-count">0</span>
+        </button>
+        <button class="mobile-menu-toggle" id="mobile-nav-toggle" aria-label="Open Menu">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
       </div>
     </div>
   </header>
 
-  <main class="container-narrow" style="padding: 4rem 1.25rem 6rem;">
-    <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Refund & Cancellation Policy</h1>
+  <main class="policy-wrapper">
+    <h1>Refund & Cancellation Policy</h1>
     <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2.5rem;">Last Updated: April 2026</p>
 
     <div style="font-size: 1rem; line-height: 1.8; color: var(--text-secondary); display: flex; flex-direction: column; gap: 1.5rem;">
-      
       <p>Because VEYANO products are perishable, edible food products, we adhere to strict food safety and hygiene protocols. Below are our policies regarding cancellations, damaged goods, and refunds.</p>
 
       <h3 style="color: var(--text-primary);">1. Order Cancellations</h3>
       <p>You can cancel an order within <strong>4 hours of placing it</strong> or before it has been dispatched from our facility, whichever is earlier. Once a package has been picked up by the courier partner, it cannot be cancelled.</p>
-      <p>To request a cancellation, message us immediately on WhatsApp at <strong>+91 9350598909</strong> or email <a href="mailto:veyanosupport@gmail.com" style="color:var(--accent-color);">veyanosupport@gmail.com</a> with your Order ID.</p>
+      <p>To request a cancellation, message us immediately on WhatsApp at <strong>+91 9350598909</strong> or email <a href="mailto:veyanosupport@gmail.com" style="color:var(--accent-color); font-weight:600;">veyanosupport@gmail.com</a> with your Order ID.</p>
 
       <h3 style="color: var(--text-primary);">2. Damaged or Tampered Shipments</h3>
       <p>If your package arrives physically damaged, tampered with, or if an item is missing/incorrect, we will issue an immediate free replacement or refund.</p>
@@ -82,8 +96,59 @@
     </div>
   </main>
 
-  <footer class="footer" style="padding: 2rem 0; text-align: center; font-size: 0.85rem; color: #71717a;">
-    <div class="container">&copy; 2026 VEYANO Foods. FSSAI Lic. No. 20826010000397. All rights reserved.</div>
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="index.html" class="nav-brand" style="margin-bottom: 0.75rem;">
+          <img src="assets/logo.png" alt="VEYANO Logo" width="130" height="39" style="mix-blend-mode: screen; filter: invert(1);">
+        </a>
+        <p class="footer-tagline">"Thoughtfully Made for You"<br>Clean roasted snacks crafted with quality and honest ingredients.</p>
+        <div class="footer-fssai-box">
+          <span style="background: #3f3f46; padding: 2px 6px; border-radius: 3px; font-weight: 700; font-size: 0.7rem; color: #fff;">FSSAI</span>
+          <span>Lic. No. 20826010000397</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All Products</a></li>
+          <li><a href="shop.html?category=combos">Discovery Combos</a></li>
+          <li><a href="try-veyano.html">Trial Packs</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <ul>
+          <li><a href="our-story.html">Our Story</a></li>
+          <li><a href="why-veyano.html">Why VEYANO</a></li>
+          <li><a href="transparency.html">Ingredient Transparency</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help & Legal</h4>
+        <ul>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><a href="shipping-policy.html">Shipping Policy</a></li>
+          <li><a href="refund-policy.html">Refund Policy</a></li>
+          <li><a href="terms.html">Terms & Conditions</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <div>&copy; 2026 VEYANO Foods. All rights reserved.</div>
+      <div style="display: flex; gap: 1.5rem;">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms & Conditions</a>
+      </div>
+    </div>
   </footer>
+
+  <a href="https://wa.me/919350598909" class="floating-whatsapp" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+    <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
+  </a>
+
+  <script src="products-data.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

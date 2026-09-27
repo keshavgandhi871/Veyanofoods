@@ -240,10 +240,15 @@ function toggleCart(open) {
   if (open) {
     drawer?.classList.add('open');
     overlay?.classList.add('open');
+    document.body.classList.add('drawer-open');
     updateCartUI();
   } else {
     drawer?.classList.remove('open');
     overlay?.classList.remove('open');
+    const mobileDrawer = document.getElementById('mobile-menu-drawer');
+    if (!mobileDrawer || !mobileDrawer.classList.contains('open')) {
+      document.body.classList.remove('drawer-open');
+    }
     goToStep(1);
   }
 }
@@ -686,11 +691,6 @@ window.renderProductsGrid = (containerId, filterCategory = 'all', searchQuery = 
         <p style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">No products found</p>
         <p style="font-size: 0.88rem;">Try clearing your search or picking another category.</p>
         <button class="btn btn-sm btn-outline" style="margin-top: 1rem;" onclick="window.resetShopFilters()">View All Products</button>
-      </div>
-    `;
-    return;
-  }
-        <p>No products found in this category right now. New snacks launching soon!</p>
       </div>
     `;
     return;
@@ -1263,8 +1263,166 @@ window.deleteSavedAddress = async (index) => {
   }
 };
 
+// --- UNIVERSAL GLOBAL DRAWER INJECTOR (Ensures cart and mobile menu work on 100% of pages) ---
+function ensureGlobalDrawersExist() {
+  const currentPath = window.location.pathname.toLowerCase();
+  const isPage = (name) => currentPath.includes(name.toLowerCase());
+
+  // 1. Mobile Menu Drawer
+  if (!document.getElementById('mobile-menu-drawer')) {
+    const mobileDrawerHTML = `
+      <div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
+      <div class="mobile-menu-drawer" id="mobile-menu-drawer">
+        <div class="mobile-drawer-header">
+          <img src="assets/logo.png" alt="VEYANO Logo" style="height: 34px; width: auto; object-fit: contain;">
+          <button id="mobile-drawer-close" aria-label="Close Menu" style="background:none; border:none; font-size: 1.6rem; color: var(--text-primary); cursor:pointer; line-height: 1; padding: 6px; display:flex; align-items:center; justify-content:center;">&times;</button>
+        </div>
+        <ul class="mobile-nav-list">
+          <li class="mobile-nav-item"><a href="index.html" class="${isPage('index') || currentPath === '/' || currentPath === '' ? 'active' : ''}"><span>Home</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+          <li class="mobile-nav-item"><a href="shop.html" class="${isPage('shop') ? 'active' : ''}"><span>Shop All Snacks</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+          <li class="mobile-nav-item"><a href="try-veyano.html" class="${isPage('try-veyano') ? 'active' : ''}"><span>Try VEYANO (Trial Packs)</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+          <li class="mobile-nav-item"><a href="our-story.html" class="${isPage('our-story') ? 'active' : ''}"><span>Our Story</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+          <li class="mobile-nav-item"><a href="why-veyano.html" class="${isPage('why-veyano') ? 'active' : ''}"><span>Why VEYANO</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+          <li class="mobile-nav-item"><a href="transparency.html" class="${isPage('transparency') ? 'active' : ''}"><span>Ingredient Transparency</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+          <li class="mobile-nav-item"><a href="blog.html" class="${isPage('blog') ? 'active' : ''}"><span>Snacking Journal</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+          <li class="mobile-nav-item"><a href="bulk-orders.html" class="${isPage('bulk-orders') ? 'active' : ''}"><span>Bulk & Corporate Orders</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+          <li class="mobile-nav-item"><a href="contact.html" class="${isPage('contact') ? 'active' : ''}"><span>Contact Us</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></a></li>
+        </ul>
+        <div class="mobile-drawer-footer">
+          <a href="shop.html" class="btn btn-accent" style="width: 100%; margin-bottom: 0.65rem;">Shop All Snacks</a>
+          <a href="https://wa.me/919350598909?text=Hi%20Veyano!%20I'd%20like%20to%20know%20more." class="btn btn-whatsapp btn-sm" style="width: 100%;">Chat on WhatsApp</a>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', mobileDrawerHTML);
+  }
+
+  // 2. Cart Drawer
+  if (!document.getElementById('cart-drawer')) {
+    const cartDrawerHTML = `
+      <div class="cart-overlay" id="cart-overlay"></div>
+      <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-header">
+          <h3>Your Bag (<span id="cart-count">0</span>)</h3>
+          <button class="close-cart" id="close-cart-btn" aria-label="Close Cart">&times;</button>
+        </div>
+        <div class="cart-progress-section" id="cart-progress-section">
+          <div class="cart-progress-text" id="shipping-msg">Add ₹499 more for FREE Pan-India Delivery</div>
+          <div class="cart-progress-container">
+            <div class="cart-progress-bar" id="shipping-bar"></div>
+          </div>
+        </div>
+        <div class="cart-body">
+          <div id="cart-step-items">
+            <div id="cart-items-container"></div>
+          </div>
+          <div id="cart-step-shipping" style="display: none;">
+            <button id="back-to-cart-btn" class="btn btn-sm btn-outline" style="margin-bottom: 1rem;">&larr; Back to Bag</button>
+            <h4 style="margin-bottom: 1rem; color: var(--accent-color);">Delivery Details</h4>
+            <div id="checkout-saved-addresses" style="display: none;"></div>
+            <form id="checkout-form">
+              <div class="form-group"><input type="text" id="ship-name" class="form-control" placeholder="Full Name *" required minlength="3"></div>
+              <div class="form-group"><input type="tel" id="ship-phone" class="form-control" placeholder="10-digit mobile number *" required pattern="[6-9][0-9]{9}"></div>
+              <div class="form-group"><input type="email" id="ship-email" class="form-control" placeholder="Email Address (for tracking) *" required></div>
+              <div class="form-group"><textarea id="ship-address" class="form-control" placeholder="House/Flat No, Building, Street Address *" rows="2" required></textarea></div>
+              <div class="form-group"><input type="text" id="ship-landmark" class="form-control" placeholder="Landmark (Optional)"></div>
+              <div class="form-row">
+                <div class="form-group"><input type="text" id="ship-pincode" class="form-control" placeholder="6-digit PIN *" required pattern="[0-9]{6}"></div>
+                <div class="form-group"><input type="text" id="ship-city" class="form-control" placeholder="City *" required></div>
+              </div>
+              <div class="form-group">
+                <select id="ship-state" class="form-control" required>
+                  <option value="" disabled selected>Select State *</option>
+                  <option value="Andhra Pradesh">Andhra Pradesh</option>
+                  <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                  <option value="Assam">Assam</option>
+                  <option value="Bihar">Bihar</option>
+                  <option value="Chhattisgarh">Chhattisgarh</option>
+                  <option value="Goa">Goa</option>
+                  <option value="Gujarat">Gujarat</option>
+                  <option value="Haryana">Haryana</option>
+                  <option value="Himachal Pradesh">Himachal Pradesh</option>
+                  <option value="Jharkhand">Jharkhand</option>
+                  <option value="Karnataka">Karnataka</option>
+                  <option value="Kerala">Kerala</option>
+                  <option value="Madhya Pradesh">Madhya Pradesh</option>
+                  <option value="Maharashtra">Maharashtra</option>
+                  <option value="Manipur">Manipur</option>
+                  <option value="Meghalaya">Meghalaya</option>
+                  <option value="Mizoram">Mizoram</option>
+                  <option value="Nagaland">Nagaland</option>
+                  <option value="Odisha">Odisha</option>
+                  <option value="Punjab">Punjab</option>
+                  <option value="Rajasthan">Rajasthan</option>
+                  <option value="Sikkim">Sikkim</option>
+                  <option value="Tamil Nadu">Tamil Nadu</option>
+                  <option value="Telangana">Telangana</option>
+                  <option value="Tripura">Tripura</option>
+                  <option value="Uttar Pradesh">Uttar Pradesh</option>
+                  <option value="Uttarakhand">Uttarakhand</option>
+                  <option value="West Bengal">West Bengal</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Chandigarh">Chandigarh</option>
+                  <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                  <option value="Ladakh">Ladakh</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="save-address-checkbox-wrapper">
+                <input type="checkbox" id="save-address-checkbox" checked>
+                <label for="save-address-checkbox" style="cursor: pointer; margin: 0; flex-grow: 1;">
+                  <span class="save-address-checkbox-label">Save this address</span>
+                  <span class="save-address-checkbox-sub">Fast 1-click checkout on your next visit</span>
+                </label>
+              </div>
+              <div style="margin-top: 1.25rem;">
+                <label class="form-label">Payment Method *</label>
+                <div class="payment-methods">
+                  <label class="payment-option">
+                    <input type="radio" name="paymentMethod" value="prepaid" checked>
+                    <span><strong>Pay Online (UPI / Card)</strong> — <span style="color:var(--brand-green); font-weight:700;">Save ₹79</span></span>
+                  </label>
+                  <label class="payment-option">
+                    <input type="radio" name="paymentMethod" value="cod">
+                    <span>Cash on Delivery (₹79 Courier Fee)</span>
+                  </label>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div id="cart-step-success" style="display: none; text-align: center; padding: 2rem 0;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: #dcfce7; color: var(--brand-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h3 style="margin-bottom: 0.5rem; color: var(--brand-green);">Order Placed!</h3>
+            <p id="order-number-display" style="font-weight: 700; color: var(--accent-color); margin: 1rem 0;"></p>
+            <a href="shop.html" class="btn btn-accent" style="width: 100%;">Continue Shopping</a>
+          </div>
+        </div>
+        <div class="cart-footer">
+          <div id="summary-section">
+            <div class="cart-summary-row"><span>Subtotal</span><span id="display-subtotal">₹0</span></div>
+            <div class="cart-summary-row"><span>Delivery</span><span id="display-shipping">₹0</span></div>
+            <div class="cart-summary-row" id="cod-row" style="display:none;"><span>COD Fee</span><span id="display-cod">₹79</span></div>
+            <div class="cart-summary-total"><span>Total</span><span id="display-total">₹0</span></div>
+          </div>
+          <button class="btn btn-accent" id="next-step-btn" style="width: 100%;">Proceed to Checkout</button>
+          <div id="checkout-actions" style="display: none; gap: 10px;">
+            <button class="btn btn-outline" id="back-to-cart-btn" style="flex: 1;">Back</button>
+            <button class="btn btn-accent" id="place-order-btn" style="flex: 2;">Place Order</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', cartDrawerHTML);
+  }
+}
+
 // --- INITIALIZATION & EVENT BINDINGS ---
 document.addEventListener('DOMContentLoaded', () => {
+  // 0. Ensure Global Drawers Exist on every page
+  ensureGlobalDrawersExist();
+
   // 1. Mobile Menu Drawer Toggle
   const mobileToggle = document.getElementById('mobile-nav-toggle');
   const mobileDrawer = document.getElementById('mobile-menu-drawer');
@@ -1274,15 +1432,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const openMobileMenu = () => {
     mobileDrawer?.classList.add('open');
     mobileOverlay?.classList.add('open');
+    document.body.classList.add('drawer-open');
   };
   const closeMobileMenu = () => {
     mobileDrawer?.classList.remove('open');
     mobileOverlay?.classList.remove('open');
+    const cartDrawer = document.getElementById('cart-drawer');
+    if (!cartDrawer || !cartDrawer.classList.contains('open')) {
+      document.body.classList.remove('drawer-open');
+    }
   };
 
   mobileToggle?.addEventListener('click', openMobileMenu);
   mobileClose?.addEventListener('click', closeMobileMenu);
   mobileOverlay?.addEventListener('click', closeMobileMenu);
+
+  // Close mobile drawer when clicking any nav link
+  document.querySelectorAll('.mobile-nav-item a').forEach(link => {
+    link.addEventListener('click', closeMobileMenu);
+  });
 
   // 2. Cart Icon & Drawer Controls
   document.querySelectorAll('.cart-trigger-btn, .cart-icon-btn, #cart-icon-btn').forEach(btn => {
@@ -1401,16 +1569,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 7. Initialize Pincode Autofill & Cart
+  // 7. Sticky Mobile Product Buy Bar (on product.html)
+  const stickyBuyBar = document.getElementById('mobile-sticky-buy-bar');
+  const mainBuyBtn = document.getElementById('add-to-cart-btn') || document.querySelector('.quantity-add-row .btn');
+  if (stickyBuyBar && mainBuyBtn) {
+    const handleStickyBarScroll = () => {
+      if (window.innerWidth <= 768) {
+        const rect = mainBuyBtn.getBoundingClientRect();
+        if (rect.bottom < 0) {
+          stickyBuyBar.classList.add('visible');
+          document.body.classList.add('has-sticky-bar');
+        } else {
+          stickyBuyBar.classList.remove('visible');
+          document.body.classList.remove('has-sticky-bar');
+        }
+      } else {
+        stickyBuyBar.classList.remove('visible');
+        document.body.classList.remove('has-sticky-bar');
+      }
+    };
+    window.addEventListener('scroll', handleStickyBarScroll, { passive: true });
+    window.addEventListener('resize', handleStickyBarScroll, { passive: true });
+  }
+
+  // 8. Initialize Pincode Autofill & Cart
   initPincodeAutofill();
   updateCartUI();
 
-  // 8. Auto-open cart if query param has ?cart=open
-  const urlParams = new URLSearchParams(window.location.search);
+  // 9. Auto-open cart if query param has ?cart=open
   if (urlParams.get('cart') === 'open' || window.location.pathname === '/cart') {
     setTimeout(() => toggleCart(true), 400);
   }
 
-  // 9. Load Clerk SDK
+  // 10. Load Clerk SDK
   initClerkAuth();
 });
