@@ -85,19 +85,37 @@
 
   <main class="section">
     <div class="container">
-      <div class="section-header">
+      <div class="section-header" style="max-width: 780px; margin: 0 auto 2.5rem; text-align: center;">
         <span class="section-tag">VEYANO Journal</span>
         <h1 class="section-title">Knowledge for Mindful Snacking</h1>
-        <p class="section-subtitle">Factual deep-dives into Indian snacking culture, ingredient science, and transparent food labeling.</p>
+        <p class="section-subtitle">Factual deep-dives into Indian snacking culture, ingredient science, metabolic health, and transparent food labeling.</p>
       </div>
 
-      <!-- Category Filter Pills -->
-      <div class="category-filter-bar" id="blog-category-bar">
-        <button class="filter-pill active" onclick="filterBlogCategory('all')">All Articles</button>
-        <button class="filter-pill" onclick="filterBlogCategory('Makhana')">Makhana</button>
-        <button class="filter-pill" onclick="filterBlogCategory('Food Transparency')">Food Transparency</button>
-        <button class="filter-pill" onclick="filterBlogCategory('Snacking')">Snacking</button>
-        <button class="filter-pill" onclick="filterBlogCategory('Ingredients')">Ingredients</button>
+      <!-- Real-Time Search Bar -->
+      <div style="max-width: 580px; margin: 0 auto 2rem; position: relative;">
+        <input 
+          type="text" 
+          id="blog-search-input" 
+          placeholder="Search 85+ articles by topic, ingredient, or benefit..." 
+          style="width: 100%; padding: 0.9rem 1.25rem 0.9rem 2.85rem; border-radius: var(--radius-full); border: 1px solid var(--border-card); background: #ffffff; font-size: 0.95rem; font-family: var(--font-body); box-shadow: var(--shadow-sm); outline: none; transition: all 0.2s ease;"
+          onfocus="this.style.borderColor='var(--accent-color)'; this.style.boxShadow='0 0 0 3px rgba(192, 139, 92, 0.2)';"
+          onblur="this.style.borderColor='var(--border-card)'; this.style.boxShadow='var(--shadow-sm)';"
+        >
+        <svg style="position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </div>
+
+      <!-- Category Filter Pills Bar & Counter -->
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-bottom: 2.5rem;">
+        <div class="category-filter-bar" id="blog-category-bar" style="margin-bottom: 0;">
+          <button class="filter-pill active" data-category="all" onclick="filterBlogCategory('all')">All Articles</button>
+          <button class="filter-pill" data-category="Makhana" onclick="filterBlogCategory('Makhana')">Makhana</button>
+          <button class="filter-pill" data-category="Food Transparency" onclick="filterBlogCategory('Food Transparency')">Food Transparency</button>
+          <button class="filter-pill" data-category="Snacking" onclick="filterBlogCategory('Snacking')">Snacking</button>
+          <button class="filter-pill" data-category="Ingredients" onclick="filterBlogCategory('Ingredients')">Ingredients</button>
+        </div>
+        <div id="blog-count-badge" style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted); background: var(--bg-subtle); padding: 0.25rem 0.75rem; border-radius: var(--radius-full); border: 1px solid var(--border-subtle);">
+          Loading articles...
+        </div>
       </div>
 
       <!-- Blog Grid Container -->
@@ -167,18 +185,9 @@
     <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.81 9.81 0 0 0 12.04 2zM6.58 17.08l-.3-.18a8.22 8.22 0 0 1-3.95-6.99c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.53 0-3.03-.42-4.33-1.21l-.31-.19L3.48 18.2l.31-2.82.31-2.82.29-.18z"/></svg>
   </a>
 
-  <script src="products-data.js"></script>
-  <script src="blog-logic.js"></script>
-  <script src="script.js"></script>
-  <script>
-    function filterBlogCategory(cat) {
-      document.querySelectorAll('#blog-category-bar .filter-pill').forEach(p => p.classList.remove('active'));
-      const activeBtn = Array.from(document.querySelectorAll('#blog-category-bar .filter-pill')).find(p => p.textContent.trim().toLowerCase() === (cat === 'all' ? 'all articles' : cat.toLowerCase()));
-      if (activeBtn) activeBtn.classList.add('active');
-      
-      const articles = window.CURRENT_BLOG_POSTS || [];
-      renderBlogCards(articles, cat);
-    }
-  </script>
+  <script src="products-data.js?v=3"></script>
+  <script src="blogs-data.js?v=3"></script>
+  <script src="blog-logic.js?v=3"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>

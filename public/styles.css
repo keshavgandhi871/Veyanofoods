@@ -2008,21 +2008,59 @@ img {
 .blog-meta-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.8rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.65rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   margin-bottom: 0.75rem;
 }
 
+.blog-category-badge {
+  color: var(--accent-color);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  background: var(--accent-light);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.blog-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+
+.blog-meta-dot {
+  opacity: 0.4;
+  font-size: 0.7rem;
+}
+
 .blog-card-title {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   margin-bottom: 0.65rem;
   line-height: 1.35;
+  font-weight: 700;
+  font-family: var(--font-heading);
+}
+
+.blog-card-title a {
+  color: var(--text-primary);
+  transition: color 0.2s ease;
+}
+
+.blog-card-title a:hover {
+  color: var(--accent-color);
 }
 
 .blog-card-excerpt {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--text-secondary);
+  line-height: 1.55;
   margin-bottom: 1.25rem;
   flex-grow: 1;
 }

@@ -108,7 +108,17 @@ app.use('/api/checkout', checkoutRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
 // Serve frontend static files (from the root directory)
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../public'), {
+  etag: false,
+  maxAge: 0,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html') || filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // Clean URL Page Routes
 app.get('/order-success', (req, res) => res.sendFile(path.join(__dirname, '../public/order-success.html')));

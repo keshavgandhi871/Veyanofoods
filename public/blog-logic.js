@@ -2,10 +2,11 @@
  * VEYANO Foods — Journal / Blog Logic Controller
  * 
  * Features:
- * - Real-time fetch from /api/blog with verified local fallback articles
- * - Category filtering (Makhana, Food Transparency, Snacking, Ingredients)
- * - Estimated reading time calculation
- * - Sanitized markdown / HTML rendering for single article view
+ * - Instant rendering from window.VEYANO_BLOGS (100+ curated articles) with real-time server sync
+ * - Complete Category Filtering (All Articles, Makhana, Food Transparency, Snacking, Ingredients)
+ * - Prominent publication date display on every card and single article page
+ * - Instant search by keyword, ingredient, or topic
+ * - Robust single article renderer with related articles recommendation
  */
 
 const API_BASE_URL = (typeof window !== 'undefined' && window.API_BASE_URL !== undefined)
@@ -24,184 +25,242 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
-if (typeof window !== 'undefined') {
-  window.escapeHtml = escapeHtml;
+function formatBlogDate(dateStr) {
+  if (!dateStr) return 'Aug 2026';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'Aug 2026';
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch (_) {
+    return 'Aug 2026';
+  }
 }
 
-const FALLBACK_ARTICLES = [
-  {
-    id: "makhana-science",
-    title: "What is Makhana? The Agricultural and Nutritional Science of Lotus Seeds",
-    slug: "what-is-makhana-agricultural-nutritional-science",
-    category: "Makhana",
-    author: "VEYANO Team",
-    image_url: "./assets/makhana-science.webp",
-    created_at: "2026-04-10T10:00:00Z",
-    read_time: "4 min read",
-    excerpt: "Discover how lotus seeds are harvested from the wetlands of Bihar and roasted into one of India's most nutrient-dense whole food snacks.",
-    content: `
-      <p>Makhana (botanical name: <em>Euryale ferox</em>), commonly known as fox nuts or gorgon nuts, is an aquatic crop harvested primarily in the Mithila wetlands of Bihar, India. For centuries, it has served as an integral part of traditional Indian dietary wisdom and fasting rituals.</p>
-      
-      <h3>How is Makhana Harvested and Processed?</h3>
-      <p>The seeds grow inside prickly water lily pods. Once harvested from pond beds, the black seeds are sun-dried, graded by size, and roasted in earthen pans over high heat. The hot seeds are then manually struck with wooden mallets to pop the hard outer shell, revealing the white, airy popped kernel inside.</p>
-
-      <h3>Nutritional Profile of Whole Makhana</h3>
-      <p>Unlike extruded corn or potato-based snacks, makhana is a natural whole seed. 100 grams of plain roasted makhana delivers:</p>
-      <ul>
-        <li><strong>Plant Protein:</strong> Approx. 9.7g of natural amino acids</li>
-        <li><strong>Dietary Fiber:</strong> Over 14g of soluble and insoluble fiber</li>
-        <li><strong>Essential Minerals:</strong> Rich in magnesium, potassium, and calcium with very low sodium</li>
-        <li><strong>Low Glycemic Index:</strong> Slow-burning complex carbohydrates that prevent sudden insulin spikes</li>
-      </ul>
-
-      <h3>Why Dry Roasting Matters</h3>
-      <p>Many commercial snack brands deep-fry makhana in industrial palm oil to make seasoning adhere quickly. At VEYANO, we dry-roast all seeds with clean hot air, preserving the natural micronutrient integrity and ensuring zero trans fats.</p>
-    `
-  },
-  {
-    id: "read-food-label",
-    title: "How to Read a Food Label: Spotting Hidden Palm Oil and Misleading Claims",
-    slug: "how-to-read-food-labels-spot-hidden-palm-oil",
-    category: "Food Transparency",
-    author: "VEYANO Team",
-    image_url: "./assets/how_to_read_food_labels_clean.webp",
-    created_at: "2026-04-05T12:00:00Z",
-    read_time: "5 min read",
-    excerpt: "A practical guide to decoding ingredient lists on packaged snacks in India and avoiding misleading marketing buzzwords.",
-    content: `
-      <p>Modern supermarket shelves in India are packed with bold claims like 'Zero Cholesterol', '100% Healthy', and 'Guilt-Free'. But turning the package around to read the fine print often reveals a very different story.</p>
-
-      <h3>1. The Order of Ingredients (By Weight)</h3>
-      <p>By Indian food labeling law (FSSAI), ingredients must be listed in descending order of weight. If the first two ingredients are 'Refined Wheat Flour (Maida)' and 'Palm Oil', the product is predominantly fried flour, regardless of what the front of the pack displays.</p>
-
-      <h3>2. Deceptive Names for Palm Oil</h3>
-      <p>Palm oil is widely used because it is cheap and shelf-stable, but it is high in saturated fats. Watch out for alias terms such as:</p>
-      <ul>
-        <li>Refined Palmolein</li>
-        <li>Edible Vegetable Fat</li>
-        <li>Hydrogenated Vegetable Oil</li>
-        <li>Interesterified Vegetable Fat</li>
-      </ul>
-
-      <h3>3. The VEYANO Transparency Commitment</h3>
-      <p>We believe in honest labeling. Every ingredient used in our roasted makhana — from cold-pressed rice bran oil to Himalayan pink salt — is explicitly named and quantified on our packages.</p>
-    `
-  },
-  {
-    id: "makhana-vs-popcorn",
-    title: "Makhana vs Popcorn: A Nutritional Face-off for Mindful Snacking",
-    slug: "makhana-vs-popcorn-nutritional-comparison",
-    category: "Snacking",
-    author: "VEYANO Team",
-    image_url: "./assets/makhana_vs_popcorn_clean.webp",
-    created_at: "2026-03-28T09:30:00Z",
-    read_time: "4 min read",
-    excerpt: "Both are light, crunchy, and popped. But which one delivers better satiety, mineral retention, and lower glycemic impact?",
-    content: `
-      <p>Popcorn and roasted makhana are two of the most popular popped snacks worldwide. While both offer a satisfying crunch, their macronutrient and digestive behaviors differ substantially.</p>
-
-      <h3>Calorie Density & Volume Satiety</h3>
-      <p>Makhana possesses a high volumetric expansion with very low calorie density. A generous 30g bowl contains only ~107 kcal while providing 4.3g of dietary fiber, signaling fullness to the brain earlier than starch-heavy popcorn.</p>
-
-      <h3>Sodium & Seasoning Comparison</h3>
-      <p>Cinema and microwave popcorn are notorious for excessive sodium and synthetic butter flavorings (diacetyl). In contrast, dry-roasted makhana retains its natural nutty flavor and pairs cleanly with mineral-rich pink salt.</p>
-    `
-  },
-  {
-    id: "how-to-store-makhana",
-    title: "How to Store Makhana & Keep It Crunchy in Humid Indian Weather",
-    slug: "how-to-store-makhana-keep-crunchy",
-    category: "Ingredients",
-    author: "VEYANO Team",
-    image_url: "./assets/tea_snack.webp",
-    created_at: "2026-03-20T14:00:00Z",
-    read_time: "3 min read",
-    excerpt: "Why does roasted makhana lose its crunch, and what simple pantry steps guarantee long-lasting crispness?",
-    content: `
-      <p>Have you ever opened a bag of roasted fox nuts only to find them soft or chewy a few days later? Here is the science of why it happens and how to prevent it.</p>
-
-      <h3>Understanding Hygroscopic Properties</h3>
-      <p>Popped lotus seeds have a microporous cell structure. When roasted to perfection, the internal moisture is reduced below 3%. However, this porous matrix is hygroscopic — meaning it rapidly pulls ambient humidity out of the air.</p>
-
-      <h3>Best Storage Practices</h3>
-      <ul>
-        <li><strong>Airtight Containers:</strong> Reseal the standing pouch zip-lock tightly or transfer opened makhana into an airtight container with a rubber gasket seal.</li>
-        <li><strong>Avoid Direct Sunlight:</strong> Store away from stove heat and window sunlight.</li>
-        <li><strong>Quick Re-crisping Trick:</strong> If your makhana has softened from humidity, simply dry-toss it on a warm non-stick pan on low flame for 60 seconds. It will instantly regain its shatter-crisp texture!</li>
-      </ul>
-    `
+function categorizeBlog(post) {
+  if (post && post.category && ['makhana', 'food transparency', 'snacking', 'ingredients'].includes(post.category.trim().toLowerCase())) {
+    const lower = post.category.trim().toLowerCase();
+    if (lower === 'makhana') return 'Makhana';
+    if (lower === 'food transparency') return 'Food Transparency';
+    if (lower === 'snacking') return 'Snacking';
+    if (lower === 'ingredients') return 'Ingredients';
   }
-];
+
+  const title = ((post && post.title) || '').toLowerCase();
+  const slug = ((post && post.slug) || '').toLowerCase();
+  const text = title + ' ' + slug;
+
+  // 1. Food Transparency: Labeling, FSSAI, regulations, deceptive claims, marketing
+  if (text.includes('fssai') || text.includes('label') || text.includes('claim') || text.includes('transparency') || text.includes('deception') || text.includes('trust') || text.includes('hfss') || text.includes('fopnl') || text.includes('misleading') || text.includes('unmasking') || text.includes('truth') || text.includes('loophole') || text.includes('front-of-pack') || text.includes('supply chain') || text.includes('marketing') || text.includes('crackdown') || text.includes('warning') || text.includes('back-label') || text.includes('whole grain')) {
+    return 'Food Transparency';
+  }
+
+  // 2. Ingredients: Specific ingredients, biochemicals, additives, oils, vitamins, minerals
+  if (text.includes('palm oil') || text.includes('maltodextrin') || text.includes('sugar') || text.includes('msg') || text.includes('sodium') || text.includes('calcium') || text.includes('fiber') || text.includes('kaempferol') || text.includes('antioxidant') || text.includes('amino acid') || text.includes('seed oil') || text.includes('micronutrient') || text.includes('bioavailability') || text.includes('acrylamide') || text.includes('glycation') || text.includes('cortisol') || text.includes('potassium') || text.includes('electrolyte') || text.includes('preservative') || text.includes('additive')) {
+    return 'Ingredients';
+  }
+
+  // 3. Makhana: Core makhana superfood guides, benefits, calories, comparison, varieties
+  if (text.includes('what is makhana') || text.includes('makhana benefits') || text.includes('makhana calories') || text.includes('makhana protein') || text.includes('is makhana healthy') || text.includes('makhana vs') || text.includes('makhana for weight loss') || text.includes('makhana side effects') || text.includes('fox nuts') || text.includes('lotus seed') || text.includes('makhana science') || text.includes('roasted makhana') || text.includes('plain makhana') || text.includes('store makhana') || text.includes('original makhana') || text.includes('makhana nutrition') || text.includes('makhana calcium') || text.includes('makhana antioxidants') || text.includes('makhana fiber') || text.includes('makhana uric acid') || text.includes('makhana for diabetics')) {
+    return 'Makhana';
+  }
+
+  // 4. Snacking: Lifestyle snacking, work, workout, kids, family, tea-time, fasting
+  if (text.includes('snack') || text.includes('tiffin') || text.includes('office') || text.includes('workout') || text.includes('evening') || text.includes('fasting') || text.includes('fitness') || text.includes('travel') || text.includes('popcorn') || text.includes('chips') || text.includes('weight loss') || text.includes('pcos') || text.includes('diabetic') || text.includes('hypertension') || text.includes('recovery') || text.includes('kids') || text.includes('pregnancy') || text.includes('yoga') || text.includes('sattvic') || text.includes('cognitive') || text.includes('desk') || text.includes('drain') || text.includes('challenge') || text.includes('coding') || text.includes('fuel') || text.includes('plateau') || text.includes('habit')) {
+    return 'Snacking';
+  }
+
+  return 'Makhana';
+}
+
+if (typeof window !== 'undefined') {
+  window.escapeHtml = escapeHtml;
+  window.formatBlogDate = formatBlogDate;
+  window.categorizeBlog = categorizeBlog;
+}
+
+let activeCategory = 'all';
+let activeSearchQuery = '';
+
+function getAllArticles() {
+  if (typeof window !== 'undefined' && Array.isArray(window.VEYANO_BLOGS) && window.VEYANO_BLOGS.length > 0) {
+    return window.VEYANO_BLOGS.map(a => ({
+      ...a,
+      category: categorizeBlog(a)
+    }));
+  }
+  return [];
+}
 
 async function fetchBlogs() {
   const container = document.getElementById('blog-container');
   if (!container) return;
 
-  let articles = [];
+  // 1. Instant load from preloaded static catalog
+  let articles = getAllArticles();
+  if (articles.length > 0) {
+    window.CURRENT_BLOG_POSTS = articles;
+    renderBlogCards(articles, activeCategory, activeSearchQuery);
+  }
 
+  // 2. Fetch from backend API to sync latest server records
   try {
     const res = await fetch(`${API_BASE_URL}/api/blog`);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
-        articles = data;
+        articles = data.map(b => ({
+          ...b,
+          category: categorizeBlog(b)
+        }));
+        window.CURRENT_BLOG_POSTS = articles;
+        renderBlogCards(articles, activeCategory, activeSearchQuery);
       }
     }
   } catch (err) {
-    console.warn('[Blog] Server fetch failed, using verified fallback articles:', err);
+    console.warn('[Blog] API fetch skipped, using local blog database:', err);
   }
 
-  if (articles.length === 0) {
-    articles = FALLBACK_ARTICLES;
+  if (!window.CURRENT_BLOG_POSTS || window.CURRENT_BLOG_POSTS.length === 0) {
+    window.CURRENT_BLOG_POSTS = articles;
+    renderBlogCards(articles, activeCategory, activeSearchQuery);
   }
-
-  window.CURRENT_BLOG_POSTS = articles;
-  renderBlogCards(articles);
 }
 
-function renderBlogCards(articles, categoryFilter = 'all') {
+function renderBlogCards(articles, categoryFilter = 'all', searchQuery = '') {
   const container = document.getElementById('blog-container');
   if (!container) return;
 
-  let filtered = articles;
-  if (categoryFilter && categoryFilter !== 'all') {
-    filtered = articles.filter(a => (a.category || '').toLowerCase() === categoryFilter.toLowerCase());
+  let rawList = (articles && articles.length > 0) ? articles : getAllArticles();
+  
+  // Guarantee every article has its proper category assigned
+  let filtered = rawList.map(a => ({
+    ...a,
+    category: categorizeBlog(a)
+  }));
+
+  // Filter by category
+  if (categoryFilter && categoryFilter.toLowerCase() !== 'all') {
+    const targetCat = categoryFilter.toLowerCase().trim();
+    filtered = filtered.filter(a => {
+      const cat = (a.category || categorizeBlog(a)).toLowerCase().trim();
+      return cat === targetCat;
+    });
+  }
+
+  // Filter by search query
+  if (searchQuery && searchQuery.trim() !== '') {
+    const q = searchQuery.toLowerCase().trim();
+    filtered = filtered.filter(a => {
+      const title = (a.title || '').toLowerCase();
+      const excerpt = (a.excerpt || '').toLowerCase();
+      const cat = (a.category || categorizeBlog(a)).toLowerCase();
+      return title.includes(q) || excerpt.includes(q) || cat.includes(q);
+    });
+  }
+
+  // Update counter badge
+  const countBadge = document.getElementById('blog-count-badge');
+  if (countBadge) {
+    const catLabel = categoryFilter === 'all' ? 'All Stories' : categoryFilter;
+    countBadge.textContent = `Showing ${filtered.length} ${filtered.length === 1 ? 'Story' : 'Stories'} in ${catLabel}`;
   }
 
   if (filtered.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1/-1; text-align: center; padding: 4rem 1rem; color: var(--text-muted);">
-        <p>No stories found in this category right now.</p>
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
+        <h3 style="font-size: 1.25rem; color: var(--text-primary); margin-bottom: 0.5rem;">No stories found in this category</h3>
+        <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Try selecting "All Articles" or adjusting your search keyword.
+        </p>
+        <button class="btn btn-sm btn-outline" onclick="resetBlogFilters()">View All Articles</button>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = filtered.map(post => `
-    <article class="product-card" style="border-radius: var(--radius-lg);">
-      <div style="aspect-ratio: 16/10; overflow: hidden; background: #f4f4f5;">
-        <a href="blog-post.html?slug=${post.slug}">
-          <img src="${post.image_url || './assets/makhana-science.webp'}" alt="${escapeHtml(post.title)}" style="width:100%; height:100%; object-fit:cover; transition:transform 0.3s ease;" loading="lazy">
-        </a>
-      </div>
-      <div class="product-card-body">
-        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-          <span style="color: var(--accent-color); font-weight: 600;">${post.category || 'Snack Science'}</span>
-          <span>${post.read_time || '4 min read'}</span>
+  container.innerHTML = filtered.map(post => {
+    const slug = post.slug || post.id;
+    const postUrl = `blog-post.html?slug=${encodeURIComponent(slug)}`;
+    const imgUrl = post.image_url || './assets/makhana-science.webp';
+    const categoryName = post.category || categorizeBlog(post);
+    const dateFormatted = formatBlogDate(post.created_at);
+    const readTime = post.read_time || '4 min read';
+    const author = post.author || 'VEYANO Team';
+    const excerpt = post.excerpt || 'Read the full guide on honest snacking, nutrition, and clean roasting.';
+
+    return `
+      <article class="blog-card">
+        <div class="blog-card-media">
+          <a href="${postUrl}" aria-label="${escapeHtml(post.title)}">
+            <img src="${imgUrl}" alt="${escapeHtml(post.title)}" loading="lazy" onerror="this.src='./assets/makhana-science.webp'">
+          </a>
         </div>
-        <h3 style="font-size: 1.2rem; line-height: 1.35; margin-bottom: 0.5rem;">
-          <a href="blog-post.html?slug=${post.slug}" style="color: inherit;">${escapeHtml(post.title)}</a>
-        </h3>
-        <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.25rem; flex-grow: 1;">
-          ${escapeHtml(post.excerpt || 'Read the full guide on honest snacking, nutrition, and clean roasting.')}
-        </p>
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
-          <span style="font-size: 0.8rem; color: var(--text-muted);">By ${post.author || 'VEYANO Team'}</span>
-          <a href="blog-post.html?slug=${post.slug}" style="font-family: var(--font-heading); font-size: 0.85rem; font-weight: 600; color: var(--accent-color);">Read Story →</a>
+        <div class="blog-card-body">
+          <div class="blog-meta-row">
+            <span class="blog-category-badge">${escapeHtml(categoryName)}</span>
+            <span class="blog-meta-dot">•</span>
+            <span class="blog-date-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity: 0.7;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              ${dateFormatted}
+            </span>
+            <span class="blog-meta-dot">•</span>
+            <span style="font-size: 0.78rem; color: var(--text-muted);">${readTime}</span>
+          </div>
+
+          <h3 class="blog-card-title">
+            <a href="${postUrl}">${escapeHtml(post.title)}</a>
+          </h3>
+
+          <p class="blog-card-excerpt">
+            ${escapeHtml(excerpt)}
+          </p>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.85rem; margin-top: auto;">
+            <span style="font-size: 0.8rem; color: var(--text-muted);">By ${escapeHtml(author)}</span>
+            <a href="${postUrl}" style="font-family: var(--font-heading); font-size: 0.85rem; font-weight: 600; color: var(--accent-color); display: inline-flex; align-items: center; gap: 4px;">
+              Read Story <span>→</span>
+            </a>
+          </div>
         </div>
-      </div>
-    </article>
-  `).join('');
+      </article>
+    `;
+  }).join('');
+}
+
+function resetBlogFilters() {
+  activeCategory = 'all';
+  activeSearchQuery = '';
+  const searchInput = document.getElementById('blog-search-input');
+  if (searchInput) searchInput.value = '';
+
+  document.querySelectorAll('#blog-category-bar .filter-pill').forEach(p => {
+    p.classList.toggle('active', p.textContent.trim().toLowerCase() === 'all articles');
+  });
+
+  renderBlogCards(window.CURRENT_BLOG_POSTS || getAllArticles(), 'all', '');
+}
+
+function filterBlogCategory(cat) {
+  activeCategory = cat || 'all';
+  document.querySelectorAll('#blog-category-bar .filter-pill').forEach(p => p.classList.remove('active'));
+  
+  const activeBtn = Array.from(document.querySelectorAll('#blog-category-bar .filter-pill')).find(p => {
+    const text = (p.dataset.category || p.textContent).trim().toLowerCase();
+    return activeCategory === 'all' 
+      ? (text === 'all articles' || text === 'all') 
+      : (text === activeCategory.toLowerCase());
+  });
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const articles = window.CURRENT_BLOG_POSTS || getAllArticles();
+  renderBlogCards(articles, activeCategory, activeSearchQuery);
+}
+
+if (typeof window !== 'undefined') {
+  window.filterBlogCategory = filterBlogCategory;
+  window.resetBlogFilters = resetBlogFilters;
+  window.renderBlogCards = renderBlogCards;
 }
 
 async function fetchPost() {
@@ -209,7 +268,15 @@ async function fetchPost() {
   if (!container) return;
 
   const urlParams = new URLSearchParams(window.location.search);
-  const slug = urlParams.get('slug');
+  let slug = urlParams.get('slug');
+
+  // Fallback: Check pathname if route is /blog/:slug
+  if (!slug) {
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    if (pathParts[0] === 'blog' && pathParts[1]) {
+      slug = pathParts[1];
+    }
+  }
 
   if (!slug) {
     window.location.href = 'blog.html';
@@ -218,60 +285,124 @@ async function fetchPost() {
 
   let post = null;
 
+  // 1. Try finding in preloaded catalog first
+  const localCatalog = getAllArticles();
+  post = localCatalog.find(a => a.slug === slug || a.id === slug);
+
+  // 2. Try fetching from API
   try {
-    const res = await fetch(`${API_BASE_URL}/api/blog/${slug}`);
+    const res = await fetch(`${API_BASE_URL}/api/blog/${encodeURIComponent(slug)}`);
     if (res.ok) {
-      post = await res.json();
+      const serverPost = await res.json();
+      if (serverPost && serverPost.title) {
+        post = serverPost;
+      }
     }
   } catch (e) {
-    console.warn('[Blog Post] Fetch failed, checking local articles:', e);
-  }
-
-  if (!post) {
-    post = FALLBACK_ARTICLES.find(a => a.slug === slug || a.id === slug);
+    console.warn('[Blog Post] API fetch failed, relying on local article:', e);
   }
 
   if (!post) {
     container.innerHTML = `
       <div style="text-align: center; padding: 5rem 1rem;">
-        <h2>Article Not Found</h2>
-        <p style="margin: 1rem 0; color: var(--text-secondary);">The requested story could not be located.</p>
-        <a href="blog.html" class="btn btn-sm btn-accent">Return to Journal</a>
+        <h2 style="font-size: 2rem; margin-bottom: 0.75rem;">Article Not Found</h2>
+        <p style="margin: 1rem 0 2rem; color: var(--text-secondary); max-width: 500px; margin-inline: auto;">
+          The requested story could not be located. It may have been moved or updated.
+        </p>
+        <a href="blog.html" class="btn btn-accent">Return to Journal</a>
       </div>
     `;
     return;
   }
 
+  post.category = post.category || categorizeBlog(post);
+  const formattedDate = formatBlogDate(post.created_at);
+
   document.title = `${post.title} | VEYANO Journal`;
 
+  // Find 3 related stories
+  const related = localCatalog
+    .filter(a => a.slug !== post.slug && a.id !== post.id)
+    .slice(0, 3);
+
   container.innerHTML = `
-    <article style="max-width: 800px; margin: 0 auto;">
-      <a href="blog.html" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; color: var(--accent-color); font-weight: 500; margin-bottom: 1.5rem;">
-        ← Back to Journal
-      </a>
-      <div style="font-size: 0.85rem; color: var(--accent-color); font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;">
-        ${post.category || 'Clean Snacking'}
+    <article style="max-width: 820px; margin: 0 auto;">
+      <div style="margin-bottom: 1.5rem;">
+        <a href="blog.html" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; color: var(--accent-color); font-weight: 600; text-decoration: none;">
+          ← Back to All Articles
+        </a>
       </div>
-      <h1 style="font-size: 2.75rem; line-height: 1.2; margin-bottom: 1rem; color: var(--text-primary);">
+
+      <div style="display: inline-block; font-size: 0.8rem; font-weight: 700; color: var(--accent-color); text-transform: uppercase; letter-spacing: 0.05em; background: var(--accent-light); padding: 0.35rem 0.75rem; border-radius: var(--radius-full); margin-bottom: 1rem;">
+        ${escapeHtml(post.category)}
+      </div>
+
+      <h1 style="font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.2; margin-bottom: 1.25rem; color: var(--text-primary); font-family: var(--font-heading);">
         ${escapeHtml(post.title)}
       </h1>
-      <div style="display: flex; gap: 1rem; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
-        <span>By <strong>${post.author || 'VEYANO Team'}</strong></span>
-        <span>&bull;</span>
-        <span>${new Date(post.created_at || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.25rem;">
+        <span>By <strong style="color: var(--text-primary);">${escapeHtml(post.author || 'VEYANO Team')}</strong></span>
+        <span>•</span>
+        <span style="display: inline-flex; align-items: center; gap: 0.3rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ${formattedDate}
+        </span>
+        <span>•</span>
+        <span>${post.read_time || '4 min read'}</span>
       </div>
 
-      <img src="${post.image_url || './assets/makhana-science.webp'}" alt="${escapeHtml(post.title)}" style="width: 100%; max-height: 480px; object-fit: cover; border-radius: var(--radius-lg); margin-bottom: 2.5rem; border: 1px solid var(--border-subtle);">
-
-      <div style="font-size: 1.1rem; line-height: 1.85; color: var(--text-secondary); display: flex; flex-direction: column; gap: 1.25rem;">
-        ${post.content}
+      <div style="border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 2.5rem; border: 1px solid var(--border-subtle); max-height: 480px;">
+        <img src="${post.image_url || './assets/makhana-science.webp'}" alt="${escapeHtml(post.title)}" style="width: 100%; height: 100%; max-height: 480px; object-fit: cover; display: block;" onerror="this.src='./assets/makhana-science.webp'">
       </div>
 
-      <div style="margin-top: 4rem; padding: 2rem; background: var(--accent-light); border: 1px solid rgba(192, 139, 92, 0.3); border-radius: var(--radius-md); text-align: center;">
-        <h3 style="font-size: 1.25rem; color: var(--text-primary); margin-bottom: 0.5rem;">Taste Clean Roasted Snacking</h3>
-        <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Discover our small-batch roasted makhana collections.</p>
-        <a href="shop.html" class="btn btn-accent">Shop VEYANO Snacks</a>
+      <div class="blog-article-content" style="font-size: 1.1rem; line-height: 1.85; color: var(--text-secondary); display: flex; flex-direction: column; gap: 1.25rem;">
+        ${post.content || `<p>${escapeHtml(post.excerpt || '')}</p>`}
       </div>
+
+      <!-- Call to Action Banner -->
+      <div style="margin-top: 4rem; padding: 2.5rem 2rem; background: linear-gradient(135deg, #fdfbf7 0%, var(--accent-light) 100%); border: 1px solid rgba(192, 139, 92, 0.35); border-radius: var(--radius-lg); text-align: center; box-shadow: var(--shadow-sm);">
+        <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-color);">Experience Honest Snacking</span>
+        <h3 style="font-size: 1.5rem; color: var(--text-primary); margin: 0.5rem 0 0.75rem; font-family: var(--font-heading);">Slow-Roasted Whole Food Makhana</h3>
+        <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem; max-width: 540px; margin-inline: auto;">
+          0% Palm Oil. 0% Added Sugars. 100% Purity and crunch crafted for mindful high-performers.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="shop.html" class="btn btn-accent" style="padding: 0.75rem 1.75rem;">Shop All Snacks</a>
+          <a href="try-veyano.html" class="btn btn-outline" style="padding: 0.75rem 1.75rem;">Try Starter Pack</a>
+        </div>
+      </div>
+
+      <!-- Related Stories Grid -->
+      ${related.length > 0 ? `
+        <div style="margin-top: 4rem; border-top: 1px solid var(--border-subtle); padding-top: 3rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h3 style="font-size: 1.4rem; font-family: var(--font-heading);">More from the Journal</h3>
+            <a href="blog.html" style="font-size: 0.88rem; font-weight: 600; color: var(--accent-color);">View All →</a>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
+            ${related.map(r => `
+              <div class="blog-card" style="border-radius: var(--radius-md);">
+                <div style="aspect-ratio: 16/10; overflow: hidden; background: var(--bg-subtle);">
+                  <a href="blog-post.html?slug=${encodeURIComponent(r.slug || r.id)}">
+                    <img src="${r.image_url || './assets/makhana-science.webp'}" alt="${escapeHtml(r.title)}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy">
+                  </a>
+                </div>
+                <div style="padding: 1.25rem; display: flex; flex-direction: column; flex-grow: 1;">
+                  <span style="font-size: 0.75rem; font-weight: 600; color: var(--accent-color); margin-bottom: 0.35rem; text-transform: uppercase;">${escapeHtml(r.category || categorizeBlog(r))}</span>
+                  <h4 style="font-size: 1rem; line-height: 1.35; margin-bottom: 0.5rem; flex-grow: 1;">
+                    <a href="blog-post.html?slug=${encodeURIComponent(r.slug || r.id)}" style="color: inherit;">${escapeHtml(r.title)}</a>
+                  </h4>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted);">
+                    <span>${formatBlogDate(r.created_at)}</span>
+                    <a href="blog-post.html?slug=${encodeURIComponent(r.slug || r.id)}" style="font-weight: 600; color: var(--accent-color);">Read Story →</a>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
     </article>
   `;
 }
@@ -280,15 +411,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('blog-container')) {
     fetchBlogs();
 
-    // Category filter pills on blog page
-    document.querySelectorAll('.blog-filter-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        document.querySelectorAll('.blog-filter-pill').forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
-        const cat = pill.dataset.category || 'all';
-        renderBlogCards(window.CURRENT_BLOG_POSTS || FALLBACK_ARTICLES, cat);
+    // Bind category filter clicks
+    document.querySelectorAll('#blog-category-bar .filter-pill').forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cat = pill.dataset.category || pill.textContent.trim();
+        filterBlogCategory(cat === 'All Articles' ? 'all' : cat);
       });
     });
+
+    // Bind search input
+    const searchInput = document.getElementById('blog-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        activeSearchQuery = e.target.value;
+        const articles = window.CURRENT_BLOG_POSTS || getAllArticles();
+        renderBlogCards(articles, activeCategory, activeSearchQuery);
+      });
+    }
   }
 
   if (document.getElementById('blog-content')) {
