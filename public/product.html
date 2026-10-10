@@ -272,7 +272,7 @@
           Get our <strong>Trio Discovery Combo</strong> to taste all three flavors (Classic Plain, Lightly Salted, Fiery Peri-Peri) or explore upcoming pocket-sized trial packs.
         </p>
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-          <a href="product.html?slug=ultimate-combo" class="btn btn-accent">Get Trio Combo (Save ₹298)</a>
+          <a href="product.html?slug=ultimate-combo" class="btn btn-outline">View Trio Combo</a>
           <a href="try-veyano.html" class="btn btn-outline">Explore Trial Packs</a>
         </div>
       </section>
@@ -617,19 +617,40 @@
       const buyNowBtn = document.getElementById('detail-buy-now-btn');
       const stickyBuyBtn = document.getElementById('sticky-buy-btn');
       
-      if (currentProduct.stock_status === 'coming_soon' || currentProduct.stock <= 0) {
+      if (currentProduct.stock_status === 'coming_soon') {
         stockBadge.className = 'badge badge-coming-soon';
         stockBadge.textContent = 'Coming Soon';
         if (buyArea) buyArea.innerHTML = `
-          <button class="btn btn-outline" style="width: 100%;" onclick="window.addToCart('${currentProduct.id}')">Notify Me on WhatsApp</button>
+          <a href="https://wa.me/919350598909?text=${encodeURIComponent('Hi VEYANO! Please notify me when ' + currentProduct.name + ' launches.')}" 
+             class="btn btn-outline" style="width: 100%;" target="_blank" rel="noopener">Notify Me on WhatsApp</a>
         `;
         if (buyNowBtn) buyNowBtn.style.display = 'none';
-        if (stickyBuyBtn) stickyBuyBtn.textContent = 'Coming Soon';
+        if (stickyBuyBtn) {
+          stickyBuyBtn.textContent = 'Coming Soon';
+          stickyBuyBtn.disabled = true;
+          stickyBuyBtn.style.opacity = '0.65';
+        }
+      } else if (currentProduct.stock_status === 'out_of_stock' || currentProduct.stock <= 0) {
+        stockBadge.className = 'badge badge-coming-soon';
+        stockBadge.textContent = 'Out of Stock';
+        if (buyArea) buyArea.innerHTML = `
+          <button class="btn btn-outline" style="width: 100%; cursor: not-allowed; opacity: 0.65;" disabled>Out of Stock</button>
+        `;
+        if (buyNowBtn) buyNowBtn.style.display = 'none';
+        if (stickyBuyBtn) {
+          stickyBuyBtn.textContent = 'Out of Stock';
+          stickyBuyBtn.disabled = true;
+          stickyBuyBtn.style.opacity = '0.65';
+        }
       } else {
         stockBadge.className = 'badge badge-featured';
         stockBadge.textContent = 'In Stock';
         if (buyNowBtn) buyNowBtn.style.display = 'block';
-        if (stickyBuyBtn) stickyBuyBtn.textContent = 'Add to Bag';
+        if (stickyBuyBtn) {
+          stickyBuyBtn.textContent = 'Add to Bag';
+          stickyBuyBtn.disabled = false;
+          stickyBuyBtn.style.opacity = '1';
+        }
       }
 
       // Main Image & Thumbs

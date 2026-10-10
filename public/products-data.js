@@ -74,8 +74,8 @@ const DEFAULT_PRODUCTS = [
       "Virtually sodium-free (2.1mg / 100g) for mindful cardiovascular diets",
       "Pure single-ingredient food with complete transparency"
     ],
-    stock: 200,
-    stock_status: "in_stock",
+    stock: 0,
+    stock_status: "out_of_stock",
     is_featured: true,
     is_new: false,
     is_trial: false,
@@ -145,8 +145,8 @@ const DEFAULT_PRODUCTS = [
       "Satisfies 4 PM savory cravings without fried heaviness",
       "No greasy fingers or heavy post-snack aftertaste"
     ],
-    stock: 200,
-    stock_status: "in_stock",
+    stock: 0,
+    stock_status: "out_of_stock",
     is_featured: true,
     is_new: false,
     is_trial: false,
@@ -216,8 +216,8 @@ const DEFAULT_PRODUCTS = [
       "Zero deep-frying, zero hydrogenated vegetable fats",
       "Clean post-snack digestive feel"
     ],
-    stock: 200,
-    stock_status: "in_stock",
+    stock: 0,
+    stock_status: "out_of_stock",
     is_featured: true,
     is_new: false,
     is_trial: false,
@@ -285,8 +285,8 @@ const DEFAULT_PRODUCTS = [
       "Great variety for household members with different snacking preferences",
       "Thoughtfully packed to lock in freshness"
     ],
-    stock: 150,
-    stock_status: "in_stock",
+    stock: 0,
+    stock_status: "out_of_stock",
     is_featured: true,
     is_new: false,
     is_trial: false,

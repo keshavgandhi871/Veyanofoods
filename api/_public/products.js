@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
     if (!error && Array.isArray(dbProducts) && dbProducts.length > 0) {
       // Merge DB prices and stock with full product metadata
       results = results.map(p => {
-        const match = dbProducts.find(dp => dp.sku === p.sku);
+        const match = dbProducts.find(dp => dp.sku === p.sku || dp.sku === `${p.sku}-200` || (p.sku === 'COMBO' && dp.sku === 'COMBO-600'));
         if (match) {
           return {
             ...p,
@@ -72,7 +72,8 @@ router.get('/:slugOrId', async (req, res) => {
 
   try {
     const db = getDB();
-    const { data: match } = await db.from('products').select('*').eq('sku', product.sku).maybeSingle();
+    const candidateSkus = [product.sku, `${product.sku}-200`, product.sku === 'COMBO' ? 'COMBO-600' : null].filter(Boolean);
+    const { data: match } = await db.from('products').select('*').in('sku', candidateSkus).maybeSingle();
     if (match) {
       product = {
         ...product,

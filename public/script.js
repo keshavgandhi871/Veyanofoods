@@ -711,7 +711,7 @@ window.renderProductsGrid = (containerId, filterCategory = 'all', searchQuery = 
 
   container.innerHTML = filtered.map(product => {
     const isComingSoon = product.stock_status === 'coming_soon';
-    const isOutOfStock = product.stock_status === 'out_of_stock';
+    const isOutOfStock = product.stock_status === 'out_of_stock' || (product.stock !== undefined && product.stock <= 0 && !isComingSoon);
     const isAvailable = !isComingSoon && !isOutOfStock && product.price != null;
 
     // Coming Soon card: no price, no cart button, no product detail link
@@ -749,7 +749,7 @@ window.renderProductsGrid = (containerId, filterCategory = 'all', searchQuery = 
           <div class="product-badge-group">
             ${product.is_trial ? '<span class="badge badge-trial">Trial Pack</span>' : ''}
             ${product.is_new ? '<span class="badge badge-new">New</span>' : ''}
-            ${product.is_featured && !product.is_trial ? '<span class="badge badge-featured">Popular</span>' : ''}
+            ${product.is_featured && !product.is_trial && !isOutOfStock ? '<span class="badge badge-featured">Popular</span>' : ''}
             ${isOutOfStock ? '<span class="badge badge-coming-soon">Out of Stock</span>' : ''}
           </div>
           <span class="badge-weight">${product.weight}</span>
