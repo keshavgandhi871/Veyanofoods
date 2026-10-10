@@ -68,9 +68,21 @@
   </url>
   <url>
     <loc>https://veyano.in/blog</loc>
-    <lastmod>2026-08-17</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://veyano.in/blog-post.html?slug=cellular-electrolyte-balance-mineral-hydration-makhana</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://veyano.in/blog-post.html?slug=digestive-spices-metabolism-cardamom-garlic-makhana</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://veyano.in/blog-post.html?slug=roasted-chana-vs-makhana-protein-evening-hunger-control</loc>
