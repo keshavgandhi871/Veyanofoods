@@ -10,6 +10,14 @@ try {
 } catch (_) {}
 
 function categorize(post) {
+  if (post && post.category && ['makhana', 'food transparency', 'snacking', 'ingredients'].includes(post.category.trim().toLowerCase())) {
+    const lower = post.category.trim().toLowerCase();
+    if (lower === 'makhana') return 'Makhana';
+    if (lower === 'food transparency') return 'Food Transparency';
+    if (lower === 'snacking') return 'Snacking';
+    if (lower === 'ingredients') return 'Ingredients';
+  }
+
   const title = ((post && post.title) || '').toLowerCase();
   const slug = ((post && post.slug) || '').toLowerCase();
   const text = title + ' ' + slug;
@@ -19,8 +27,8 @@ function categorize(post) {
     return 'Food Transparency';
   }
 
-  // 2. Ingredients: Specific ingredients, biochemicals, additives, oils, vitamins, minerals
-  if (text.includes('palm oil') || text.includes('maltodextrin') || text.includes('sugar') || text.includes('msg') || text.includes('sodium') || text.includes('calcium') || text.includes('fiber') || text.includes('kaempferol') || text.includes('antioxidant') || text.includes('amino acid') || text.includes('seed oil') || text.includes('micronutrient') || text.includes('bioavailability') || text.includes('acrylamide') || text.includes('glycation') || text.includes('cortisol') || text.includes('potassium') || text.includes('electrolyte') || text.includes('preservative') || text.includes('additive')) {
+  // 2. Ingredients: Specific ingredients, biochemicals, additives, oils, vitamins, minerals, seeds
+  if (text.includes('palm oil') || text.includes('maltodextrin') || text.includes('sugar') || text.includes('msg') || text.includes('sodium') || text.includes('calcium') || text.includes('fiber') || text.includes('kaempferol') || text.includes('antioxidant') || text.includes('amino acid') || text.includes('seed oil') || text.includes('seeds') || text.includes('omega') || text.includes('chia') || text.includes('flax') || text.includes('hemp') || text.includes('micronutrient') || text.includes('bioavailability') || text.includes('acrylamide') || text.includes('glycation') || text.includes('cortisol') || text.includes('potassium') || text.includes('electrolyte') || text.includes('preservative') || text.includes('additive')) {
     return 'Ingredients';
   }
 
