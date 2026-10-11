@@ -55,7 +55,7 @@ function categorizeBlog(post) {
   }
 
   // 2. Ingredients: Specific ingredients, biochemicals, additives, oils, vitamins, minerals
-  if (text.includes('palm oil') || text.includes('maltodextrin') || text.includes('sugar') || text.includes('msg') || text.includes('sodium') || text.includes('calcium') || text.includes('fiber') || text.includes('kaempferol') || text.includes('antioxidant') || text.includes('amino acid') || text.includes('seed oil') || text.includes('micronutrient') || text.includes('bioavailability') || text.includes('bioavailable') || text.includes('moringa') || text.includes('polyphenol') || text.includes('botanical') || text.includes('mineral') || text.includes('acrylamide') || text.includes('glycation') || text.includes('cortisol') || text.includes('potassium') || text.includes('electrolyte') || text.includes('preservative') || text.includes('additive')) {
+  if (text.includes('palm oil') || text.includes('maltodextrin') || text.includes('sugar') || text.includes('msg') || text.includes('sodium') || text.includes('calcium') || text.includes('fiber') || text.includes('flour') || text.includes('aleurone') || text.includes('kaempferol') || text.includes('antioxidant') || text.includes('amino acid') || text.includes('seed oil') || text.includes('micronutrient') || text.includes('bioavailability') || text.includes('bioavailable') || text.includes('moringa') || text.includes('polyphenol') || text.includes('botanical') || text.includes('mineral') || text.includes('acrylamide') || text.includes('glycation') || text.includes('cortisol') || text.includes('potassium') || text.includes('electrolyte') || text.includes('preservative') || text.includes('additive')) {
     return 'Ingredients';
   }
 
