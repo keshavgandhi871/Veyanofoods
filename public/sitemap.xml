@@ -68,9 +68,15 @@
   </url>
   <url>
     <loc>https://veyano.in/blog</loc>
-    <lastmod>2026-08-24</lastmod>
+    <lastmod>2026-08-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://veyano.in/blog-post.html?slug=cold-pressed-sesame-oil-benefits-sesamin-lignans-makhana</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://veyano.in/blog-post.html?slug=unpolished-rice-benefits-diabetes-aleurone-makhana</loc>
